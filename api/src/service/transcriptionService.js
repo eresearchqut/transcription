@@ -5,24 +5,13 @@ const {
 } = require('../repository/repository');
 
 
-
-
-
-
-
-
-const deleteTranscription = (transcriptionId, identityId) =>
-    deleteResource(transcriptionResourceType, transcriptionId, identityId)
-        .then(() => deleteParentResources(transcriptionResourceType, transcriptionId));
+const deleteTranscription = (id, identityId) => deleteResource(identityId, id);
 
 const getTranscription = (id, identityId) =>
-    getResource( , id, identityId);
+    getResource(identityId, id);
 
-
-
-const putTranscription = (transcription, identityId) => {
-    const {id, project} = transcription;
-}
+const putTranscription = (id, transcription, identityId) =>
+    putResource(identityId, id, transcription)
 
 
 module.exports = {

@@ -1,78 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b9b2e7ad-0326-482a-949d-a42d6d1d2e0b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/transcription.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/__mocks__/axios.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/jest-dynalite-config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/jest.config.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/api/api.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/api/apiHandler.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/repository/dynamoDBClient.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/repository/repository.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/routes/transcriptionRoutes.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/service/transcriptionService.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/src/util/requestUtils.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/test/repository/repository.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/test/service/transcriptionService.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/yarn.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/.env.local" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/data/faculties-and-schools.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/data/faculties.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/data/for-categories.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/images/qut_logo.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/images/qut_logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/avatar_1.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/avatar_2.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/avatar_3.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/avatar_4.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/dots.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo-white.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo-white.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo-white@2x.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo.svg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/logo@2x.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/preloader.gif" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/assets/layout/images/profile.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/public/manifest.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/App.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/App.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/App.test.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/AppFooter.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/AppTopbar.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/ScrollToTop.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/index.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/_overrides.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/_variables.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/flags/flags.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/flags/flags_responsive.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/layout.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_config.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_content.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_footer.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_layout.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_main.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_mixins.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_topbar.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/layout/sass/_typography.scss" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/Login.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/PageHeading.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/pages/Transcriptions.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/service/Authorization.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/service/TranscriptionService.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/serviceWorker.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/yarn.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/template.yaml" afterDir="false" />
+    <list default="true" id="b9b2e7ad-0326-482a-949d-a42d6d1d2e0b" name="Default Changelist" comment="Initial revision with scafold">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/api/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/src/api/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/api/api.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/src/repository/repository.js" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/repository/repository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/src/service/transcriptionService.js" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/service/transcriptionService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/test/repository/repository.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/api/test/repository/repository.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/test/service/transcriptionService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/api/test/service/transcriptionService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/yarn.lock" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,8 +47,16 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1616641476187</updated>
-      <workItem from="1616641477939" duration="12560000" />
+      <workItem from="1616641477939" duration="14304000" />
     </task>
+    <task id="LOCAL-00001" summary="Initial revision with scafold">
+      <created>1616715540688</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1616715540688</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -126,5 +72,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial revision with scafold" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial revision with scafold" />
   </component>
 </project>

@@ -15,12 +15,12 @@ const getResource = (pk, sk) => dynamoDBClient
     .then(result => result.Item && unmarshall(result.Item));
 
 
-const putResource = (pk, sk, data, identityId) =>
+const putResource = (pk, sk, data) =>
     dynamoDBClient
         .send(new PutItemCommand({
             TableName: tableName,
             Item: marshall({
-                pk, sk, data, identityId,
+                pk, sk, data,
                 date: new Date().toISOString(),
             }, {removeUndefinedValues: true})
         }));
