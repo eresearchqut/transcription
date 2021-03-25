@@ -1,0 +1,196 @@
+[
+  {
+    "code": "BUSINESS_AND_LAW_ACCOUNTANCY",
+    "label": "Business and Law - Accountancy",
+    "faculty": "Business and Law",
+    "school": "Accountancy"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_ADVERTISING",
+    "label": "Business and Law - Advertising",
+    "faculty": "Business and Law",
+    "school": "Advertising"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_MARKETING_AND_PUBLIC_RELATIONS",
+    "label": "Business and Law - Marketing and Public Relations",
+    "faculty": "Business and Law",
+    "school": "Marketing and Public Relations"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_ECONOMICS_AND_FINANCE",
+    "label": "Business and Law - Economics and Finance",
+    "faculty": "Business and Law",
+    "school": "Economics and Finance"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_LAW",
+    "label": "Business and Law - Law",
+    "faculty": "Business and Law",
+    "school": "Law"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_MANAGEMENT",
+    "label": "Business and Law - Management",
+    "faculty": "Business and Law",
+    "school": "Management"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_QUT_GRADUATE_SCHOOL_OF_BUSINESS",
+    "label": "Business and Law - QUT Graduate School of Business",
+    "faculty": "Business and Law",
+    "school": "QUT Graduate School of Business"
+  },
+  {
+    "code": "BUSINESS_AND_LAW_QUTEX",
+    "label": "Business and Law - QUTeX",
+    "faculty": "Business and Law",
+    "school": "QUTeX"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_COMMUNICATION",
+    "label": "Creative Industries, Education and Social Justice - Communication",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Communication"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_CREATIVE_PRACTICE",
+    "label": "Creative Industries, Education and Social Justice - Creative Practice",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Creative Practice"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_DESIGN",
+    "label": "Creative Industries, Education and Social Justice - Design",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Design"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_EARLY_CHILDHOOD_AND_INCLUSIVE_EDUCATION",
+    "label": "Creative Industries, Education and Social Justice - Early Childhood and Inclusive Education",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Early Childhood and Inclusive Education"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_JUSTICE",
+    "label": "Creative Industries, Education and Social Justice - Justice",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Justice"
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE_TEACHER_EDUCATION_AND_LEADERSHIP",
+    "label": "Creative Industries, Education and Social Justice - Teacher Education and Leadership",
+    "faculty": "Creative Industries, Education and Social Justice",
+    "school": "Teacher Education and Leadership"
+  },
+  {
+    "code": "ENGINEERING_ARCHITECTURE_AND_BUILD_ENVIRONMENT",
+    "label": "Engineering - Architecture and Built Environment",
+    "faculty": "Engineering",
+    "school": "Architecture and Built Environment"
+  },
+  {
+    "code": "ENGINEERING_CIVIL_AND_ENVIRONMENTAL_ENGINEERING",
+    "label": "Engineering - Civil and Environmental Engineering",
+    "faculty": "Engineering",
+    "school": "Civil and Environmental Engineering"
+  },
+  {
+    "code": "ENGINEERING_ELECTRICAL_ENGINEERING_AND_ROBOTICS",
+    "label": "Engineering - Electrical Engineering and Robotics",
+    "faculty": "Engineering",
+    "school": "Electrical Engineering and Robotics"
+  },
+  {
+    "code": "ENGINEERING_MECHANICAL_MEDICAL_AND_PROCESS",
+    "label": "Engineering - Mechanical, Medical and Process",
+    "faculty": "Engineering",
+    "school": "Mechanical, Medical and Process "
+  },
+  {
+    "code": "ENGINEERING_ENGINEERING",
+    "label": "Engineering - Engineering",
+    "faculty": "Engineering",
+    "school": "Engineering"
+  },
+  {
+    "code": "HEALTH_BIOMEDICAL_SERVICES",
+    "label": "Health - Biomedical Sciences",
+    "faculty": "Health",
+    "school": "Biomedical Sciences"
+  },
+  {
+    "code": "HEALTH_CLINICAL_SERVICES",
+    "label": "Health - Clinical Sciences",
+    "faculty": "Health",
+    "school": "Clinical Sciences"
+  },
+  {
+    "code": "HEALTH_EXERCISE_AND_NUTRITION_SCIENCES",
+    "label": "Health - Exercise and Nutrition Sciences",
+    "faculty": "Health",
+    "school": "Exercise and Nutrition Sciences"
+  },
+  {
+    "code": "HEALTH_NURSING",
+    "label": "Health - Nursing",
+    "faculty": "Health",
+    "school": "Nursing"
+  },
+  {
+    "code": "HEALTH_OPTOMETRY_AND_VISION_SCIENCE",
+    "label": "Health - Optometry and Vision Science",
+    "faculty": "Health",
+    "school": "Optometry and Vision Science"
+  },
+  {
+    "code": "HEALTH_PSYCHOLOGY_AND_COUNSELLING",
+    "label": "Health - Psychology and Counselling",
+    "faculty": "Health",
+    "school": "Psychology and Counselling"
+  },
+  {
+    "code": "HEALTH_PUBLIC_HEALTH_AND_SOCIAL_WORK",
+    "label": "Health - Public Health and Social Work",
+    "faculty": "Health",
+    "school": "Public Health and Social Work"
+  },
+  {
+    "code": "SCIENCE_BIOLOGY_AND_ENVIRONMENTAL_SCIENCE",
+    "label": "Science - Biology and Environmental Science",
+    "faculty": "Science",
+    "school": "Biology and Environmental Science"
+  },
+  {
+    "code": "SCIENCE_CHEMISTRY_AND_PHYSICS",
+    "label": "Science - Chemistry and Physics",
+    "faculty": "Science",
+    "school": "Chemistry and Physics"
+  },
+  {
+    "code": "SCIENCE_COMPUTER_SCIENCE",
+    "label": "Science - Computer Science",
+    "faculty": "Science",
+    "school": "Computer Science"
+  },
+  {
+    "code": "SCIENCE_EARTH_AND_ATMOSPHERIC_SCIENCES",
+    "label": "Science - Earth and Atmospheric Sciences",
+    "faculty": "Science",
+    "school": "Earth and Atmospheric Sciences"
+  },
+  {
+    "code": "SCIENCE_INFORMATION_SYSTEMS",
+    "label": "Science - Information Systems",
+    "faculty": "Science",
+    "school": "Information Systems"
+  },
+  {
+    "code": "SCIENCE_MATHEMATICAL_SCIENCES",
+    "label": "Science - Mathematical Sciences",
+    "faculty": "Science",
+    "school": "Mathematical Sciences"
+  }
+]
+
+

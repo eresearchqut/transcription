@@ -1,0 +1,451 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Transcription API
+Parameters:
+  ApplicationName:
+    Type: String
+    Default: transcription
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - qa
+      - prod
+  AwsRoute53CloudFrontHostedZoneId:
+    Type: String
+    Default: Z2FDTNDATAQYW2
+    Description: CloudFront resources HostedZoneId
+  UserPoolStackName:
+    Type: String
+    Description: The user pool stack name
+    Default: 'qut-user-pool'
+  WafStackName:
+    Type: String
+    Description: The waf stack name
+    Default: 'waf-qut-general-regional'
+  LogBucketSuffix:
+    Type: String
+    Description: The cloudfront log bucket suffix
+    Default: 'qut-cloudfront-logs'
+  SupportedIdentityProviders:
+    Type: List<String>
+    Description: The Identity Provider Name
+    Default: 'QUT,QUT-Test'
+Mappings:
+  EnvironmentMap:
+    dev:
+      RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
+      AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
+      FrontEndDomainName: "transcription.dev.eresearchqut.net"
+      ApiDomainName: "api-transcription.dev.eresearchqut.net"
+      VpcId: "vpc-0d673f722007f45eb"
+      HostedZoneName: "dev.eresearchqut.net."
+      SubnetIds:
+        - subnet-063a6e032aa50dc31
+        - subnet-0a44efd7e3150f734
+        - subnet-0b64a1893e6646035
+    qa:
+      RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/023eb2a5-fb13-4b51-a187-1a42337f8cd3"
+      AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/4d5c4379-4158-459e-aa80-085b08d8a970"
+      FrontEndDomainName: "qa-transcription.qut.edu.au"
+      ApiDomainName: "qa-api-transcription.qut.edu.au"
+      VpcId: "vpc-07be9e7c8d5af440e"
+      HostedZoneName: ""
+      SubnetIds:
+        - subnet-09bb9365c2ef4b739
+        - subnet-09b60f7e440984e55
+        - subnet-0fc6b193cb612bc31
+Conditions:
+  CreateARecords: !Not [ !Equals [ !FindInMap [ EnvironmentMap, !Ref Environment, HostedZoneName ], "" ] ]
+Globals:
+  Function:
+    Timeout: 15
+    Tracing: Active
+    MemorySize: 1024
+  Api:
+    Cors:
+      AllowMethods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+    Auth:
+      DefaultAuthorizer: CognitoAuthorizer
+      Authorizers:
+        CognitoAuthorizer:
+          UserPoolArn:
+            Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolArn"
+          Identity:
+            Header: Authorization
+      AddDefaultAuthorizerToCorsPreflight: false
+Resources:
+  DistributionIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub '${AWS::StackName}'
+  TranscriptionBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods:
+              - GET
+              - PUT
+              - DELETE
+            AllowedOrigins:
+              - http://localhost:3000/
+              - !Sub
+                - 'https://${FrontEndDomainName}/'
+                - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+            AllowedHeaders:
+              - authorization
+              - x-amz-content-sha256
+              - x-amz-date
+              - x-amz-security-token
+              - x-amz-user-agent
+              - content-type
+              - x-amz-acl
+      LifecycleConfiguration:
+        Rules:
+          - ExpirationInDays: 14
+            Status: Enabled
+  DistributionBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+  DistributionBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DistributionBucket
+      PolicyDocument:
+        Statement:
+          - Action:
+              - "s3:GetObject"
+            Effect: Allow
+            Principal:
+              AWS: !Join [ "", [ "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ", !Ref DistributionIdentity ] ]
+            Resource: !Join [ "", [ "arn:aws:s3:::", !Ref DistributionBucket, "/*" ] ]
+        Version: "2012-10-17"
+  Distribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Comment: !Sub '${AWS::StackName}'
+        Aliases:
+          - !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+        Origins:
+          - DomainName: !GetAtt DistributionBucket.RegionalDomainName
+            Id: !Ref DistributionBucketPolicy
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${DistributionIdentity}"
+        Enabled: 'true'
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          TargetOriginId: !Ref DistributionBucketPolicy
+          ViewerProtocolPolicy: redirect-to-https
+          ForwardedValues:
+            QueryString: True
+        PriceClass: PriceClass_All
+        Logging:
+          IncludeCookies: 'false'
+          Bucket: !Sub "${Environment}-${LogBucketSuffix}.s3.amazonaws.com"
+          Prefix: !Sub
+            - '${FrontEndDomainName}/'
+            - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+        ViewerCertificate:
+          AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
+  DistributionAlias:
+    Type: AWS::Route53::RecordSet
+    Condition: CreateARecords
+    Properties:
+      Comment: !Sub '${AWS::StackName}'
+      HostedZoneName: !FindInMap [ EnvironmentMap, !Ref Environment, HostedZoneName ]
+      Name: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        EvaluateTargetHealth: False
+        HostedZoneId: !Ref AwsRoute53CloudFrontHostedZoneId
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: 'pk'
+          AttributeType: 'S'
+        - AttributeName: 'sk'
+          AttributeType: 'S'
+      KeySchema:
+        - AttributeName: 'pk'
+          KeyType: 'HASH'
+        - AttributeName: 'sk'
+          KeyType: 'RANGE'
+      BillingMode: PAY_PER_REQUEST
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  ApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: !Sub 'Security group for ${ApplicationName} api function'
+      VpcId: !FindInMap [ EnvironmentMap, !Ref Environment, VpcId ]
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./api
+      Handler: src/api/apiHandler.handler
+      Runtime: nodejs14.x
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub 'app/${Environment}/${ApplicationName}'
+        - S3CrudPolicy:
+            BucketName: !Ref TranscriptionBucket
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          BUCKET_NAME: !Ref TranscriptionBucket
+          APPLCIATION_NAME: !Ref ApplicationName
+          ENVIRONMENT: !Ref Environment
+      Events:
+        ApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+        Api:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref ApiSecurityGroup
+        SubnetIds: !FindInMap [ EnvironmentMap, !Ref Environment, SubnetIds ]
+  ApiGatewayDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      RegionalCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, RegionalCertificateArn ]
+      DomainName: !FindInMap [ EnvironmentMap, !Ref Environment, ApiDomainName ]
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+  ApiGatewayBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName: !Ref ApiGatewayDomainName
+      RestApiId: !Ref ServerlessRestApi
+      Stage: !Ref ServerlessRestApiProdStage
+    DependsOn: ApiFunction
+  ApiDomain:
+    Type: AWS::Route53::RecordSetGroup
+    Condition: CreateARecords
+    Properties:
+      Comment: !Sub '${AWS::StackName}'
+      HostedZoneName: !FindInMap [ EnvironmentMap, !Ref Environment, HostedZoneName ]
+      RecordSets:
+        - Name: !FindInMap [ EnvironmentMap, !Ref Environment, ApiDomainName ]
+          Type: A
+          AliasTarget:
+            DNSName: !GetAtt ApiGatewayDomainName.RegionalDomainName
+            HostedZoneId: !GetAtt ApiGatewayDomainName.RegionalHostedZoneId
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId:
+        Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
+      GenerateSecret: false
+      SupportedIdentityProviders: !Ref SupportedIdentityProviders
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - phone
+        - email
+        - openid
+        - profile
+        - aws.cognito.signin.user.admin
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+      CallbackURLs:
+        - http://localhost:3000/
+        - !Sub
+          - 'https://${FrontEndDomainName}/'
+          - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+      LogoutURLs:
+        - http://localhost:3000/
+        - !Sub
+          - 'https://${FrontEndDomainName}/'
+          - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+        - !Sub 'https://idp.qut.edu.au/idp/Logout'
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: true
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName:
+            Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolProviderName"
+  CognitoUnAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              'ForAnyValue:StringLike':
+                'cognito-identity.amazonaws.com:amr': unauthenticated
+      Policies:
+        - PolicyName: 'CognitoUnauthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'mobileanalytics:PutEvents'
+                  - 'cognito-sync:*'
+                Resource: '*'
+  CognitoAuthorizedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Federated: 'cognito-identity.amazonaws.com'
+            Action:
+              - 'sts:AssumeRoleWithWebIdentity'
+            Condition:
+              StringEquals:
+                'cognito-identity.amazonaws.com:aud': !Ref IdentityPool
+              ForAnyValue:StringLike:
+                'cognito-identity.amazonaws.com:amr': authenticated
+      Policies:
+        - PolicyName: 'CognitoAuthorizedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'mobileanalytics:PutEvents'
+                  - 'cognito-sync:*'
+                  - 'cognito-identity:*'
+                Resource: '*'
+              - Effect: 'Allow'
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource: '*'
+        - PolicyName: 'TranscriptionBucketCognitoAccessPolicy'
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${TranscriptionBucket}
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - ${cognito-identity.amazonaws.com:sub}/
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub arn:aws:s3:::${TranscriptionBucket}/${!cognito-identity.amazonaws.com:sub}
+                  - !Sub arn:aws:s3:::${TranscriptionBucket}/${!cognito-identity.amazonaws.com:sub}/*
+  IdentityPoolRoleMapping:
+    Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthorizedRole.Arn
+        unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+Outputs:
+  ApiGatewayEndpoint:
+    Description: 'API Gateway endpoint URL for Prod stage'
+    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/'
+  ApiFunction:
+    Description: 'Api Function ARN'
+    Value: !GetAtt ApiFunction.Arn
+  ApiFunctionIamRole:
+    Description: 'Implicit IAM Role created for Social Events function'
+    Value: !GetAtt ApiFunction.Arn
+  FrontendEndpoint:
+    Description: 'Frontend URL'
+    Value: !Sub
+      - 'https://${FrontEndDomainName}/'
+      - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+  ApiEndpoint:
+    Description: 'API Endpoint'
+    Value: !Sub
+      - 'https://${ApiDomainName}/'
+      - ApiDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, ApiDomainName ]
+  ClientId:
+    Description: 'Web Application Client Id'
+    Value: !Ref UserPoolClient
+  IdentityPoolId:
+    Description: 'Identity Pool Id'
+    Value: !Ref IdentityPool
+  TranscriptionBucket:
+    Value: !Ref TranscriptionBucket
+    Description: The transcription bucket
+  DistributionBucket:
+    Value: !Ref DistributionBucket
+    Description: The distribution bucket
+  DistributionBucketWebsiteURL:
+    Value: !GetAtt DistributionBucket.WebsiteURL
+    Description: The distribution bucket website URL
+  DistributionDomainName:
+    Value: !GetAtt Distribution.DomainName
+    Description: The cloudfront distribution URL add this to DNS if Certs are manully created
+  FrontEndEnvironment:
+    Description: Front end react app configuration
+    Value: !Sub
+      - |
+        REACT_APP_ENV=${Environment}
+        REACT_APP_APPLICATION_NAME=Transcription
+        REACT_APP_API_ENDPOINT=https://${ApiDomainName}
+        REACT_APP_AUTH_IDENTITY_POOL_ID=${IdentityPool}
+        REACT_APP_AUTH_USER_POOL_ID=${UserPoolId}
+        REACT_APP_AUTH_USER_WEB_CLIENT_ID=${UserPoolClient}
+        REACT_APP_AUTH_SIGN_IN_REDIRECT=https://${FrontEndDomainName}/
+        REACT_APP_AUTH_SIGN_OUT_REDIRECT=https://${FrontEndDomainName}/
+        REACT_APP_AUTH_DOMAIN=${AuthDomain}
+        REACT_APP_TRANSCRIPTION_BUCKET=${TranscriptionBucket}
+      - UserPoolId:
+          Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
+        AuthDomain:
+          Fn::ImportValue: !Sub "${UserPoolStackName}-DomainName"
+        ApiDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, ApiDomainName ]
+        FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+  DistributionEnvironment:
+    Description: Environment Configuration
+    Value: !Sub |
+      DISTRIBUTION_BUCKET=s3://${DistributionBucket}
+      DISTRIBUTION_ID=${Distribution}
+

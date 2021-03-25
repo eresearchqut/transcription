@@ -1,0 +1,92 @@
+.layout-main {
+
+  flex: 1 1 auto;     /* 1 */
+  position: relative;
+  min-width: $minWidth;
+  max-width: $maxWidth;
+  margin: 0 auto 1rem auto;
+  z-index: 1;
+  width: 100%;
+
+  .p-breadcrumb {
+    margin: 1rem 0 1rem 0;
+  }
+
+  .print-label {
+    width: 50%;
+  }
+
+  div.p-col:empty {
+    display: none;
+  }
+
+  .p-card-content .p-message.p-message-error {
+    margin: 0 0 1rem 0;
+  }
+
+  .p-card-content .p-message.p-message-error .p-message-wrapper {
+    padding: 0.7rem 1rem 0.7rem 1rem;
+    cursor: pointer;
+  }
+
+  .p-input-filled .p-inputtext:enabled:focus {
+    background-size: 100% 3px, 100% 1px;
+  }
+
+
+  .p-selectbutton .p-button:focus,
+  .p-selectbutton .p-button.p-highlight:focus, .p-selectbutton .p-button:hover:focus:hover {
+    background-color: inherit;
+    border-color: #673AB7;
+  }
+
+
+  .p-selectbutton .p-button:focus:not(:last-child), .p-selectbutton .p-button.p-highlight:focus:not(:last-child) {
+    background-color: #e0e0e1;
+    border-right: 1px solid;
+  }
+
+  .p-selectbutton .p-button.p-highlight:focus:last-child, .p-selectbutton .p-button.p-highlight:focus:last-child {
+    background-color: #e0e0e1;
+  }
+
+  .p-button.p-component:not(:hover):not(div) {
+    filter: brightness(90%);
+  }
+
+
+
+  .datatable-responsive .p-datatable-responsive .p-datatable-tbody > tr > td .p-column-title {
+    display: none;
+  }
+
+  @media screen and (max-width: 40em) {
+    .datatable-responsive .p-button-danger,
+    .datatable-responsive .p-checkbox-box,
+    .datatable-responsive .p-datatable.p-datatable-responsive .p-datatable-thead > tr > th,
+    .datatable-responsive .p-datatable.p-datatable-responsive .p-datatable-tfoot > tr > td {
+      display: none !important;
+    }
+
+    .datatable-responsive .p-datatable.p-datatable-responsive .p-datatable-tbody > tr > td {
+      text-align: left;
+      display: block;
+      width: 100%;
+      float: left;
+      clear: left;
+      border: 0 none;
+    }
+
+    .datatable-responsive .p-datatable.p-datatable-responsive .p-datatable-tbody > tr > td .p-column-title {
+      padding: .4rem;
+      min-width: 30%;
+      display: inline-block;
+      margin: -.4em 1em -.4em -.4rem;
+      font-weight: bold;
+    }
+
+    .datatable-responsive .p-datatable.p-datatable-responsive .p-datatable-tbody > tr > td:last-child {
+      border-bottom: 1px solid var(--surface-d);
+    }
+  }
+}

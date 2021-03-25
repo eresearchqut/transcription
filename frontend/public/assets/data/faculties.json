@@ -1,0 +1,158 @@
+[
+  {
+    "code": "BUSINESS_AND_LAW",
+    "label": "Business and Law",
+    "schools": [
+      {
+        "code": "ADVERTISING",
+        "label": "Advertising"
+      },
+      {
+        "code": "MARKETING_AND_PUBLIC_RELATIONS",
+        "label": "Marketing and Public Relations"
+      },
+      {
+        "code": "LAW_ECONOMICS_AND_FINANCE",
+        "label": "Economics and Finance"
+      },
+      {
+        "code": "LAW",
+        "label": "Law"
+      },
+      {
+        "code": "MANAGEMENT",
+        "label": "Management"
+      },
+      {
+        "code": "GRADUATE_SCHOOL_OF_BUSINESS",
+        "label": "QUT Graduate School of Business"
+      },
+      {
+        "code": "QUTEX",
+        "label": "QUTeX"
+      }
+    ]
+  },
+  {
+    "code": "CREATIVE_INDUSTRIES_EDUCATION_AND_SOCIAL_JUSTICE",
+    "label": "Creative Industries, Education and Social Justice",
+    "schools": [
+      {
+        "code": "COMMUNICATION",
+        "label": "Communication"
+      },
+      {
+        "code": "CREATIVE_PRACTICE",
+        "label": "Creative Practice"
+      },
+      {
+        "code": "DESIGN",
+        "label": "Design"
+      },
+      {
+        "code": "EARLY_CHILDHOOD_AND_INCLUSIVE_EDUCATION",
+        "label": "Early Childhood and Inclusive Education"
+      },
+      {
+        "code": "JUSTICE",
+        "label": "Justice"
+      },
+      {
+        "code": "TEACHER_EDUCATION_AND_LEADERSHIP",
+        "label": "Teacher Education and Leadership"
+      }
+    ]
+  },
+  {
+    "code": "ENGINEERING",
+    "label": "Architecture and Built Environment",
+    "schools": [
+      {
+        "code": "ARCHITECTURE_AND_BUILD_ENVIRONMENT",
+        "label": "Architecture and Built Environment"
+      },
+      {
+        "code": "CIVIL_AND_ENVIRONMENTAL_ENGINEERING",
+        "label": "Civil and Environmental Engineering"
+      },
+      {
+        "code": "ELECTRICAL_AND_ROBOTICS",
+        "label": "Electrical Engineering and Robotics"
+      },
+      {
+        "code": "MECHANICAL_MEDICAL_AND_PROCESS",
+        "label": "Mechanical, Medical and Process"
+      },
+      {
+        "code": "ENGINEERING",
+        "label": "Engineering"
+      }
+    ]
+  },
+  {
+    "code": "HEALTH",
+    "label": "Health",
+    "schools": [
+      {
+        "code": "BIOMEDICAL_SERVICES",
+        "label": "Biomedical Sciences"
+      },
+      {
+        "code": "CLINICAL_SERVICES",
+        "label": "Clinical Sciences"
+      },
+      {
+        "code": "EXERCISE_AND_NUTRITION_SCIENCES",
+        "label": "Exercise and Nutrition Sciences"
+      },
+      {
+        "code": "NURSING",
+        "label": "Nursing"
+      },
+      {
+        "code": "OPTOMETRY_AND_VISION_SCIENCE",
+        "label": "Optometry and Vision Science"
+      },
+      {
+        "code": "PSYCHOLOGY_AND_COUNSELLING",
+        "label": "Psychology and Counselling"
+      },
+      {
+        "code": "PUBLIC_AND_SOCIAL_WORK",
+        "label": "Public Health and Social Work"
+      }
+    ]
+  },
+  {
+    "code": "SCIENCE",
+    "label": "Science",
+    "schools": [
+      {
+        "code": "SCIENCE_BIOLOGY_AND_ENVIRONMENTAL_SCIENCE",
+        "label": "Science - Biology and Environmental Science"
+      },
+      {
+        "code": "SCIENCE_CHEMISTRY_AND_PHYSICS",
+        "label": "Science - Chemistry and Physics"
+      },
+      {
+        "code": "SCIENCE_COMPUTER_SCIENCE",
+        "label": "Science - Computer Science"
+      },
+      {
+        "code": "SCIENCE_EARTH_AND_ATMOSPHERIC_SCIENCES",
+        "label": "Science - Earth and Atmospheric Sciences"
+      },
+      {
+        "code": "SCIENCE_INFORMATION_SYSTEMS",
+        "label": "Science - Information Systems"
+      },
+      {
+        "code": "SCIENCE_MATHEMATICAL_SCIENCES",
+        "label": "Science - Mathematical Sciences"
+      }
+    ]
+  }
+]
+
+
