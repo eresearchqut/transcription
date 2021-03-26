@@ -87,6 +87,7 @@ Resources:
   TranscriptionBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketName: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -215,7 +216,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref Table
-          BUCKET_NAME: !Ref TranscriptionBucket
+          BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
           APPLCIATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Events:
@@ -244,7 +245,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref Table
-          BUCKET_NAME: !Ref TranscriptionBucket
+          BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
           APPLCIATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Policies:
@@ -255,8 +256,6 @@ Resources:
               - transcribe:GetTranscriptionJob
             Resource:
               - "*"
-        - S3ReadPolicy:
-            BucketName: !Ref TranscriptionBucket
       Events:
         WavCreated:
           Properties:
@@ -265,8 +264,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .wav
           Type: S3
@@ -277,8 +274,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/-
                   - Name: suffix
                     Value: .flac
           Type: S3
@@ -289,8 +284,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .amr
           Type: S3
@@ -301,8 +294,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .3ga
           Type: S3
@@ -313,8 +304,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .mp3
           Type: S3
@@ -325,8 +314,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .mp4
           Type: S3
@@ -337,8 +324,7 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
+
                   - Name: suffix
                     Value: .m4a
           Type: S3
@@ -349,8 +335,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .oga
           Type: S3
@@ -361,8 +345,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .ogg
           Type: S3
@@ -373,8 +355,6 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .opus
           Type: S3
@@ -385,42 +365,40 @@ Resources:
             Filter:
               S3Key:
                 Rules:
-                  - Name: prefix
-                    Value: upload/
                   - Name: suffix
                     Value: .webm
           Type: S3
-#  TranscriptionJobStateChangeFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      CodeUri: ./api
-#      Handler: src/event/transcriptionJobStateChangeHandler.handler
-#      Runtime: nodejs14.x
-#      Description: >
-#        Triggers when the job state is updated
-#  TranscriptionJobEventsRule:
-#    Type: AWS::Events::Rule
-#    Properties:
-#      Description: Monitors Amazon Transcribe for job state changes
-#      EventPattern: |
-#        {
-#          "source": [
-#            "aws.transcribe"
-#          ],
-#          "detail-type": [
-#            "Transcribe Job State Change"
-#          ],
-#          "detail": {
-#            "TranscriptionJobStatus": [
-#              "COMPLETED",
-#              "FAILED"
-#            ]
-#          }
-#        }
-#      State: ENABLED
-#      Targets:
-#        - Arn: !GetAtt TranscriptionJobStateChangeFunction.Arn
-#          Id: !Sub ${AWS::StackName}.Transcribe.JobState
+    TranscriptionJobStateChangeFunction:
+      Type: AWS::Serverless::Function
+      Properties:
+        CodeUri: ./api
+        Handler: src/event/transcriptionJobStateChangeHandler.handler
+        Runtime: nodejs14.x
+        Description: >
+          Triggers when the job state is updated
+    TranscriptionJobEventsRule:
+      Type: AWS::Events::Rule
+      Properties:
+        Description: Monitors Amazon Transcribe for job state changes
+        EventPattern: |
+          {
+            "source": [
+              "aws.transcribe"
+            ],
+            "detail-type": [
+              "Transcribe Job State Change"
+            ],
+            "detail": {
+              "TranscriptionJobStatus": [
+                "COMPLETED",
+                "FAILED"
+              ]
+            }
+          }
+        State: ENABLED
+        Targets:
+          - Arn: !GetAtt TranscriptionJobStateChangeFunction.Arn
+            Id: !Sub ${AWS::StackName}.Transcribe.JobState
   ApiGatewayDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
@@ -551,7 +529,7 @@ Resources:
                 Action:
                   - s3:ListBucket
                 Resource:
-                  - !Sub arn:aws:s3:::${TranscriptionBucket}
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
                 Condition:
                   StringLike:
                     s3:prefix:
@@ -562,8 +540,8 @@ Resources:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource:
-                  - !Sub arn:aws:s3:::${TranscriptionBucket}/${!cognito-identity.amazonaws.com:sub}
-                  - !Sub arn:aws:s3:::${TranscriptionBucket}/${!cognito-identity.amazonaws.com:sub}/*
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/${!cognito-identity.amazonaws.com:sub}
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/${!cognito-identity.amazonaws.com:sub}/*
   IdentityPoolRoleMapping:
     Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
     Properties:
@@ -598,7 +576,7 @@ Outputs:
     Description: 'Identity Pool Id'
     Value: !Ref IdentityPool
   TranscriptionBucket:
-    Value: !Ref TranscriptionBucket
+    Value: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
     Description: The transcription bucket
   DistributionBucket:
     Value: !Ref DistributionBucket
@@ -622,7 +600,7 @@ Outputs:
         REACT_APP_AUTH_SIGN_IN_REDIRECT=https://${FrontEndDomainName}/
         REACT_APP_AUTH_SIGN_OUT_REDIRECT=https://${FrontEndDomainName}/
         REACT_APP_AUTH_DOMAIN=${AuthDomain}
-        REACT_APP_TRANSCRIPTION_BUCKET=${TranscriptionBucket}
+        REACT_APP_TRANSCRIPTION_BUCKET=${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
       - UserPoolId:
           Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
         AuthDomain:
