@@ -23,10 +23,10 @@ exports.handler = async (event) => {
     for (const record of event['Records']) {
         const key = record['s3']['object']['key'];
         const bucketName = record['s3']['bucket']['name'];
-        console.info(key, bucketName, Array.from(key.matchAll(uploadPattern)))
-        const [matchedKey, identityId, languageCode, fileName] = Array.from(key.matchAll(uploadPattern));
+        const [matchedKey, identityId, languageCode, fileName] = [...key.matchAll(uploadPattern)][0];
+        console.log(matchedKey, identityId, languageCode, fileName);
         if (matchedKey) {
-            const [matchedFileExtension, fileExtension] = Array.from(fileName.matchAll(fileExtensionPattern));
+            const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
             if (matchedFileExtension) {
                 const params = {
                     TranscriptionJobName: `${identityId}-${languageCode}-${fileName}`,
@@ -40,6 +40,8 @@ exports.handler = async (event) => {
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
                 await jobStarted(identityId, record['s3'], transcriptionResponse).then(() => console.info('Saved job details', identityId));
+            } else {
+                console.error('Unexpected filename: ', fileName);
             }
         } else {
             console.error('Unexpected key: ', key);
