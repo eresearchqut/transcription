@@ -212,8 +212,6 @@ Resources:
             TableName: !Ref Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub 'app/${Environment}/${ApplicationName}'
-        - S3CrudPolicy:
-            BucketName: !Ref TranscriptionBucket
       Environment:
         Variables:
           TABLE_NAME: !Ref Table
@@ -235,6 +233,163 @@ Resources:
         SecurityGroupIds:
           - !Ref ApiSecurityGroup
         SubnetIds: !FindInMap [ EnvironmentMap, !Ref Environment, SubnetIds ]
+  TranscriptionJobStartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./api
+      Handler: src/event/fileUploadHandler.handler
+      Runtime: nodejs14.x
+      Description: >
+        Starts transcription jobs when triggered by S3 events
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          BUCKET_NAME: !Ref TranscriptionBucket
+          APPLCIATION_NAME: !Ref ApplicationName
+          ENVIRONMENT: !Ref Environment
+      Policies:
+        - Statement:
+            Sid: Transcribe
+            Effect: Allow
+            Action:
+              - transcribe:GetTranscriptionJob
+            Resource:
+              - "*"
+        - S3ReadPolicy:
+            BucketName: !Ref TranscriptionBucket
+      Events:
+        WavCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .wav
+          Type: S3
+        FlacCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/-
+                  - Name: suffix
+                    Value: .flac
+          Type: S3
+        AmrCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .amr
+          Type: S3
+        3gaCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .3ga
+          Type: S3
+        Mp3Created:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .mp3
+          Type: S3
+        Mp4Created:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .mp4
+          Type: S3
+        M4aCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .m4a
+          Type: S3
+        OgaCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .oga
+          Type: S3
+        OggCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .ogg
+          Type: S3
+        OpusCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .opus
+          Type: S3
+        WebmCreated:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: upload/
+                  - Name: suffix
+                    Value: .webm
+          Type: S3
   ApiGatewayDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:

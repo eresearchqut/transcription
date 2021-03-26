@@ -1,21 +1,12 @@
 const {
-    deleteResource,
-    getResource,
     putResource
 } = require('../repository/repository');
 
 
-const deleteTranscription = (id, identityId) => deleteResource(identityId, id);
-
-const getTranscription = (id, identityId) =>
-    getResource(identityId, id);
-
-const putTranscription = (id, transcription, identityId) =>
-    putResource(identityId, id, transcription)
+const jobStarted = (identityId, uploadEvent, transcriptionResponse) =>
+    putResource(identityId, transcriptionResponse['TranscriptionJob']['TranscriptionJobName'], {uploadEvent, transcriptionResponse});
 
 
 module.exports = {
-    deleteTranscription,
-    putTranscription,
-    getTranscription
+    jobStarted
 };

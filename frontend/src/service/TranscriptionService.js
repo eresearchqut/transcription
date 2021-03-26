@@ -10,20 +10,11 @@ axios.interceptors.request.use((config) => {
 
 export class TranscriptionService {
 
-    deleteChecklist(id) {
-        return axios.delete(`${endpoint}/checklist/${id}`);
-    }
 
-    getChecklistsByRole(role) {
-        return axios.get(`${endpoint}/checklist/role/${role}`)
-            .then(response => response.data);
-    }
 
-    getChecklist(id) {
-        if (id === 'create') {
-            return Promise.resolve({project: {}});
-        }
-        return axios.get(`${endpoint}/checklist/${id}`)
+    getIdentity(id) {
+
+        return axios.get(`${endpoint}/identity`)
             .then(result => result.data);
     }
 

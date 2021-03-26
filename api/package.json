@@ -8,8 +8,9 @@
         "test": "jest ./test"
     },
     "dependencies": {
-        "@aws-sdk/client-dynamodb": "^3.7.0",
-        "@aws-sdk/util-dynamodb": "^3.7.0",
+        "@aws-sdk/client-dynamodb": "^3.9.0",
+        "@aws-sdk/client-transcribe": "^3.9.0",
+        "@aws-sdk/util-dynamodb": "^3.9.0",
         "@vendia/serverless-express": "^3.4.0",
         "body-parser": "^1.18.3",
         "cors": "^2.8.5",
