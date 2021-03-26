@@ -376,6 +376,17 @@ Resources:
       Runtime: nodejs14.x
       Description: >
         Triggers when the job state is updated
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub 'app/${Environment}/${ApplicationName}'
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
+          APPLCIATION_NAME: !Ref ApplicationName
+          ENVIRONMENT: !Ref Environment
   TranscriptionJobEventsRule:
     Type: AWS::Events::Rule
     Properties:
