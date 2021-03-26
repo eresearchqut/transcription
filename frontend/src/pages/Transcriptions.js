@@ -1,10 +1,15 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Storage} from 'aws-amplify';
+import {TranscriptionService} from '../service/TranscriptionService';
 
 export const Transcriptions = () => {
 
+    const transcriptionService = new TranscriptionService();
+    const [identity, setIdentity] = useState({})
+
     useEffect(() => {
         let isCancelled = false;
+        transcriptionService.getIdentity().then(identity => setIdentity);
         return () => {
             isCancelled = true;
         };
@@ -13,8 +18,8 @@ export const Transcriptions = () => {
     async function onChange(e) {
         const file = e.target.files[0];
         try {
-            await Storage.put(file.name, file, {
-                // contentType: 'image/png' // contentType is optional
+            await Storage.put(`upload/${identity['identityId']}/en-AU/${file.name}`, file, {
+
             });
         } catch (error) {
             console.log('Error uploading file: ', error);
