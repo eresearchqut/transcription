@@ -23,10 +23,10 @@ exports.handler = async (event) => {
     for (const record of event['Records']) {
         const key = record['s3']['object']['key'];
         const bucketName = record['s3']['bucket']['name'];
-        console.info(key, bucketName, key.matchAll(uploadPattern))
-        const [matchedKey, identityId, languageCode, fileName] = key.matchAll(uploadPattern);
+        console.info(key, bucketName, Array.from(key.matchAll(uploadPattern)))
+        const [matchedKey, identityId, languageCode, fileName] = Array.from(key.matchAll(uploadPattern));
         if (matchedKey) {
-            const [matchedFileExtension, fileExtension] = fileName.matchAll(fileExtensionPattern);
+            const [matchedFileExtension, fileExtension] = Array.from(fileName.matchAll(fileExtensionPattern));
             if (matchedFileExtension) {
                 const params = {
                     TranscriptionJobName: `${identityId}-${languageCode}-${fileName}`,
