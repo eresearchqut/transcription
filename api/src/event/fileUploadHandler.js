@@ -11,28 +11,39 @@ const region = process.env.AWS_REGION || 'ap-southeast-2';
 const transcribeBucket = process.env.TRANSCRIPTION_BUCKET || 'transcriptions';
 const transcribeClient = new TranscribeClient({region});
 
-const uploadPattern = /upload\/.*([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/(.*)\/(.*)/gm
+const uploadPattern = /upload\/(.*)\/(.*)\/(.*)/gm
 const fileExtensionPattern = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi
+
+const mediaFormat = (fileExtension) => fileExtension;
 
 exports.handler = async (event) => {
 
-    for (const record in event['Records']) {
-        const {s3} = record;
-        const {key, bucketName} = s3['object'];
-        const [identityId, languageCode, fileName] = key.match(uploadPattern);
-        const [fileExtension] = fileName.match(fileExtensionPattern);
-        const params = {
-            TranscriptionJobName: `${identityId}-${languageCode}-${fileName}`,
-            LanguageCode: languageCode,
-            MediaFormat: fileExtension,
-            Media: {
-                MediaFileUri: `https://s3-${region}.amazonaws.com\`/${bucketName}/${key}`,
-            },
-            OutputBucketName: transcribeBucket,
-            OutputKeyPrefix: `transcription/${identityId}`
-        };
-        const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
-        await jobStarted(identityId, s3, transcriptionResponse).then(() => console.info('Saved job details', identityId, s3, transcriptionResponse));
+    console.log(JSON.stringify(event));
+
+    for (const record of event['Records']) {
+        const key = record['s3']['object']['key'];
+        const bucketName = record['s3']['bucket']['name'];
+        console.info(key, bucketName, key.matchAll(uploadPattern))
+        const [matchedKey, identityId, languageCode, fileName] = key.matchAll(uploadPattern);
+        if (matchedKey) {
+            const [matchedFileExtension, fileExtension] = fileName.matchAll(fileExtensionPattern);
+            if (matchedFileExtension) {
+                const params = {
+                    TranscriptionJobName: `${identityId}-${languageCode}-${fileName}`,
+                    LanguageCode: languageCode,
+                    MediaFormat: mediaFormat(fileExtension),
+                    Media: {
+                        MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
+                    },
+                    OutputBucketName: transcribeBucket,
+                    OutputKeyPrefix: `transcription/${identityId}`
+                };
+                const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
+                await jobStarted(identityId, record['s3'], transcriptionResponse).then(() => console.info('Saved job details', identityId));
+            }
+        } else {
+            console.error('Unexpected key: ', key);
+        }
     }
 
     return `Processed ${event['Records'].length} uploads`;
