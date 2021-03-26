@@ -390,37 +390,37 @@ Resources:
                   - Name: suffix
                     Value: .webm
           Type: S3
-  TranscriptionJobStateChangeFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: ./api
-      Handler: src/event/transcriptionJobStateChangeHandler.handler
-      Runtime: nodejs14.x
-      Description: >
-        Triggers when the job state is updated
-  TranscriptionJobEventsRule:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: Monitors Amazon Transcribe for job state changes
-      EventPattern: |
-        {
-          "source": [
-            "aws.transcribe"
-          ],
-          "detail-type": [
-            "Transcribe Job State Change"
-          ],
-          "detail": {
-            "TranscriptionJobStatus": [
-              "COMPLETED",
-              "FAILED"
-            ]
-          }
-        }
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt TranscriptionJobStateChangeFunction.Arn
-          Id: !Sub ${AWS::StackName}.Transcribe.JobState
+#  TranscriptionJobStateChangeFunction:
+#    Type: AWS::Serverless::Function
+#    Properties:
+#      CodeUri: ./api
+#      Handler: src/event/transcriptionJobStateChangeHandler.handler
+#      Runtime: nodejs14.x
+#      Description: >
+#        Triggers when the job state is updated
+#  TranscriptionJobEventsRule:
+#    Type: AWS::Events::Rule
+#    Properties:
+#      Description: Monitors Amazon Transcribe for job state changes
+#      EventPattern: |
+#        {
+#          "source": [
+#            "aws.transcribe"
+#          ],
+#          "detail-type": [
+#            "Transcribe Job State Change"
+#          ],
+#          "detail": {
+#            "TranscriptionJobStatus": [
+#              "COMPLETED",
+#              "FAILED"
+#            ]
+#          }
+#        }
+#      State: ENABLED
+#      Targets:
+#        - Arn: !GetAtt TranscriptionJobStateChangeFunction.Arn
+#          Id: !Sub ${AWS::StackName}.Transcribe.JobState
   ApiGatewayDomainName:
     Type: AWS::ApiGateway::DomainName
     Properties:
