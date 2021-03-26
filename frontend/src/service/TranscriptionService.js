@@ -9,7 +9,7 @@ axios.interceptors.request.use((config) => {
 
 export class TranscriptionService {
     getIdentity() {
-        return axios.get(`${endpoint}/identity`)
+        return axios.get(`${endpoint}/transcription/identity`)
             .then(result => result.data);
     }
 }

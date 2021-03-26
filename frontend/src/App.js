@@ -95,7 +95,7 @@ const App = () => {
     Hub.listen('auth', listener);
 
 
-    // if (loggedIn) {
+    if (loggedIn) {
         return (
 
             <div className={wrapperClass}>
@@ -114,27 +114,27 @@ const App = () => {
             </div>
 
         );
-    // }
+    }
 
-    // return (
-    //
-    //     <div className={wrapperClass}>
-    //         <header>
-    //             <AppTopbar/>
-    //         </header>
-    //
-    //         <main className="layout-main">
-    //             <Redirect from='/' to='/login' exact/>
-    //             <Route path='/login' exact component={Login}/>
-    //         </main>
-    //
-    //         <footer>
-    //             <AppFooter/>
-    //         </footer>
-    //
-    //     </div>
-    //
-    // );
+    return (
+
+        <div className={wrapperClass}>
+            <header>
+                <AppTopbar/>
+            </header>
+
+            <main className="layout-main">
+                <Redirect from='/' to='/login' exact/>
+                <Route path='/login' exact component={Login}/>
+            </main>
+
+            <footer>
+                <AppFooter/>
+            </footer>
+
+        </div>
+
+    );
 
 
 }
