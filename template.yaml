@@ -254,6 +254,7 @@ Resources:
             Effect: Allow
             Action:
               - transcribe:GetTranscriptionJob
+              - transcribe:StartTranscriptionJob
             Resource:
               - "*"
       Events:
