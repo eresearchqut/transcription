@@ -247,6 +247,8 @@ Resources:
           APPLCIATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Policies:
+        - S3CrudPolicy:
+            BucketName: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
         - Statement:
             Sid: Transcribe
             Effect: Allow

@@ -8,7 +8,7 @@ const {
 
 
 const region = process.env.AWS_REGION || 'ap-southeast-2';
-const transcribeBucket = process.env.TRANSCRIPTION_BUCKET || 'transcriptions';
+const transcribeBucket = process.env.BUCKET_NAME || 'transcriptions';
 const transcribeClient = new TranscribeClient({region});
 
 const uploadPattern = /private\/(.*)\/(.*)\/(.*)\/(.*)/gm
