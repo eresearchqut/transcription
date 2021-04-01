@@ -59,7 +59,11 @@ export const Transcriptions = () => {
         const file = e.target.files[0];
         console.log(identity)
         try {
-            await Storage.put(`upload/${identity['identityId']}/en-AU/${file.name}`, file, {
+            await Storage.put(`${identity['identityId']}/en-AU/${file.name}`, file, {
+                level: 'private',
+                progressCallback(progress) {
+                    console.log(`Uploaded: ${progress.loaded}/${progress.total}`);
+                },
 
             });
 

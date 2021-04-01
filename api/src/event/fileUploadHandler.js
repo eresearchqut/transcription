@@ -11,7 +11,7 @@ const region = process.env.AWS_REGION || 'ap-southeast-2';
 const transcribeBucket = process.env.TRANSCRIPTION_BUCKET || 'transcriptions';
 const transcribeClient = new TranscribeClient({region});
 
-const uploadPattern = /public/upload\/(.*)\/(.*)\/(.*)/gm
+const uploadPattern = /private\/(.*)\/(.*)\/(.*)\/(.*)/gm
 const fileExtensionPattern = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi
 
 const mediaFormat = (fileExtension) => fileExtension;
@@ -23,8 +23,8 @@ exports.handler = async (event) => {
     for (const record of event['Records']) {
         const key = record['s3']['object']['key'];
         const bucketName = record['s3']['bucket']['name'];
-        const [matchedKey, identityId, languageCode, fileName] = [...key.matchAll(uploadPattern)][0];
-        console.log(matchedKey, identityId, languageCode, fileName);
+        const [matchedKey, cognitoId, identityId, languageCode, fileName] = [...key.matchAll(uploadPattern)][0];
+        console.log(matchedKey, cognitoId, identityId, languageCode, fileName);
         if (matchedKey) {
             const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
             if (matchedFileExtension) {
