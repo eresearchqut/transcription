@@ -11,7 +11,7 @@ const region = process.env.AWS_REGION || 'ap-southeast-2';
 const transcribeBucket = process.env.TRANSCRIPTION_BUCKET || 'transcriptions';
 const transcribeClient = new TranscribeClient({region});
 
-const uploadPattern = /upload\/(.*)\/(.*)\/(.*)/gm
+const uploadPattern = /public/upload\/(.*)\/(.*)\/(.*)/gm
 const fileExtensionPattern = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi
 
 const mediaFormat = (fileExtension) => fileExtension;

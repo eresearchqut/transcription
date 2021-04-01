@@ -49,7 +49,7 @@ export const Transcriptions = () => {
 
     useEffect(() => {
         let isCancelled = false;
-        transcriptionService.getIdentity().then(identity => setIdentity);
+        transcriptionService.getIdentity().then(identity => setIdentity(identity));
         return () => {
             isCancelled = true;
         };
@@ -57,20 +57,29 @@ export const Transcriptions = () => {
 
     async function onChange(e) {
         const file = e.target.files[0];
+        console.log(identity)
         try {
             await Storage.put(`upload/${identity['identityId']}/en-AU/${file.name}`, file, {
 
             });
+
+
         } catch (error) {
             console.log('Error uploading file: ', error);
         }
     }
+
+
 
     return (
     <React.Fragment>
         <TranscriptionList/>
         <br></br>
         <FileUpload mode="basic" name="demo" url="./upload" chooseLabel="Upload file"></FileUpload>
+        <input
+            type="file"
+            onChange={onChange}
+        />
     </React.Fragment>
     );
 }

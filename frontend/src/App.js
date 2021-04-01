@@ -37,7 +37,7 @@ Amplify.configure({
     },
     Storage: {
         AWSS3: {
-            bucket: process.env.TRANSCRIPTION_BUCKET,
+            bucket: process.env.REACT_APP_TRANSCRIPTION_BUCKET,
             region: process.env.REACT_APP_AWS_REGION || 'ap-southeast-2'
         }
     }

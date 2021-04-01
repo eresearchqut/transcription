@@ -98,20 +98,18 @@ Resources:
           - AllowedMethods:
               - GET
               - PUT
+              - POST
+              - HEAD
               - DELETE
             AllowedOrigins:
-              - http://localhost:3000/
-              - !Sub
-                - 'https://${FrontEndDomainName}/'
-                - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
+              - '*'
             AllowedHeaders:
-              - authorization
-              - x-amz-content-sha256
-              - x-amz-date
-              - x-amz-security-token
-              - x-amz-user-agent
-              - content-type
-              - x-amz-acl
+              - '*'
+            ExposedHeaders:
+              - "x-amz-server-side-encryption"
+              - "x-amz-request-id"
+              - "x-amz-id-2"
+              - "ETag"
       LifecycleConfiguration:
         Rules:
           - ExpirationInDays: 14
@@ -492,6 +490,39 @@ Resources:
                   - 'mobileanalytics:PutEvents'
                   - 'cognito-sync:*'
                 Resource: '*'
+        - PolicyName: 'TranscriptionBucketUnauthorisedPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/public/*
+              - Effect: 'Allow'
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/uploads/*
+              - Effect: 'Allow'
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/protected/*
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
+                Condition:
+                  StringLike:
+                    s3:prefix:
+                      - "public/"
+                      - "public/*"
+                      - "protected/"
+                      - "protected/*"
   CognitoAuthorizedRole:
     Type: AWS::IAM::Role
     Properties:
@@ -523,7 +554,7 @@ Resources:
                 Action:
                   - 'lambda:InvokeFunction'
                 Resource: '*'
-        - PolicyName: 'TranscriptionBucketCognitoAccessPolicy'
+        - PolicyName: 'TranscriptionBucketAuthorisedPolicy'
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -535,15 +566,31 @@ Resources:
                 Condition:
                   StringLike:
                     s3:prefix:
-                      - ${cognito-identity.amazonaws.com:sub}/
+                      - "public/"
+                      - "public/*"
+                      - "protected/"
+                      - "protected/*"
+                      - "private/${cognito-identity.amazonaws.com:sub}/"
+                      - "private/${cognito-identity.amazonaws.com:sub}/*"
               - Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource:
-                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/${!cognito-identity.amazonaws.com:sub}
-                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/${!cognito-identity.amazonaws.com:sub}/*
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/public/*
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/protected/${!cognito-identity.amazonaws.com:sub}/*
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/private/${!cognito-identity.amazonaws.com:sub}/*
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/uploads/*
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/protected/*
   IdentityPoolRoleMapping:
     Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
     Properties:
