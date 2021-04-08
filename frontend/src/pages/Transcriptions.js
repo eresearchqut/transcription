@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Storage} from 'aws-amplify';
 import {TranscriptionService} from '../service/TranscriptionService';
+import {UserService} from '../service/UserService';
 import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {FileUpload} from 'primereact/fileupload';
@@ -45,11 +46,14 @@ const TranscriptionList = () => {
 export const Transcriptions = () => {
 
     const transcriptionService = new TranscriptionService();
-    const [identity, setIdentity] = useState({})
+    const userService = new UserService();
+    const [user, setUser] = useState({});
+    const [transcriptions, setTranascriptions] = useState([]);
 
     useEffect(() => {
         let isCancelled = false;
-        transcriptionService.getIdentity().then(identity => setIdentity(identity));
+        userService.getUser().then(result => setUser(user));
+        transcriptionService.getTranscriptions().then(result => setTranascriptions(result));
         return () => {
             isCancelled = true;
         };
@@ -57,9 +61,8 @@ export const Transcriptions = () => {
 
     async function onChange(e) {
         const file = e.target.files[0];
-        console.log(identity)
         try {
-            await Storage.put(`${identity['identityId']}/en-AU/${file.name}`, file, {
+            await Storage.put(`${user['identityId']}/en-AU/${file.name}`, file, {
                 level: 'private',
                 progressCallback(progress) {
                     console.log(`Uploaded: ${progress.loaded}/${progress.total}`);

@@ -7,9 +7,9 @@ axios.interceptors.request.use((config) => {
     return addAuthHeader(config);
 });
 
-export class TranscriptionService {
-    getTranscriptions() {
-        return axios.get(`${endpoint}/transcription`)
+export class UserService {
+    getUser() {
+        return axios.get(`${endpoint}/user`)
             .then(result => result.data);
     }
 }

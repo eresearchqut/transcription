@@ -5,6 +5,7 @@ const {
 const {
     jobStarted
 } = require('../service/transcriptionService');
+const {v4: uuid} = require('uuid');
 
 
 const region = process.env.AWS_REGION || 'ap-southeast-2';
@@ -27,9 +28,10 @@ exports.handler = async (event) => {
         console.log(matchedKey, cognitoId, identityId, languageCode, fileName);
         if (matchedKey) {
             const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
+            const jobName = uuid();
             if (matchedFileExtension) {
                 const params = {
-                    TranscriptionJobName: `${identityId}-${languageCode}-${fileName}`,
+                    TranscriptionJobName: jobName,
                     LanguageCode: languageCode,
                     MediaFormat: mediaFormat(fileExtension),
                     Media: {

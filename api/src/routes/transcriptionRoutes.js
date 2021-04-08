@@ -1,15 +1,15 @@
 const express = require('express');
 
 const {getIdentityId} = require("../util/requestUtils");
-// const {
-//
-// } = require("../service/transcriptionService");
+const {getTranscriptions} = require("../service/transcriptionService");
 const router = express.Router();
 
-router.get('/identity', (request, response, next) => {
+router.get('/', (request, response, next) => {
     const identityId = getIdentityId(request);
-    response.json({identityId});
-})
+    const transcriptions = getTranscriptions(identityId);
+    response.json(transcriptions);
+});
+
 
 
 module.exports = router;

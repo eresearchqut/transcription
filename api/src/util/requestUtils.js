@@ -4,7 +4,6 @@ const getClaims = (request) => {
         try {
             const base64decoded = Buffer.from(token.split(".")[1], "base64").toString("ascii");
             const claims = JSON.parse(base64decoded);
-            console.info(claims);
             return claims;
         } catch (e) {
             console.error("Invalid JWT token. Cannot resolve claims.", e);
@@ -29,12 +28,16 @@ const getUserName = (request) => {
     } else {
         console.warn(`No username claim found in claims.`);
     }
-    console.log(username);
     return username;
 }
 const getIdentityId = (request) => getClaims(request)['custom:qutIdentityId'];
 
+
+const getRoles = (request) => getClaims(request)['custom:eResearchGroups'] ?
+    Array.from(getClaims(request)['custom:eResearchGroups'].matchAll(/([\w-]+)/g), match => match[1]).filter(group => group.startsWith('transcription-')).map(group => group.substring(4)) : [];
+
 module.exports = {
     getIdentityId,
-    getUserName
+    getUserName,
+    getRoles
 }
