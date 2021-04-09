@@ -42,7 +42,12 @@ exports.handler = async (event) => {
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
                 console.log(identityId, jobId, transcriptionResponse['TranscriptionJob']['TranscriptionJobName'], JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
-                await jobStarted(identityId, jobId, record['s3'], transcriptionResponse).then(() => console.info('Saved job details', identityId));
+                try {
+                    await jobStarted(identityId, jobId, record['s3'], transcriptionResponse);
+                    console.info('Saved job details', identityId);
+                } catch (error) {
+                    console.error('Failed to save job details', error);
+                }
             } else {
                 console.error('Unexpected filename: ', fileName);
             }
