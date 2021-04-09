@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
 import {Storage} from 'aws-amplify';
 import {TranscriptionService} from '../service/TranscriptionService';
 import {UserService} from '../service/UserService';
@@ -9,7 +9,11 @@ import {FileUpload} from 'primereact/fileupload';
 const TranscriptionList = () => {
     const mockData = [
         {"filename": "Top Gun 2 - Top Gunnier.mp4", "status": "started", "link": "https://www.example.com"},
-        {"filename": "Star Trek VII - The Search for eResearch.mp4", "status": "running", "link": "https://www.example.com"},
+        {
+            "filename": "Star Trek VII - The Search for eResearch.mp4",
+            "status": "running",
+            "link": "https://www.example.com"
+        },
         {"filename": "TRRiffic.mp4", "status": "finished", "link": "https://www.example.com"},
         {"filename": "Nightmare on Helm street.mp4", "status": "error", "link": "https://www.example.com"},
     ]
@@ -51,16 +55,15 @@ export const Transcriptions = () => {
     const [transcriptions, setTranascriptions] = useState([]);
 
     useEffect(() => {
-        let isCancelled = false;
-        userService.getUser().then(result => setUser(user));
+
+        userService.getUser().then(result => setUser(result));
         transcriptionService.getTranscriptions().then(result => setTranascriptions(result));
-        return () => {
-            isCancelled = true;
-        };
+
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     async function onChange(e) {
         const file = e.target.files[0];
+        console.log(user, `${user['identityId']}/en-AU/${file.name}`);
         try {
             await Storage.put(`${user['identityId']}/en-AU/${file.name}`, file, {
                 level: 'private',
@@ -77,16 +80,15 @@ export const Transcriptions = () => {
     }
 
 
-
     return (
-    <React.Fragment>
-        <TranscriptionList/>
-        <br></br>
-        <FileUpload mode="basic" name="demo" url="./upload" chooseLabel="Upload file"></FileUpload>
-        <input
-            type="file"
-            onChange={onChange}
-        />
-    </React.Fragment>
+        <React.Fragment>
+            <TranscriptionList/>
+            <br></br>
+            <FileUpload mode="basic" name="demo" url="./upload" chooseLabel="Upload file"></FileUpload>
+            <input
+                type="file"
+                onChange={onChange}
+            />
+        </React.Fragment>
     );
 }
