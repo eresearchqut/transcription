@@ -41,7 +41,7 @@ exports.handler = async (event) => {
                     OutputKey: `transcription/${identityId}/${languageCode}/${jobId}.json`
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
-                console.log(identityId, jobId, transcriptionResponse['TranscriptionJob']['TranscriptionJobName'], JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
+                console.log(identityId, jobId, JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
                 try {
                     await jobStarted(identityId, jobId, record['s3'], transcriptionResponse);
                     console.info('Saved job details', identityId);
