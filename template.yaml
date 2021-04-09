@@ -47,12 +47,12 @@ Mappings:
         - subnet-0a44efd7e3150f734
         - subnet-0b64a1893e6646035
     qa:
-      RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/023eb2a5-fb13-4b51-a187-1a42337f8cd3"
-      AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/4d5c4379-4158-459e-aa80-085b08d8a970"
-      FrontEndDomainName: "qa-transcription.qut.edu.au"
-      ApiDomainName: "qa-api-transcription.qut.edu.au"
+      RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/ce96c960-f8ca-4d95-8eb9-845b57b57301"
+      AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
+      FrontEndDomainName: "transcription.qa.eresearchqut.net"
+      ApiDomainName: "api-transcription.qa.eresearchqut.net"
       VpcId: "vpc-07be9e7c8d5af440e"
-      HostedZoneName: ""
+      HostedZoneName: "qa.eresearchqut.net."
       SubnetIds:
         - subnet-09bb9365c2ef4b739
         - subnet-09b60f7e440984e55
