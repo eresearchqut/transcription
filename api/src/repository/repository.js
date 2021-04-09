@@ -2,6 +2,7 @@ const {
     GetItemCommand,
     PutItemCommand,
     DeleteItemCommand,
+    UpdateItemCommand,
     QueryCommand
 } = require("@aws-sdk/client-dynamodb");
 const dynamoDBClient = require("./dynamoDBClient");
@@ -16,16 +17,28 @@ const getResource = (pk, sk) => dynamoDBClient
     .then(result => result.Item && unmarshall(result.Item));
 
 
-const putResource = (pk, sk, data) =>
+const putResource = (pk, sk, attributes) =>
     dynamoDBClient
         .send(new PutItemCommand({
             TableName: tableName,
             Item: marshall({
-                pk, sk, data,
+                pk, sk, ...attributes,
                 date: new Date().toISOString(),
             }, {removeUndefinedValues: true})
         }));
 
+const updateResource = (pk, sk, attributeName, attributeValue) => dynamoDBClient
+    .send(new UpdateItemCommand({
+        TableName: tableName,
+        Key: marshall({pk, sk}),
+        ReturnValues: "UPDATED_NEW",
+        UpdateExpression: "set #attributeName = :attributeValue, #date =:date",
+        ExpressionAttributeNames: {"#attributeName": attributeName, "#date": 'date'},
+        ExpressionAttributeValues: marshall({
+            ":attributeValue": attributeValue,
+            ":date": new Date().toISOString(),
+        }, {removeUndefinedValues: true})
+    }));
 
 const deleteResource = (pk, sk) => dynamoDBClient
     .send(new DeleteItemCommand({
@@ -60,5 +73,6 @@ module.exports = {
     deleteResource,
     getResource,
     getResources,
-    putResource
+    putResource,
+    updateResource
 };

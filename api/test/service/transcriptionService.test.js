@@ -3,7 +3,7 @@ const {jobStarted, getTranscriptions} = require('../../src/service/transcription
 describe('transcription service test', function () {
 
     it("job started event is returned as resource", async () => {
-        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a',
+        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a', '95edf479-b991-4d0c-9e9e-d34474880b65',
             {
                 s3SchemaVersion: '1.0',
                 configurationId: 'eebad215-feed-40d2-8b97-7c9717881172',
@@ -45,7 +45,7 @@ describe('transcription service test', function () {
                     Settings: undefined,
                     StartTime: "2021-04-09T01:21:45.860Z",
                     Transcript: undefined,
-                    TranscriptionJobName: '95edf479-b991-4d0c-9e9e-d34474880b65',
+                    TranscriptionJobName: '76c65a59-1c57-489b-be96-020ceaa9675a|95edf479-b991-4d0c-9e9e-d34474880b65',
                     TranscriptionJobStatus: 'IN_PROGRESS'
                 }
             }
@@ -67,7 +67,7 @@ describe('transcription service test', function () {
                                 null
                             ],
                             "StartTime": "2021-04-09T01:21:45.860Z",
-                            "TranscriptionJobName": "95edf479-b991-4d0c-9e9e-d34474880b65",
+                            "TranscriptionJobName": "76c65a59-1c57-489b-be96-020ceaa9675a|95edf479-b991-4d0c-9e9e-d34474880b65",
                             "TranscriptionJobStatus": "IN_PROGRESS"
                         }
                     },

@@ -1,14 +1,17 @@
 const {
     putResource,
+    updateResource,
     getResources
 } = require('../repository/repository');
 
-
-const jobStarted = (identityId, uploadEvent, transcriptionResponse) =>
-    putResource(identityId, transcriptionResponse['TranscriptionJob']['TranscriptionJobName'], {
+const jobStarted = (identityId, jobId, uploadEvent, transcriptionResponse) =>
+    putResource(identityId, jobId, {
         uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
         transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse))
     });
+
+const jobStatusUpdated = (identityId, jobId, jobStatusUpdated) =>
+    updateResource(identityId, jobId, 'jobStatusUpdated',  JSON.parse(JSON.stringify(jobStatusUpdated)));
 
 const getTranscriptions = (identityId) =>
     getResources(identityId).then(items => items.map(item => item['data']));
