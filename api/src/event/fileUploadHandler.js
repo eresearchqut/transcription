@@ -31,7 +31,7 @@ exports.handler = async (event) => {
             const jobId = uuid();
             if (matchedFileExtension) {
                 const params = {
-                    TranscriptionJobName: `${identityId}-${jobId}`,
+                    TranscriptionJobName: `${identityId}_${jobId}`,
                     LanguageCode: languageCode,
                     MediaFormat: mediaFormat(fileExtension),
                     Media: {
