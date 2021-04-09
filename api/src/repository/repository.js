@@ -49,7 +49,7 @@ const getResources = async (pk, exclusiveStartKey) => {
                     ':pk': pk
                 })
             }));
-        items.push(Items.map(item => unmarshall(item)));
+        Items.map(item => unmarshall(item)).forEach(item => items.push(item));
         lastEvaluatedKey = LastEvaluatedKey;
     } while (lastEvaluatedKey);
     return items;

@@ -1,9 +1,9 @@
-const {jobStarted} = require('../../src/service/transcriptionService');
+const {jobStarted, getTranscriptions} = require('../../src/service/transcriptionService');
 
 describe('transcription service test', function () {
 
-    it("job started event", async () => {
-        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a 95edf479-b991-4d0c-9e9e-d34474880b65',
+    it("job started event is returned as resource", async () => {
+        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a',
             {
                 s3SchemaVersion: '1.0',
                 configurationId: 'eebad215-feed-40d2-8b97-7c9717881172',
@@ -50,6 +50,46 @@ describe('transcription service test', function () {
                 }
             }
         );
+        expect(await getTranscriptions('76c65a59-1c57-489b-be96-020ceaa9675a'))
+            .toEqual([
+                {
+                    "transcriptionResponse": {
+                        "$metadata": {
+                            "attempts": 1,
+                            "httpStatusCode": 200,
+                            "requestId": "84eab607-c3e0-4d04-90f5-41acb59f7587",
+                            "totalRetryDelay": 0
+                        },
+                        "TranscriptionJob": {
+                            "CreationTime": "2021-04-09T01:21:45.830Z",
+                            "LanguageCode": "en-AU",
+                            "Media": [
+                                null
+                            ],
+                            "StartTime": "2021-04-09T01:21:45.860Z",
+                            "TranscriptionJobName": "95edf479-b991-4d0c-9e9e-d34474880b65",
+                            "TranscriptionJobStatus": "IN_PROGRESS"
+                        }
+                    },
+                    "uploadEvent": {
+                        "bucket": {
+                            "arn": "arn:aws:s3:::transcription-ap-southeast-2-854640616043",
+                            "name": "transcription-ap-southeast-2-854640616043",
+                            "ownerIdentity": [
+                                null
+                            ]
+                        },
+                        "configurationId": "eebad215-feed-40d2-8b97-7c9717881172",
+                        "object": {
+                            "eTag": "c2ee56cbea8c6d3d694042bd4f5439fe",
+                            "key": "private/ap-southeast-2%3Ac4ef3d04-e56c-4544-bba5-0a73206c7fad/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/Welcome.wav",
+                            "sequencer": "00606FAC27C252D5E2",
+                            "size": 1292288
+                        },
+                        "s3SchemaVersion": "1.0"
+                    }
+                }
+            ]);
 
 
     });

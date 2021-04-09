@@ -8,7 +8,7 @@ describe("repository", () => {
             .putResource("pk", "sk", {});
 
         expect(await repository.getResource("pk", "sk")['data'])
-            .toEqual({});
+            .toEqual([{}]);
     });
 
 

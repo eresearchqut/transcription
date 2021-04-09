@@ -10,8 +10,8 @@ const jobStarted = (identityId, uploadEvent, transcriptionResponse) =>
         transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse))
     });
 
-const getTranscriptions = async (identityId) =>
-    getResources(identityId).map(item => item.data);
+const getTranscriptions = (identityId) =>
+    getResources(identityId).then(items => items.map(item => item['data']));
 
 module.exports = {
     jobStarted,
