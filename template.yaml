@@ -399,11 +399,21 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: Monitors Amazon Transcribe for job state changes
-      EventPattern:
-        source:
-          - aws.transcribe
-        detail-type:
-          - "Transcribe Job State Change"
+      EventPattern: |
+        {
+          "source": [
+            "aws.transcribe"
+          ],
+          "detail-type": [
+            "Transcribe Job State Change"
+          ],
+          "detail": {
+            "TranscriptionJobStatus": [
+              "COMPLETED",
+              "FAILED"
+            ]
+          }
+        }
       State: ENABLED
       Targets:
         - Arn: !GetAtt TranscriptionJobStateChangeFunction.Arn
