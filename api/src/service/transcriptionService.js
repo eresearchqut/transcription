@@ -14,7 +14,7 @@ const jobStatusUpdated = (identityId, jobId, jobStatusUpdated) =>
     updateResource(identityId, jobId, 'jobStatusUpdated',  JSON.parse(JSON.stringify(jobStatusUpdated)));
 
 const getTranscriptions = (identityId) =>
-    getResources(identityId).then(items => items.map(item => item['data']));
+    getResources(identityId);
 
 module.exports = {
     jobStarted,
