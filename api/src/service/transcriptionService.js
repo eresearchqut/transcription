@@ -19,5 +19,6 @@ const getTranscriptions = (identityId) =>
 
 module.exports = {
     jobStarted,
+    jobStatusUpdated,
     getTranscriptions
 };
