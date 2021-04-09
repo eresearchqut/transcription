@@ -38,7 +38,7 @@ exports.handler = async (event) => {
                         MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
                     },
                     OutputBucketName: transcribeBucket,
-                    OutputKey: `private/${cognitoId}/${identityId}/${languageCode}/${jobId}.json`
+                    OutputKey: `transcription/${identityId}/${languageCode}/${jobId}.json`
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
                 console.log(identityId, jobId, transcriptionResponse['TranscriptionJob']['TranscriptionJobName'], JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
