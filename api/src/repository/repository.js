@@ -5,7 +5,7 @@ const {
 } = require("@aws-sdk/client-dynamodb");
 const dynamoDBClient = require("./dynamoDBClient");
 const {marshall, unmarshall} = require("@aws-sdk/util-dynamodb");
-const tableName = process.env.TABLE_NAME_STORE || "transcription";
+const tableName = process.env.TABLE_NAME || "transcription";
 
 const getResource = (pk, sk) => dynamoDBClient
     .send(new GetItemCommand({
