@@ -382,14 +382,19 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref Table
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub 'app/${Environment}/${ApplicationName}'
       Environment:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
           APPLCIATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
+  TranscriptionJobEventsRuleLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt TranscriptionJobStateChangeFunction.Arn
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt TranscriptionJobEventsRule.Arn
   TranscriptionJobEventsRule:
     Type: AWS::Events::Rule
     Properties:
