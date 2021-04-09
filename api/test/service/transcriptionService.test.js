@@ -3,7 +3,7 @@ const {jobStarted, getTranscriptions} = require('../../src/service/transcription
 describe('transcription service test', function () {
 
     it("job started event is returned as resource", async () => {
-        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a', '95edf479-b991-4d0c-9e9e-d34474880b65',
+        await jobStarted('76c65a59-1c57-489b-be96-020ceaa9675a', '95edf479-b991-4d0c-9e9e-d34474880b65', 'transcription/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/a907ed50-a407-461e-bc20-b1ccdc8f41a1.json',
             {
                 s3SchemaVersion: '1.0',
                 configurationId: 'eebad215-feed-40d2-8b97-7c9717881172',
@@ -51,8 +51,11 @@ describe('transcription service test', function () {
             }
         );
         expect(await getTranscriptions('76c65a59-1c57-489b-be96-020ceaa9675a'))
-            .toEqual([
+            .toEqual([expect.objectContaining(
                 {
+                    "outputKey": "transcription/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/a907ed50-a407-461e-bc20-b1ccdc8f41a1.json",
+                    "pk": "76c65a59-1c57-489b-be96-020ceaa9675a",
+                    "sk": "95edf479-b991-4d0c-9e9e-d34474880b65",
                     "transcriptionResponse": {
                         "$metadata": {
                             "attempts": 1,
@@ -89,7 +92,7 @@ describe('transcription service test', function () {
                         "s3SchemaVersion": "1.0"
                     }
                 }
-            ]);
+            )]);
 
 
     });

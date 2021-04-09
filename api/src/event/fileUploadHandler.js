@@ -29,6 +29,7 @@ exports.handler = async (event) => {
         if (matchedKey) {
             const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
             const jobId = uuid();
+            const outputKey = `transcription/${identityId}/${languageCode}/${jobId}.json`;
             if (matchedFileExtension) {
                 const params = {
                     TranscriptionJobName: `${identityId}_${jobId}`,
@@ -38,12 +39,12 @@ exports.handler = async (event) => {
                         MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
                     },
                     OutputBucketName: transcribeBucket,
-                    OutputKey: `transcription/${identityId}/${languageCode}/${jobId}.json`
+                    OutputKey: outputKey
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
-                console.log(identityId, jobId, JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
+                console.log(identityId, jobId, outputKey, JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
                 try {
-                    await jobStarted(identityId, jobId, record['s3'], transcriptionResponse);
+                    await jobStarted(identityId, jobId, outputKey, record['s3'], transcriptionResponse);
                     console.info('Saved job details', identityId);
                 } catch (error) {
                     console.error('Failed to save job details', error);

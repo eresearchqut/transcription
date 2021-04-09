@@ -4,8 +4,9 @@ const {
     getResources
 } = require('../repository/repository');
 
-const jobStarted = (identityId, jobId, uploadEvent, transcriptionResponse) =>
+const jobStarted = (identityId, jobId, outputKey, uploadEvent, transcriptionResponse) =>
     putResource(identityId, jobId, {
+        outputKey,
         uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
         transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse))
     });
