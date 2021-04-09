@@ -2,6 +2,7 @@ const {
     GetItemCommand,
     PutItemCommand,
     DeleteItemCommand,
+    QueryCommand
 } = require("@aws-sdk/client-dynamodb");
 const dynamoDBClient = require("./dynamoDBClient");
 const {marshall, unmarshall} = require("@aws-sdk/util-dynamodb");
@@ -32,8 +33,32 @@ const deleteResource = (pk, sk) => dynamoDBClient
         Key: marshall({pk, sk})
     }));
 
+const getResources = async (pk, exclusiveStartKey) => {
+    let lastEvaluatedKey;
+    let items = [];
+    do {
+        const {LastEvaluatedKey, Items} = await dynamoDBClient
+            .send(new QueryCommand({
+                TableName: tableName,
+                ExclusiveStartKey: exclusiveStartKey,
+                KeyConditionExpression: '#pk = :pk',
+                ExpressionAttributeNames: {
+                    '#pk': 'pk'
+                },
+                ExpressionAttributeValues: marshall({
+                    ':pk': pk
+                })
+            }));
+        items.push(Items.map(item => unmarshall(item)));
+        lastEvaluatedKey = LastEvaluatedKey;
+    } while (lastEvaluatedKey);
+    return items;
+}
+
+
 module.exports = {
     deleteResource,
     getResource,
+    getResources,
     putResource
 };
