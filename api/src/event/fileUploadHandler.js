@@ -29,7 +29,7 @@ exports.handler = async (event) => {
         if (matchedKey) {
             const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
             const jobId = uuid();
-            const outputKey = `transcription/${identityId}/${languageCode}/${jobId}.json`;
+            const outputKey = `public/transcription/${identityId}/${languageCode}/${jobId}.json`;
             if (matchedFileExtension) {
                 const params = {
                     TranscriptionJobName: `${identityId}_${jobId}`,
