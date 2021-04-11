@@ -15,7 +15,24 @@ const transcribeClient = new TranscribeClient({region});
 const uploadPattern = /private\/(.*)\/(.*)\/(.*)\/(.*)/gm
 const fileExtensionPattern = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi
 
-const mediaFormat = (fileExtension) => fileExtension;
+const mediaFormat = (fileExtension) => {
+    switch (fileExtension) {
+        case '3ga':
+            return 'amr';
+            break;
+        case 'm4a':
+            return 'mp4';
+            break;
+        case 'oga':
+            return 'ogg';
+            break;
+        case 'opus':
+            return 'ogg';
+            break;
+        default:
+            return fileExtension;
+    }
+}
 
 exports.handler = async (event) => {
 
@@ -42,7 +59,10 @@ exports.handler = async (event) => {
                     OutputKey: outputKey
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
-                console.log(identityId, jobId, outputKey, JSON.stringify({uploadEvent: record['s3'], transcriptionResponse}));
+                console.log(identityId, jobId, outputKey, JSON.stringify({
+                    uploadEvent: record['s3'],
+                    transcriptionResponse
+                }));
                 try {
                     await jobStarted(identityId, jobId, outputKey, record['s3'], transcriptionResponse);
                     console.info('Saved job details', identityId);
