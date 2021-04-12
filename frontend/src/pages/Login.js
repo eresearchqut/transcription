@@ -25,14 +25,72 @@ export const Login = () => {
                 <title>{title}</title>
             </Helmet>
             <BreadCrumb model={breadcrumbs} home={home}/>
-            <Card title={applicationName} >
+            <Card title={applicationName}>
+                <p>Welcome to the eResearch transcription service Beta Testing.</p>
 
-                <div className="p-grid p-formgrid">
-                    <div className="p-field p-col-12">
+                <h3>Supported file formats</h3>
+                <ul>
+                    <li>wav</li>
+                    <li>flac</li>
+                    <li>amr</li>
+                    <li>3ga</li>
+                    <li>mp3</li>
+                    <li>mp4</li>
+                    <li>m4a</li>
+                    <li>oga</li>
+                    <li>ogg</li>
+                    <li>opus</li>
 
+                </ul>
+
+                <h3>Quotas and Limits</h3>
+
+                <div className="p-datatable p-component"
+                     data-scrollselectors=".p-datatable-scrollable-body, .p-datatable-unfrozen-view .p-datatable-scrollable-body">
+
+                    <div className="p-datatable-wrapper">
+                        <table role="grid">
+                            <thead className="p-datatable-thead">
+                            <tr role="row">
+                                <th role="columnheader">Description</th>
+                                <th role="columnheader">Quota/Limit</th>
+                            </tr>
+                            </thead>
+                            <tbody className="p-datatable-tbody">
+                            <tr role="row">
+                                <td role="cell">Minimum audio file duration, in milliseconds (ms)</td>
+                                <td role="cell">500</td>
+                            </tr>
+                            <tr role="row">
+                                <td role="cell">Maximum audio file duration</td>
+                                <td role="cell">4:00:00 (four) hours, 14,400 seconds</td>
+                            </tr>
+                            <tr role="row">
+                                <td role="cell">Maximum audio file size</td>
+                                <td role="cell">2 GB</td>
+                            </tr>
+                            <tr role="row">
+                                <td role="cell">Number of days that transcriptions are retained</td>
+                                <td role="cell">14</td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
-
                 </div>
+
+                <h3>Powered by Amazon Transcribe</h3>
+                <blockquote>
+                    <p>Amazon Transcribe uses a deep learning process called automatic speech recognition (ASR) to
+                        convert speech to text quickly and accurately. Amazon Transcribe can be used to transcribe
+                        customer service calls, automate subtitling, and generate metadata for media assets to create a
+                        fully searchable archive. You can use Amazon Transcribe Medical to add medical speech to text
+                        capabilities to clinical documentation applications.</p>
+                    <footer>
+                        <cite><a href="https://aws.amazon.com/transcribe/">Amazon Transcribe</a></cite>
+                    </footer>
+                </blockquote>
+
+
             </Card>
         </React.Fragment>
 
