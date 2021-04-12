@@ -62,7 +62,7 @@ export const Transcriptions = () => {
         console.log('Polling transcriptions.')
         const transcriptions = await transcriptionService.getTranscriptions();
         setTranscriptions(transcriptions);
-    }, 10000)
+    }, 30000)
 
 
     const onUpload = ({file}) => {
