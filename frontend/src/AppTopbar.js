@@ -13,21 +13,14 @@ export const AppTopbar = () => {
     const userService = new UserService();
 
     useEffect(() => {
-        let isCancelled = false;
-        Auth.currentAuthenticatedUser().then(() => {
-            if (!isCancelled) {
-                userService.getUser().then(data => {
-                    if (!isCancelled) {
-                        setUser(data);
-                    }
-                }).catch((error) => console.error(error));
-            }
-        }).catch(() => {
-            // Not currently authenticated
-        });
-        return () => {
-            isCancelled = true;
-        };
+        const getUser = async () => {
+            try {
+                await Auth.currentAuthenticatedUser();
+                const user = await userService.getUser();
+                setUser(user);
+            } catch {};
+        }
+        getUser().then(r => {console.log("Fetched User Details")});
     }, []);  // eslint-disable-line react-hooks/exhaustive-deps
 
     const history = useHistory();
