@@ -55,7 +55,7 @@ export const Transcriptions = () => {
         fetchData().then(r => {
             console.log("Retrieved user and transcriptions")
         });
-    }, []);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
     useInterval(async () => {
