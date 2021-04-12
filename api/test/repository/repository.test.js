@@ -11,6 +11,7 @@ describe("repository", () => {
         expect(await repository.getResource("pk", "sk"))
             .toEqual(expect.objectContaining({"foo": "bar", "pk": "pk", "sk": "sk", "value": "none"}));
 
+
         await repository
             .updateResource("pk", "sk", 'foo', {bar: 'nar'});
 
@@ -21,6 +22,7 @@ describe("repository", () => {
                 }, "pk": "pk", "sk": "sk", "value": "none"
             }));
 
+
         await repository
             .updateResource("pk", "sk", 'wa', 'far');
 
@@ -30,6 +32,8 @@ describe("repository", () => {
                     "bar": "nar"
                 }, "wa": "far", "pk": "pk", "sk": "sk", "value": "none"
             }));
+
+
     });
 
 

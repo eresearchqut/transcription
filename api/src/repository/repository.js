@@ -8,6 +8,7 @@ const {
 const dynamoDBClient = require("./dynamoDBClient");
 const {marshall, unmarshall} = require("@aws-sdk/util-dynamodb");
 const tableName = process.env.TABLE_NAME || "transcription";
+const TTL_DELTA = 60 * 60 * 24 * 14; // 14 days
 
 const getResource = (pk, sk) => dynamoDBClient
     .send(new GetItemCommand({
@@ -24,6 +25,7 @@ const putResource = (pk, sk, attributes) =>
             Item: marshall({
                 pk, sk, ...attributes,
                 date: new Date().toISOString(),
+                ttl: (Math.floor(+new Date() / 1000) + TTL_DELTA).toString()
             }, {removeUndefinedValues: true})
         }));
 
@@ -32,11 +34,12 @@ const updateResource = (pk, sk, attributeName, attributeValue) => dynamoDBClient
         TableName: tableName,
         Key: marshall({pk, sk}),
         ReturnValues: "UPDATED_NEW",
-        UpdateExpression: "set #attributeName = :attributeValue, #date =:date",
-        ExpressionAttributeNames: {"#attributeName": attributeName, "#date": 'date'},
+        UpdateExpression: "set #attributeName = :attributeValue, #date = :date, #ttl = :ttl",
+        ExpressionAttributeNames: {"#attributeName": attributeName, "#date": 'date', "#ttl": 'ttl'},
         ExpressionAttributeValues: marshall({
             ":attributeValue": attributeValue,
             ":date": new Date().toISOString(),
+            ":ttl": (Math.floor(+new Date() / 1000) + TTL_DELTA).toString()
         }, {removeUndefinedValues: true})
     }));
 
