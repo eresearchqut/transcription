@@ -5,15 +5,28 @@ import {Button} from 'primereact/button';
 import {useHistory} from "react-router-dom";
 import {Divider} from "primereact/divider";
 import {Chip} from "primereact/chip";
-
+import {UserService} from './service/UserService';
 
 export const AppTopbar = () => {
 
-    const [profile, setProfile] = useState(null);
-
+    const [user, setUser] = useState(null);
+    const userService = new UserService();
 
     useEffect(() => {
         let isCancelled = false;
+        Auth.currentAuthenticatedUser().then(() => {
+            userService.getUser().then(data => {
+                if (!isCancelled) {
+                    userService.getUser().then(result => {
+                        if (!isCancelled) {
+                            setUser(result);
+                        }
+                    })
+                }
+            }).catch((error) => console.error(error));
+        }).catch(() => {
+            // not currently authenticated
+        });
         return () => {
             isCancelled = true;
         };
@@ -22,43 +35,40 @@ export const AppTopbar = () => {
     const history = useHistory();
 
     const menuItems = [
-        {label: 'My Transcriptions', icon: 'pi pi-fw pi-check-square', command: () => history.push('/transcriptions')},
+        {label: 'My Transcriptions', icon: 'pi pi-fw pi-bars', command: () => history.push('/transcriptions')},
     ];
 
-
     const profileAndLogout = () => (
-
         <div className="p-d-flex">
             <Chip size="large"
-                  template={<React.Fragment><span className="p-chip-icon pi pi-user" title={profile['label']}
-                                                  aria-label={profile['label']}/>
-                      <span className="p-chip-text" title={profile['label']}
-                            aria-label={profile['label']}>{profile['name']}</span>
+                  template={<React.Fragment><span className="p-chip-icon pi pi-user" title={user['username']}
+                                                  aria-label={user['username']}/>
+                      <span className="p-chip-text" title={user['username']}
+                            aria-label={user['username']}>{user['username']}</span>
                   </React.Fragment>}/>
             <Divider layout="vertical"/>
             <Button label="Log Out" icon="pi pi-sign-out"
                     className="p-link"
                     onClick={() => Auth.signOut({global: false})}/>
         </div>
-
     );
 
     const login = (event) => {
-        Auth.federatedSignIn({provider: process.env.REACT_APP_AUTH_PROVIDER});
+        Auth.federatedSignIn({provider: process.env.REACT_APP_AUTH_PROVIDER})
+            .then((outcome) => console.log(outcome));
     }
 
     const loginMenu = () => (
-
         <div className="p-d-flex">
             <Divider layout="vertical"/>
-            <Button label="Log In" icon="pi pi-sign-in" title={`Log in provider: ${process.env.REACT_APP_AUTH_PROVIDER}`}
+            <Button label="Log In" icon="pi pi-sign-in"
+                    title={`Log in provider: ${process.env.REACT_APP_AUTH_PROVIDER}`}
                     className="p-link"
                     onClick={login}/>
         </div>
-
     );
 
-    if (profile) {
+    if (user) {
         return (
             <div className="layout-topbar">
                 <Menubar model={menuItems} end={profileAndLogout}/>
