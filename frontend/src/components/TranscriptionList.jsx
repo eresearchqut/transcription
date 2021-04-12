@@ -37,7 +37,7 @@ export const TranscriptionList = (props) => {
                 status: statusIcons[transcriptionStatus] || statusIcons["QUEUED"]
             }
         })
-        .sort((a, b) => a.expiry - b.expiry)
+        .sort((a, b) => b.expiry - a.expiry)
 
     const expirySort = (e) => {
         return tableData.sort(e.order === 1 ? (a, b) => a.expiry - b.expiry : (a, b) => b.expiry - a.expiry)
