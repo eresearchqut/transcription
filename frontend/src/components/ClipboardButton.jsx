@@ -7,11 +7,15 @@ export const ClipboardButton = (props) => {
     const copyText = () => {
         navigator.clipboard.writeText(props.text)
         setCopied(true);
+
+        setTimeout(() => setCopied(false), 3000)
     }
+
     const icon = copied ? "pi pi-check" : "pi pi-copy"
+    const label = copied ? "Copied" : "Copy to clipboard"
 
     return (
-        <Button label="Copy to clipboard" icon={icon} onClick={copyText} />
+        <Button label={label} icon={icon} onClick={copyText} />
     )
 }
 
