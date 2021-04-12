@@ -37,7 +37,7 @@ export const Transcriptions = () => {
         <React.Fragment>
             <Toast ref={toast}/>
 
-            <TranscriptionList/>
+            <TranscriptionList transcriptions={transcriptions}/>
             <br></br>
             <S3FileUpload progress={50} mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError} multiple chooseLabel="Add files" />
         </React.Fragment>

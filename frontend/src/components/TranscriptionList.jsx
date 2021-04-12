@@ -1,43 +1,46 @@
-import {DataTable} from 'primereact/datatable';
-import {Column} from 'primereact/column';
+import { DataTable } from 'primereact/datatable';
+import { Column } from 'primereact/column';
+import { TranscriptionDialog } from './TranscriptionDialog';
+import { Storage } from 'aws-amplify';
 
-export const TranscriptionList = () => {
-    const mockData = [
-        {"filename": "Top Gun 2 - Top Gunnier.mp4", "status": "started", "link": "https://www.example.com"},
-        {
-            "filename": "Star Trek VII - The Search for eResearch.mp4",
-            "status": "running",
-            "link": "https://www.example.com"
-        },
-        {"filename": "TRRiffic.mp4", "status": "finished", "link": "https://www.example.com"},
-        {"filename": "Nightmare on Helm street.mp4", "status": "error", "link": "https://www.example.com"},
-    ]
+const EXPIRY_SECONDS = 1209600000 // Two weeks
+
+export const TranscriptionList = (props) => {
+
     const statusIcons = {
-        "started": <span><i className="pi pi-cloud-upload"></i> Started</span>,
-        "running": <span><i className="pi pi-spinner"></i> Running</span>,
-        "finished": <span><i className="pi pi-check"></i> Finished</span>,
-        "error": <span><i className="pi pi-exclamation-triangle"></i> Error</span>,
+        "QUEUED": <span><i className="pi pi-cloud-upload"></i> Queued</span>,
+        "IN_PROGRESS": <span><i className="pi pi-spinner"></i> Processing</span>,
+        "COMPLETED": <span><i className="pi pi-check"></i> Finished</span>,
+        "FAILED": <span><i className="pi pi-exclamation-triangle"></i> Failed</span>,
     }
 
 
-    const tableData = mockData.map((d) => {
-        let link = <i className="pi pi-download"></i>;
-        if (d['status'] === "finished") {
-            link = <a href={d['link']}>{link}</a>;
-        }
+    const tableData = props.transcriptions.map((t) => {
+        const transcriptionStatus = t.jobStatusUpdated?.detail.TranscriptionJobStatus;
+        const filename = t.uploadEvent.object.key.split("/").pop()
+        const finished = transcriptionStatus === "COMPLETED";
+        const expiry = new Intl.DateTimeFormat('en-AU', { dateStyle: 'short', timeStyle: 'short' })
+            .format(Date.parse(t.date) + EXPIRY_SECONDS);
+
+        const downloadKey = t.outputKey.replace("public/", "");
+        const getData = async () => { return await Storage.get(downloadKey, { download: true }) }
+        const getUrl = async () => { return await Storage.get(downloadKey, { download: false }) }
 
         return {
-            "filename": d['filename'],
-            "status": statusIcons[d['status']],
-            "link": link
+            pk: t.pk,
+            filename: filename,
+            link: <TranscriptionDialog disabled={!finished} filename={filename} getData={getData} getUrl={getUrl} />,
+            expiry: expiry,
+            status: statusIcons[transcriptionStatus] || statusIcons["QUEUED"]
         }
     })
 
     return (
-        <DataTable value={tableData}>
+        <DataTable value={tableData} dataKey="pk">
             <Column field="filename" header="File name"></Column>
             <Column field="status" header="Status"></Column>
-            <Column field="link" header="Download link"></Column>
+            <Column field="expiry" header="Expiry"></Column>
+            <Column field="link" header=""></Column>
         </DataTable>
     )
 }
