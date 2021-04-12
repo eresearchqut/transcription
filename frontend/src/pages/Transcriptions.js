@@ -59,7 +59,7 @@ export const Transcriptions = () => {
 
             <TranscriptionList transcriptions={transcriptions} />
             <br></br>
-            <S3FileUpload progress={50} mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError} multiple chooseLabel="Add files" />
+            <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError} multiple chooseLabel="Add files" />
         </React.Fragment>
     );
 }

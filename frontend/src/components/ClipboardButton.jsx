@@ -4,7 +4,6 @@ import { Button } from 'primereact/button';
 export const ClipboardButton = (props) => {
     const [copied, setCopied] = useState(false);
 
-
     const copyText = () => {
         navigator.clipboard.writeText(props.text)
         setCopied(true);
