@@ -53,9 +53,9 @@ export const AppTopbar = () => {
         </div>
     );
 
-    const login = (event) => {
+    const login = () => {
         Auth.federatedSignIn({provider: process.env.REACT_APP_AUTH_PROVIDER})
-            .then((outcome) => console.log(outcome));
+            .then(() => console.log('User initiated login'));
     }
 
     const loginMenu = () => (
