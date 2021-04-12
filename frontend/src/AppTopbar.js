@@ -15,17 +15,15 @@ export const AppTopbar = () => {
     useEffect(() => {
         let isCancelled = false;
         Auth.currentAuthenticatedUser().then(() => {
-            userService.getUser().then(data => {
-                if (!isCancelled) {
-                    userService.getUser().then(result => {
-                        if (!isCancelled) {
-                            setUser(result);
-                        }
-                    })
-                }
-            }).catch((error) => console.error(error));
+            if (!isCancelled) {
+                userService.getUser().then(data => {
+                    if (!isCancelled) {
+                        setUser(data);
+                    }
+                }).catch((error) => console.error(error));
+            }
         }).catch(() => {
-            // not currently authenticated
+            // Not currently authenticated
         });
         return () => {
             isCancelled = true;
