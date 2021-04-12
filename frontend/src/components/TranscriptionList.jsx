@@ -44,7 +44,7 @@ export const TranscriptionList = (props) => {
     }
 
     return (
-        <DataTable value={expirySort} dataKey="pk">
+        <DataTable value={tableData} dataKey="pk">
             <Column field="filename" header="File name" sortable></Column>
             <Column field="status" header="Status" sortable></Column>
             <Column field="expiryString" header="Expiry" sortable sortFunction={expirySort}></Column>
