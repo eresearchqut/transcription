@@ -59,7 +59,7 @@ export const Transcriptions = () => {
 
             <TranscriptionList transcriptions={transcriptions} />
             <br></br>
-            <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError} multiple chooseLabel="Add files" accept="audio/*,video/*" />
+            <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError} multiple chooseLabel="Add files" accept=".flac,.mp3,.mp4,.ogg,.webm,.amr,.wav" />
         </React.Fragment>
     );
 }
