@@ -92,7 +92,7 @@ export const Transcriptions = () => {
             <BreadCrumb model={breadcrumbs} home={home}/>
             <Card title={pageTitle}>
                 <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError}
-                              multiple chooseLabel="Add files" accept=".flac,.mp3,.mp4,.ogg,.webm,.amr,.wav"/>
+                              multiple chooseLabel="Select files" accept=".flac,.mp3,.mp4,.m4a,.ogg,.webm,.amr,.wav"/>
                 <TranscriptionList transcriptions={transcriptions}/>
             </Card>
         </React.Fragment>
