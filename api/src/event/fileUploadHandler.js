@@ -39,7 +39,7 @@ exports.handler = async (event) => {
     console.log(JSON.stringify(event));
 
     for (const record of event['Records']) {
-        const key = record['s3']['object']['key'];
+        const key = record['s3']['object']['key'].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
         const bucketName = record['s3']['bucket']['name'];
         const [matchedKey, cognitoId, identityId, languageCode, fileName] = [...key.matchAll(uploadPattern)][0];
         console.log(matchedKey, cognitoId, identityId, languageCode, fileName);
