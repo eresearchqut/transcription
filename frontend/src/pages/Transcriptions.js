@@ -93,7 +93,7 @@ export const Transcriptions = () => {
             <Card title={pageTitle}>
                 <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError}
                               multiple chooseLabel="Select files" accept=".flac,.mp3,.mp4,.m4a,.ogg,.webm,.amr,.wav"
-                              emptyTemplate={<p className="p-m-0">Drag and drop files to here to upload.</p>}
+                              emptyTemplate={<p className="p-m-0">Drag and drop files here to upload.</p>}
                               />
                 <TranscriptionList transcriptions={transcriptions}/>
             </Card>
