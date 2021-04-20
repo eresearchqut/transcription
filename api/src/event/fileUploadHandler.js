@@ -56,7 +56,11 @@ exports.handler = async (event) => {
                         MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
                     },
                     OutputBucketName: transcribeBucket,
-                    OutputKey: outputKey
+                    OutputKey: outputKey,
+                    Settings: {
+                        ShowSpeakerLabels: true,
+                        ShowAlternatives: true,
+                    }
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
                 console.log(identityId, jobId, outputKey, JSON.stringify({
