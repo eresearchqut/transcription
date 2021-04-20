@@ -92,7 +92,8 @@ export const Transcriptions = () => {
             <BreadCrumb model={breadcrumbs} home={home}/>
             <Card title={pageTitle}>
                 <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError}
-                              multiple chooseLabel="Select files" accept=".flac,.mp3,.mp4,.m4a,.ogg,.webm,.amr,.wav"
+                              multiple chooseLabel="Select files"
+                              accept="audio/flac,audio/mpeg,audio/mp4,video/mp4,audio/m4a,application/ogg,audio/ogg,video/ogg,video/webm,audio/webm,audio/amr,audio/3gpp,audio/3gpp2,audio/x-wav,audio/vnd.wave,audio/wav,audio/wave,audio/x-pn-wav"
                               emptyTemplate={<p className="p-m-0">Drag and drop files here to upload.</p>}
                               />
                 <TranscriptionList transcriptions={transcriptions}/>
