@@ -60,6 +60,7 @@ exports.handler = async (event) => {
                     Settings: {
                         ShowSpeakerLabels: true,
                         ShowAlternatives: true,
+                        MaxAlternatives: 10,
                         MaxSpeakerLabels: 10,
                     }
                 };
