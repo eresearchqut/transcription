@@ -60,6 +60,7 @@ exports.handler = async (event) => {
                     Settings: {
                         ShowSpeakerLabels: true,
                         ShowAlternatives: true,
+                        MaxSpeakerLabels: 10,
                     }
                 };
                 const transcriptionResponse = await transcribeClient.send(new StartTranscriptionJobCommand(params));
