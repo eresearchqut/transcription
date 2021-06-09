@@ -217,7 +217,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Events:
         ApiRoot:
@@ -246,7 +246,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Policies:
         - DynamoDBCrudPolicy:
@@ -388,7 +388,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
   TranscriptionJobEventsRuleLambdaPermission:
     Type: AWS::Lambda::Permission
