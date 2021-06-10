@@ -18,7 +18,6 @@ export const TranscriptionList = (props) => {
     const tableData = props.transcriptions
         .map((t) => {
             const transcriptionStatus = t.jobStatusUpdated?.detail.TranscriptionJobStatus || t.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus;
-            console.log(t)
             const filename = unescape(t.uploadEvent.object.key.split("/").pop().replace(/\+/g, " ")); // https://stackoverflow.com/a/61869212
             const finished = transcriptionStatus === "COMPLETED";
             const expiry = Date.parse(t.date) + EXPIRY_SECONDS

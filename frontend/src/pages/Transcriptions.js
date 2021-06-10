@@ -59,7 +59,6 @@ export const Transcriptions = () => {
 
 
     useInterval(async () => {
-        console.log('Polling transcriptions.')
         const transcriptions = await transcriptionService.getTranscriptions();
         setTranscriptions(transcriptions);
     }, 30000)
