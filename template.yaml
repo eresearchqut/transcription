@@ -33,7 +33,7 @@ Mappings:
   EnvironmentMap:
     dev:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
-      WafArn: "arn:aws:wafv2:ap-southeast-2:827511434808:regional/webacl/waf-qut-general-regional/3bc093b5-feec-458a-8876-02dd6636cc72"
+      WafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
       AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
       FrontEndDomainName: "transcription.dev.eresearchqut.net"
       ApiDomainName: "api-transcription.dev.eresearchqut.net"
