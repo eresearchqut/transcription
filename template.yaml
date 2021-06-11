@@ -21,10 +21,6 @@ Parameters:
     Type: String
     Description: The user pool stack name
     Default: 'qut-user-pool'
-  WafStackName:
-    Type: String
-    Description: The waf stack name
-    Default: 'waf-qut-general-regional'
   LogBucketSuffix:
     Type: String
     Description: The cloudfront log bucket suffix
@@ -37,6 +33,7 @@ Mappings:
   EnvironmentMap:
     dev:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
+      WafArn: "arn:aws:wafv2:ap-southeast-2:827511434808:regional/webacl/waf-qut-general-regional/3bc093b5-feec-458a-8876-02dd6636cc72"
       AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
       FrontEndDomainName: "transcription.dev.eresearchqut.net"
       ApiDomainName: "api-transcription.dev.eresearchqut.net"
@@ -48,6 +45,7 @@ Mappings:
         - subnet-0b64a1893e6646035
     qa:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/ce96c960-f8ca-4d95-8eb9-845b57b57301"
+      WafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
       AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
       FrontEndDomainName: "transcription.qa.eresearchqut.net"
       ApiDomainName: "api-transcription.qa.eresearchqut.net"
@@ -166,7 +164,7 @@ Resources:
           AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
           MinimumProtocolVersion: TLSv1.2_2018
           SslSupportMethod: sni-only
-        WebACLId: {'Fn::ImportValue': !Sub '${WafStackName}-WafArn'}
+        WebACLId: !FindInMap [ EnvironmentMap, !Ref Environment, WafArn ]
   DistributionAlias:
     Type: AWS::Route53::RecordSet
     Condition: CreateARecords
