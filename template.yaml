@@ -145,7 +145,7 @@ Resources:
             Id: !Ref DistributionBucketPolicy
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${DistributionIdentity}"
-        Enabled: 'true'
+        Enabled: true
         DefaultRootObject: index.html
         DefaultCacheBehavior:
           AllowedMethods:
@@ -157,7 +157,7 @@ Resources:
             QueryString: True
         PriceClass: PriceClass_All
         Logging:
-          IncludeCookies: 'false'
+          IncludeCookies: false
           Bucket: !Sub "${Environment}-${LogBucketSuffix}.s3.amazonaws.com"
           Prefix: !Sub
             - '${FrontEndDomainName}/'
@@ -476,7 +476,7 @@ Resources:
         - !Sub
           - 'https://${FrontEndDomainName}/'
           - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
-        - !Sub 'https://idp.qut.edu.au/idp/Logout'
+        - 'https://idp.qut.edu.au/idp/Logout'
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
