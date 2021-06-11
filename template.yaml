@@ -166,6 +166,7 @@ Resources:
           AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
           MinimumProtocolVersion: TLSv1.2_2018
           SslSupportMethod: sni-only
+        WebACLId: {'Fn::ImportValue': !Sub '${WafStackName}-WafArn'}
   DistributionAlias:
     Type: AWS::Route53::RecordSet
     Condition: CreateARecords
