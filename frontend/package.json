@@ -26,7 +26,10 @@
         "react-transition-group": "^4.4.1"
     },
     "devDependencies": {
-        "env-cmd": "^10.1.0"
+        "env-cmd": "^10.1.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^3.4.0",
+        "prettier": "^2.3.1"
     },
     "scripts": {
         "start": "react-scripts start",
@@ -38,7 +41,8 @@
         "eject": "react-scripts eject"
     },
     "eslintConfig": {
-        "extends": "react-app"
+        "extends": ["react-app", "plugin:prettier/recommended"],
+        "rules": {}
     },
     "browserslist": [
         ">0.2%",

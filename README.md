@@ -2,6 +2,18 @@
 
 QUT eResearch transcription service
 
+## Linting and Formatting
+
+eslint formatting rules can be configured in the `package.json` files
+
+prettier can be configured in `.prettierrc` and `.prettierignore`.
+
+To format files using prettier, use:
+
+```
+yarn prettier --write .
+```
+
 ## Manual deployment instructions
 
 ```
