@@ -26,6 +26,7 @@
         "react-transition-group": "^4.4.1"
     },
     "devDependencies": {
+        "@trivago/prettier-plugin-sort-imports": "^2.0.2",
         "env-cmd": "^10.1.0",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-prettier": "^3.4.0",
@@ -38,11 +39,15 @@
         "build-qa": "env-cmd -f .env.qa react-scripts build",
         "build-prod": "env-cmd -f .env.prod react-scripts build",
         "test": "react-scripts test",
-        "eject": "react-scripts eject"
+        "eject": "react-scripts eject",
+        "fmt": "prettier --write .",
+        "lint": "eslint --fix ."
     },
     "eslintConfig": {
-        "extends": ["react-app", "plugin:prettier/recommended"],
-        "rules": {}
+        "extends": [
+            "react-app",
+            "plugin:prettier/recommended"
+        ]
     },
     "browserslist": [
         ">0.2%",

@@ -1,3 +1,6 @@
 package.json
 package-lock.json
 yarn.lock
+build/
+public/
+*.d.ts
