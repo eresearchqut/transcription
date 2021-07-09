@@ -31,10 +31,13 @@ const FILE_UPLOAD_MIME_TYPES = [
   "audio/wave",
   "audio/x-pn-wav",
 ].join(",");
+const APPLICATION_NAME = process.env.REACT_APP_APPLICATION_NAME;
 
 export const Transcriptions = () => {
-  const transcriptionService = new TranscriptionService();
-  const applicationName = process.env.REACT_APP_APPLICATION_NAME;
+  const [user, setUser] = useState(null);
+  const [transcriptions, setTranscriptions] = useState([]);
+  const toast = useRef(null);
+
   const useInterval = (callback, delay) => {
     const savedCallback = useRef();
 
@@ -56,11 +59,7 @@ export const Transcriptions = () => {
     }, [delay]);
   };
 
-  const [user, setUser] = useState(null);
-  const [transcriptions, setTranscriptions] = useState([]);
-
   const uploadDir = user ? `${user["identityId"]}/en-AU` : null;
-  const toast = useRef(null);
 
   useEffect(async () => {
     if (!user) {
@@ -101,7 +100,7 @@ export const Transcriptions = () => {
   };
 
   const pageTitle = "My Transcriptions";
-  const title = `${pageTitle} | ${applicationName}`;
+  const title = `${pageTitle} | ${APPLICATION_NAME}`;
 
   const home = { icon: "pi pi-home", url: "/" };
   const breadcrumbs = [
