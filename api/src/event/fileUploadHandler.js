@@ -38,7 +38,7 @@ exports.handler = async (event) => {
   console.log(JSON.stringify(event));
 
   for (const record of event["Records"]) {
-    const objectKey = decodeURI(record["s3"]["object"]["key"]);
+    const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
 
     const taggingResponse = await s3client.send(
       new GetObjectTaggingCommand({
