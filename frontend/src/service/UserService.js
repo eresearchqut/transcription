@@ -9,7 +9,7 @@ axios.interceptors.request.use((config) => {
 });
 
 export class UserService {
-  getUser() {
+  static getUser() {
     return axios.get(`${endpoint}/user`).then((result) => result.data);
   }
 }

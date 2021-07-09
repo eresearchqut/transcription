@@ -63,8 +63,7 @@ export const Transcriptions = () => {
 
   useEffect(async () => {
     if (!user) {
-      const userService = new UserService();
-      setUser(await userService.getUser());
+      setUser(await UserService.getUser());
     }
   }, [user]);
 
