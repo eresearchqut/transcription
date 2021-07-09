@@ -33,6 +33,10 @@ const FILE_UPLOAD_MIME_TYPES = [
 ].join(",");
 const APPLICATION_NAME = process.env.REACT_APP_APPLICATION_NAME;
 
+const emptyUploadTemplate = (
+  <p className="p-m-0">Drag and drop files here to upload.</p>
+);
+
 export const Transcriptions = () => {
   const [user, setUser] = useState(null);
   const [transcriptions, setTranscriptions] = useState([]);
@@ -127,9 +131,7 @@ export const Transcriptions = () => {
           multiple
           chooseLabel="Select files"
           accept={FILE_UPLOAD_MIME_TYPES}
-          emptyTemplate={
-            <p className="p-m-0">Drag and drop files here to upload.</p>
-          }
+          emptyTemplate={emptyUploadTemplate}
         />
         <TranscriptionList transcriptions={transcriptions} />
       </Card>
