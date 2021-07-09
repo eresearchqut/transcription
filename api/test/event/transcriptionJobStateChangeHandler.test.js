@@ -1,15 +1,13 @@
-const {handler} = require("../../src/event/transcriptionJobStateChangeHandler");
-
+const {
+  handler,
+} = require("../../src/event/transcriptionJobStateChangeHandler");
 
 describe("config", () => {
+  it("start job after file upload", async () => {
+    const jobStateChangeEvent = require("./jobStateChangeEvent.json");
 
-    it("start job after file upload", async () => {
-
-        const jobStateChangeEvent = require("./jobStateChangeEvent.json");
-
-        expect(await handler(jobStateChangeEvent))
-            .toEqual("Transcription job status updated");
-    });
-
-
+    expect(await handler(jobStateChangeEvent)).toEqual(
+      "Transcription job status updated"
+    );
+  });
 });
