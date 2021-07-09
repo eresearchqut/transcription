@@ -45,12 +45,17 @@ export const TranscriptionList = (props) => {
         timeStyle: "short",
       }).format(expiry);
 
-      const downloadKey = t.outputKey.replace("public/", "");
       const getData = async () => {
-        return await Storage.get(downloadKey, { download: true });
+        return await Storage.get(t.outputKey, {
+          level: "private",
+          download: true,
+        });
       };
       const getUrl = async () => {
-        return await Storage.get(downloadKey, { download: false });
+        return await Storage.get(t.outputKey, {
+          level: "private",
+          download: false,
+        });
       };
 
       return {
