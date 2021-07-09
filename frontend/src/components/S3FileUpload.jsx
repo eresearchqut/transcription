@@ -1,5 +1,6 @@
 import { Storage } from "aws-amplify";
 import { FileUpload } from "primereact/fileupload";
+import { v4 as uuid } from "uuid";
 
 export class S3FileUpload extends FileUpload {
   constructor(props) {
@@ -22,8 +23,13 @@ export class S3FileUpload extends FileUpload {
     for (const file of e.files) {
       this.setState({ progress: 0 });
       try {
-        await Storage.put(`${this.props.uploadDir}/${file.name}`, file, {
+        await Storage.put(`${this.props.uploadDir}/${uuid()}`, file, {
           level: "private",
+          metadata: {
+            fileName: file.name,
+            fileType: "userUploadedFile",
+            languageCode: "en-AU",
+          },
           progressCallback: (progress) => {
             this.setState({
               progress: (progress.loaded * 100) / progress.total,

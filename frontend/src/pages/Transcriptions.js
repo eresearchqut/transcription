@@ -63,7 +63,8 @@ export const Transcriptions = () => {
     }, [delay]);
   };
 
-  const uploadDir = user ? `${user["identityId"]}/en-AU` : null;
+  const uploadDir = user ? `{user["identityId"]}/input` : null;
+  console.log("User", user);
 
   useEffect(() => {
     if (!user) {
