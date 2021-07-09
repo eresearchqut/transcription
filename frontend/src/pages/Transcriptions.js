@@ -11,6 +11,27 @@ import { TranscriptionList } from "../components/TranscriptionList";
 import { TranscriptionService } from "../service/TranscriptionService";
 import { UserService } from "../service/UserService";
 
+const FILE_UPLOAD_MIME_TYPES = [
+  "audio/flac",
+  "audio/mpeg",
+  "audio/mp4",
+  "video/mp4",
+  "audio/m4a",
+  "application/ogg",
+  "audio/ogg",
+  "video/ogg",
+  "video/webm",
+  "audio/webm",
+  "audio/amr",
+  "audio/3gpp",
+  "audio/3gpp2",
+  "audio/x-wav",
+  "audio/vnd.wave",
+  "audio/wav",
+  "audio/wave",
+  "audio/x-pn-wav",
+].join(",");
+
 export const Transcriptions = () => {
   const userService = new UserService();
   const transcriptionService = new TranscriptionService();
@@ -103,7 +124,7 @@ export const Transcriptions = () => {
           onError={onError}
           multiple
           chooseLabel="Select files"
-          accept="audio/flac,audio/mpeg,audio/mp4,video/mp4,audio/m4a,application/ogg,audio/ogg,video/ogg,video/webm,audio/webm,audio/amr,audio/3gpp,audio/3gpp2,audio/x-wav,audio/vnd.wave,audio/wav,audio/wave,audio/x-pn-wav"
+          accept={FILE_UPLOAD_MIME_TYPES}
           emptyTemplate={
             <p className="p-m-0">Drag and drop files here to upload.</p>
           }
