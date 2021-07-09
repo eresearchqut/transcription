@@ -1,5 +1,4 @@
-import { S3Client, GetObjectTaggingCommand } from "@aws-sdk/client-s3";
-
+const { S3Client, GetObjectTaggingCommand } = require("@aws-sdk/client-s3");
 const {
   TranscribeClient,
   StartTranscriptionJobCommand,
