@@ -1,3 +1,5 @@
+import { S3Client, GetObjectTaggingCommand } from "@aws-sdk/client-s3";
+
 const {
   TranscribeClient,
   StartTranscriptionJobCommand,
@@ -9,8 +11,8 @@ const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const transcribeClient = new TranscribeClient({ region });
 
-const uploadPattern = /private\/(.*)\/(.*)\/(.*)\/(.*)/gm;
-const fileExtensionPattern = /\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gim;
+const uploadPattern = /private\/(.*)\/(.*)\/(.*)/gm;
+const fileExtensionPattern = /(?:\.([^.]+))?$/; // https://stackoverflow.com/a/680982
 
 const mediaFormat = (fileExtension) => {
   switch (fileExtension) {
@@ -31,23 +33,39 @@ const mediaFormat = (fileExtension) => {
   }
 };
 
+const s3client = new S3Client({ region: process.env.AWS_REGION });
+
 exports.handler = async (event) => {
   console.log(JSON.stringify(event));
 
   for (const record of event["Records"]) {
+    const taggingResponse = await s3client.send(
+      new GetObjectTaggingCommand({
+        Bucket: record["s3"]["bucket"]["name"],
+        Key: record["s3"]["object"]["key"],
+      })
+    );
+
+    const objectTags = new Map(
+      taggingResponse.TagSet.map((tag) => [tag.Key, tag.Value])
+    );
+
+    if (!(objectTags.get("fileType") === "userUploadedFile")) continue;
+
+    const fileName = objectTags.get("fileName");
+    const languageCode = objectTags.get("languageCode");
+
     const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
     const bucketName = record["s3"]["bucket"]["name"];
-    const [matchedKey, cognitoId, identityId, languageCode, fileName] = [
+    const [matchedKey, cognitoId, identityId, _] = [
       ...key.matchAll(uploadPattern),
     ][0];
-    console.log(matchedKey, cognitoId, identityId, languageCode, fileName);
+    console.log(matchedKey, cognitoId, identityId, fileName);
     if (matchedKey) {
-      const [matchedFileExtension, fileExtension] = [
-        ...fileName.matchAll(fileExtensionPattern),
-      ][0];
+      const fileExtension = fileExtensionPattern.exec(fileName)[1];
       const jobId = uuid();
-      const outputKey = `public/transcription/${identityId}/${languageCode}/${jobId}.json`;
-      if (matchedFileExtension) {
+      const outputKey = `private/${cognitoId}/${identityId}/output/${jobId}.json`;
+      if (fileExtension) {
         const params = {
           TranscriptionJobName: `${identityId}_${jobId}`,
           LanguageCode: languageCode,
