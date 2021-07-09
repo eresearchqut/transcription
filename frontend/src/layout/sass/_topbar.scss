@@ -1,5 +1,4 @@
 .layout-topbar {
-
   .p-menubar {
     flex: 1 1 auto;
     position: relative;
@@ -12,14 +11,29 @@
 
   @include linear-gradient-left($topbarLeftBgColor, $topbarRightBgColor);
 
-
-  .p-menubar:not(.p-menubar-mobile-active) .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-text,
-  .p-menubar:not(.p-menubar-mobile-active) .p-menubar-root-list > .p-menuitem > .p-menuitem-link .p-menuitem-icon,
-  .p-menubar:not(.p-menubar-mobile-active) .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover .p-menuitem-text,
-  .p-menubar:not(.p-menubar-mobile-active) .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover .p-menuitem-icon,
-  .p-button.p-link, .p-button.p-link:hover,
-  .p-menubar .p-menubar-button,
-  {
+  .p-menubar:not(.p-menubar-mobile-active)
+    .p-menubar-root-list
+    > .p-menuitem
+    > .p-menuitem-link
+    .p-menuitem-text,
+  .p-menubar:not(.p-menubar-mobile-active)
+    .p-menubar-root-list
+    > .p-menuitem
+    > .p-menuitem-link
+    .p-menuitem-icon,
+  .p-menubar:not(.p-menubar-mobile-active)
+    .p-menubar-root-list
+    > .p-menuitem
+    > .p-menuitem-link:hover
+    .p-menuitem-text,
+  .p-menubar:not(.p-menubar-mobile-active)
+    .p-menubar-root-list
+    > .p-menuitem
+    > .p-menuitem-link:hover
+    .p-menuitem-icon,
+  .p-button.p-link,
+  .p-button.p-link:hover,
+  .p-menubar .p-menubar-button {
     color: #fff;
   }
 
@@ -34,7 +48,7 @@
   .p-menubar .p-menubar-root-list > .p-menuitem > .p-menuitem-link:hover,
   .p-button.p-link:hover,
   .p-menubar .p-menubar-button:hover {
-    background-color: rgba(255,255,255,.1);
+    background-color: rgba(255, 255, 255, 0.1);
   }
 
   .p-chip {
