@@ -33,7 +33,6 @@ const FILE_UPLOAD_MIME_TYPES = [
 ].join(",");
 
 export const Transcriptions = () => {
-  const userService = new UserService();
   const transcriptionService = new TranscriptionService();
   const applicationName = process.env.REACT_APP_APPLICATION_NAME;
   const useInterval = (callback, delay) => {
@@ -57,23 +56,28 @@ export const Transcriptions = () => {
     }, [delay]);
   };
 
-  const [user, setUser] = useState({});
+  const [user, setUser] = useState(null);
   const [transcriptions, setTranscriptions] = useState([]);
 
-  const uploadDir = `${user["identityId"]}/en-AU`;
+  const uploadDir = user ? `${user["identityId"]}/en-AU` : null;
   const toast = useRef(null);
+
+  useEffect(async () => {
+    if (!user) {
+      const userService = new UserService();
+      setUser(await userService.getUser());
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {
-      const user = await userService.getUser();
-      setUser(user);
       const transcriptions = await transcriptionService.getTranscriptions();
       setTranscriptions(transcriptions);
     };
     fetchData().then((r) => {
-      console.log("Retrieved user and transcriptions");
+      console.log("Transcriptions");
     });
-  }, [user]);
+  }, []);
 
   useInterval(async () => {
     const transcriptions = await transcriptionService.getTranscriptions();
@@ -88,7 +92,7 @@ export const Transcriptions = () => {
     });
   };
 
-  const onError = ({ file, error }) => {
+  const onError = ({ file, _ }) => {
     toast.current.show({
       severity: "error",
       summary: "Failure",
