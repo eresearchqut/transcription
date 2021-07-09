@@ -71,7 +71,7 @@ export const Transcriptions = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const transcriptions = await transcriptionService.getTranscriptions();
+      const transcriptions = await TranscriptionService.getTranscriptions();
       setTranscriptions(transcriptions);
     };
     fetchData().then((r) => {
@@ -80,7 +80,7 @@ export const Transcriptions = () => {
   }, []);
 
   useInterval(async () => {
-    const transcriptions = await transcriptionService.getTranscriptions();
+    const transcriptions = await TranscriptionService.getTranscriptions();
     setTranscriptions(transcriptions);
   }, 30000);
 

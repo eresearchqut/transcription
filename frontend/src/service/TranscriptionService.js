@@ -9,7 +9,7 @@ axios.interceptors.request.use((config) => {
 });
 
 export class TranscriptionService {
-  getTranscriptions() {
+  static getTranscriptions() {
     return axios.get(`${endpoint}/transcription`).then((result) => result.data);
   }
 }
