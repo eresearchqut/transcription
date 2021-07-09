@@ -73,7 +73,7 @@ export const Transcriptions = () => {
     fetchData().then((r) => {
       console.log("Retrieved user and transcriptions");
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user]);
 
   useInterval(async () => {
     const transcriptions = await transcriptionService.getTranscriptions();
