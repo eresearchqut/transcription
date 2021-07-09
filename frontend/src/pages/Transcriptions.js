@@ -65,26 +65,19 @@ export const Transcriptions = () => {
 
   const uploadDir = user ? `${user["identityId"]}/en-AU` : null;
 
-  useEffect(async () => {
+  useEffect(() => {
     if (!user) {
-      setUser(await UserService.getUser());
+      UserService.getUser().then(setUser);
     }
   }, [user]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const transcriptions = await TranscriptionService.getTranscriptions();
-      setTranscriptions(transcriptions);
-    };
-    fetchData().then((r) => {
-      console.log("Transcriptions");
-    });
+    TranscriptionService.getTranscriptions().then(setTranscriptions);
   }, []);
 
-  useInterval(async () => {
-    const transcriptions = await TranscriptionService.getTranscriptions();
-    setTranscriptions(transcriptions);
-  }, 30000);
+  useInterval(() => {
+    TranscriptionService.getTranscriptions().then(setTranscriptions);
+  }, 20000);
 
   const onUpload = ({ file }) => {
     toast.current.show({
