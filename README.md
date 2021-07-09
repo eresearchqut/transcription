@@ -4,14 +4,15 @@ QUT eResearch transcription service
 
 ## Linting and Formatting
 
-eslint formatting rules can be configured in the `package.json` files
+```
+yarn lint
+yarn fmt
+```
 
-prettier can be configured in `.prettierrc` and `.prettierignore`.
-
-To format files using prettier, use:
+Ignore formatting revisions in `.git-blame-ignore-revs`:
 
 ```
-yarn prettier --write .
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ## Manual deployment instructions
