@@ -30,7 +30,7 @@ const putResource = (pk, sk, attributes) =>
           sk,
           ...attributes,
           date: new Date().toISOString(),
-          ttl: (Math.floor(+new Date() / 1000) + TTL_DELTA).toString(),
+          ttl: Math.floor(+new Date() / 1000) + TTL_DELTA,
         },
         { removeUndefinedValues: true }
       ),
@@ -54,7 +54,7 @@ const updateResource = (pk, sk, attributeName, attributeValue) =>
         {
           ":attributeValue": attributeValue,
           ":date": new Date().toISOString(),
-          ":ttl": (Math.floor(+new Date() / 1000) + TTL_DELTA).toString(),
+          ":ttl": Math.floor(+new Date() / 1000) + TTL_DELTA,
         },
         { removeUndefinedValues: true }
       ),
