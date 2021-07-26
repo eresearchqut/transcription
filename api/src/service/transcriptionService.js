@@ -14,11 +14,15 @@ const jobStarted = (identityId, jobId, outputKey, uploadEvent, transcriptionResp
 const jobStatusUpdated = (identityId, jobId, jobStatusUpdated) =>
     updateResource(identityId, jobId, 'jobStatusUpdated',  JSON.parse(JSON.stringify(jobStatusUpdated)));
 
+const downloadKey = (identityId, jobId, downloadKey) =>
+    updateResource(identityId, jobId, 'downloadKey',  downloadKey);
+
 const getTranscriptions = (identityId) =>
     getResources(identityId);
 
 module.exports = {
     jobStarted,
     jobStatusUpdated,
-    getTranscriptions
+    getTranscriptions,
+    downloadKey
 };

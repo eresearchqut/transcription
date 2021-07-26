@@ -7,9 +7,11 @@ const EXPIRY_SECONDS = 1209600000 // Two weeks
 
 export const TranscriptionList = (props) => {
 
+    console.log(props);
+
     const statusIcons = {
         "QUEUED": <span><i className="pi pi-cloud-upload"></i> Queued</span>,
-        "IN_PROGRESS": <span><i className="pi pi-spinner"></i> Processing</span>,
+        "IN_PROGRESS": <span><i className="pi pi-spin pi-spinner"></i> Processing</span>,
         "COMPLETED": <span><i className="pi pi-check"></i> Finished</span>,
         "FAILED": <span><i className="pi pi-exclamation-triangle"></i> Failed</span>,
     }
@@ -19,14 +21,13 @@ export const TranscriptionList = (props) => {
         .map((t) => {
             const transcriptionStatus = t.jobStatusUpdated?.detail.TranscriptionJobStatus || t.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus;
             const filename = t.uploadEvent.object.key.split("/").pop()
-            const finished = transcriptionStatus === "COMPLETED";
+            const finished = transcriptionStatus === "COMPLETED" && t.downloadKey;
             const expiry = Date.parse(t.date) + EXPIRY_SECONDS
             const expiryString = new Intl.DateTimeFormat('en-AU', { dateStyle: 'short', timeStyle: 'short' })
                 .format(expiry);
 
-            const downloadKey = t.outputKey.replace("public/", "");
-            const getData = async () => { return await Storage.get(downloadKey, { download: true }) }
-            const getUrl = async () => { return await Storage.get(downloadKey, { download: false }) }
+            const getData = async () => { return await Storage.get(t.downloadKey, { download: true, level: 'private' }) }
+            const getUrl = async () => { return await Storage.get(t.downloadKey, { download: false, level: 'private' }) }
 
             return {
                 pk: t.pk,
@@ -44,7 +45,7 @@ export const TranscriptionList = (props) => {
     }
 
     return (
-        <DataTable value={tableData} dataKey="pk">
+        <DataTable value={tableData} dataKey="pk" paginator  rows={5} rowsPerPageOptions={[5, 10,20,50]}>
             <Column field="filename" header="File name" sortable></Column>
             <Column field="status" header="Status" sortable></Column>
             <Column field="expiryString" header="Expiry" sortable sortFunction={expirySort}></Column>

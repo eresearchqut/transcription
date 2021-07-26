@@ -26,15 +26,8 @@ export const Login = () => {
             </Helmet>
             <BreadCrumb model={breadcrumbs} home={home}/>
             <Card>
-                <h2>Thank you for taking part in the transcription service ALPHA testing!</h2>
-
-                <p>Please raise bugs and tasks under the following <a
-                    href="https://eresearchqut.atlassian.net/browse/ERE-1342">epic</a>.</p>
-                <p>A bug is anything that doesn't work properly e.g. a transcription not coming out for one of the
-                    supported file formats. Steps to reproduce are very helpful.</p>
-                <p>A task is something you think the transcription service should have or would be nice to have in the
-                    future.</p>
-                <p>As the service is in ALPHA, please don't share the link outside of eResearch.</p>
+                <h2>Thank you for taking part in the transcription service BETA testing!</h2>
+                <p>Your feedback is appreciated and can be provided through the eResearch support  in https://eresearchqut.atlassian.net/servicedesk/customer/portal/3/group/4/create/127</p>
                 <h3>Supported file formats</h3>
                 <ul>
                     <li>wav</li>
@@ -47,7 +40,6 @@ export const Login = () => {
                     <li>oga</li>
                     <li>ogg</li>
                     <li>opus</li>
-
                 </ul>
 
                 <h3>Quotas and Limits</h3>

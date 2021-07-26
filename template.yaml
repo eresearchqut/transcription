@@ -373,6 +373,51 @@ Resources:
                   - Name: suffix
                     Value: .webm
           Type: S3
+  TranscriptionCopyOutputFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./api
+      Handler: src/event/copyOutputHandler.handler
+      Runtime: nodejs14.x
+      Description: >
+        Starts transcription jobs when triggered by S3 events
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+          BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
+          APPLCIATION_NAME: !Ref ApplicationName
+          ENVIRONMENT: !Ref Environment
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Table
+        - Statement:
+          - Sid: CopyGetPutObjectsAndTags
+            Effect: 'Allow'
+            Action:
+              - s3:GetObject
+              - s3:GetObjectTagging
+              - s3:GetObjectAcl
+              - s3:PutObject
+              - s3:PutObjectTagging
+              - s3:PutObjectAcl
+            Resource: !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}/*
+          - Sid: CopyListBucket
+            Effect: Allow
+            Action: s3:ListBucket
+            Resource: !Sub arn:aws:s3:::${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
+      Events:
+        TranscriptionComplete:
+          Properties:
+            Bucket: !Ref TranscriptionBucket
+            Events: s3:ObjectCreated:*
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: !Sub "transcription"
+                  - Name: suffix
+                    Value: .json
+          Type: S3
   TranscriptionJobStateChangeFunction:
     Type: AWS::Serverless::Function
     Properties:

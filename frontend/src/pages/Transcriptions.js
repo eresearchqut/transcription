@@ -67,6 +67,9 @@ export const Transcriptions = () => {
 
     const onUpload = ({file}) => {
         toast.current.show({severity: "info", summary: "Success", detail: `${file.name} uploaded`})
+        new Promise((resolve) => {
+            setTimeout(resolve, 2000);
+        }).then(() => transcriptionService.getTranscriptions().then((transcriptions) => setTranscriptions(transcriptions)));
     }
 
     const onError = ({file, error}) => {

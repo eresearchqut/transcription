@@ -32,6 +32,10 @@ const getUserName = (request) => {
 }
 const getIdentityId = (request) => getClaims(request)['custom:qutIdentityId'];
 
+const getSub = (request) => {
+    const claims = getClaims(request);
+    return claims['sub'];
+}
 
 const getRoles = (request) => getClaims(request)['custom:eResearchGroups'] ?
     Array.from(getClaims(request)['custom:eResearchGroups'].matchAll(/([\w-]+)/g), match => match[1]).filter(group => group.startsWith('transcription-')).map(group => group.substring(4)) : [];
@@ -39,5 +43,6 @@ const getRoles = (request) => getClaims(request)['custom:eResearchGroups'] ?
 module.exports = {
     getIdentityId,
     getUserName,
+    getSub,
     getRoles
 }

@@ -7,7 +7,6 @@ const {
 } = require('../service/transcriptionService');
 const {v4: uuid} = require('uuid');
 
-
 const region = process.env.AWS_REGION || 'ap-southeast-2';
 const transcribeBucket = process.env.BUCKET_NAME || 'transcriptions';
 const transcribeClient = new TranscribeClient({region});
@@ -45,8 +44,9 @@ exports.handler = async (event) => {
         console.log(matchedKey, cognitoId, identityId, languageCode, fileName);
         if (matchedKey) {
             const [matchedFileExtension, fileExtension] = [...fileName.matchAll(fileExtensionPattern)][0];
+            const cognitoGuid = cognitoId.split('%3A')[1]; // split on escaped colon
             const jobId = uuid();
-            const outputKey = `public/transcription/${identityId}/${languageCode}/${jobId}.json`;
+            const outputKey = `transcription/${cognitoGuid}/${identityId}/${languageCode}/${jobId}/${jobId}.json`;
             if (matchedFileExtension) {
                 const params = {
                     TranscriptionJobName: `${identityId}_${jobId}`,
