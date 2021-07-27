@@ -15,7 +15,7 @@ export const TranscriptionList = (props) => {
     ),
     IN_PROGRESS: (
       <span>
-        <i className="pi pi-spinner"></i> Processing
+        <i className="pi pi-spin pi-spinner"></i> Processing
       </span>
     ),
     COMPLETED: (
@@ -35,10 +35,9 @@ export const TranscriptionList = (props) => {
       const transcriptionStatus =
         t.jobStatusUpdated?.detail.TranscriptionJobStatus ||
         t.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus;
-      const filename = unescape(
-        t.uploadEvent.object.key.split("/").pop().replace(/\+/g, " ")
-      ); // https://stackoverflow.com/a/61869212
-      const finished = transcriptionStatus === "COMPLETED";
+      const filename = t.metadata?.filename;
+      const downloadKey = t.downloadKey;
+      const finished = transcriptionStatus === "COMPLETED" && downloadKey;
       const expiry = Date.parse(t.date) + EXPIRY_SECONDS;
       const expiryString = new Intl.DateTimeFormat("en-AU", {
         dateStyle: "short",
@@ -46,13 +45,15 @@ export const TranscriptionList = (props) => {
       }).format(expiry);
 
       const getData = async () => {
-        return await Storage.get(t.outputKey, {
+        console.log("getData", downloadKey);
+        return await Storage.get(downloadKey, {
           level: "private",
           download: true,
         });
       };
       const getUrl = async () => {
-        return await Storage.get(t.outputKey, {
+        console.log("getUrl", downloadKey);
+        return await Storage.get(downloadKey, {
           level: "private",
           download: false,
         });
@@ -85,7 +86,14 @@ export const TranscriptionList = (props) => {
   };
 
   return (
-    <DataTable value={tableData} dataKey="pk">
+    <DataTable
+      value={tableData}
+      dataKey="pk"
+      paginator
+      rows={5}
+      rowsPerPageOptions={[5, 10, 25, 100]}
+      alwaysShowPaginator={false}
+    >
       <Column field="filename" header="File name" sortable></Column>
       <Column field="status" header="Status" sortable></Column>
       <Column

@@ -63,8 +63,7 @@ export const Transcriptions = () => {
     }, [delay]);
   };
 
-  const uploadDir = user ? `${user["identityId"]}/input` : null;
-  console.log("User", user);
+  const uploadDir = user ? `${user["identityId"]}` : null;
 
   useEffect(() => {
     if (!user) {
@@ -78,7 +77,7 @@ export const Transcriptions = () => {
 
   useInterval(() => {
     TranscriptionService.getTranscriptions().then(setTranscriptions);
-  }, 20000);
+  }, 2000);
 
   const onUpload = ({ file }) => {
     toast.current.show({

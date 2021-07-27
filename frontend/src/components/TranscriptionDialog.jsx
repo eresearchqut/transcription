@@ -14,7 +14,10 @@ export const TranscriptionDialog = (props) => {
   const [dataDownloadUrl, setDataDownloadUrl] = useState("");
 
   const displayDialog = async () => {
+    console.log(props);
+
     const fileUrl = await props.getUrl();
+
     setDataDownloadUrl(fileUrl);
 
     const fileContent = await props.getData();
@@ -35,7 +38,6 @@ export const TranscriptionDialog = (props) => {
       new Blob([transcriptionScript.innerHTML])
     );
     setDownloadUrl(rawUrl);
-
     setDialogDisplayed(true);
   };
 

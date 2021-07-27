@@ -23,7 +23,7 @@ export class S3FileUpload extends FileUpload {
     for (const file of e.files) {
       this.setState({ progress: 0 });
       try {
-        await Storage.put(`${this.props.uploadDir}/${uuid()}`, file, {
+        await Storage.put(`${this.props.uploadDir}/${uuid()}.upload`, file, {
           level: "private",
           metadata: {
             fileName: file.name,

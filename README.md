@@ -4,9 +4,20 @@ QUT eResearch transcription service
 
 ## Linting and Formatting
 
+### Frontend
+
 ```
+cd frontend
 yarn lint
 yarn fmt
+```
+
+### API
+
+```
+cd api
+npm run lint
+npm run fmt
 ```
 
 Ignore formatting revisions in `.git-blame-ignore-revs`:

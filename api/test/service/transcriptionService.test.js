@@ -54,6 +54,11 @@ describe("transcription service test", function () {
             "76c65a59-1c57-489b-be96-020ceaa9675a|95edf479-b991-4d0c-9e9e-d34474880b65",
           TranscriptionJobStatus: "IN_PROGRESS",
         },
+      },
+      {
+        languagecode: "en-AU",
+        filename: "Welcome.wav",
+        filetype: "userUploadedFile",
       }
     );
     expect(
