@@ -21,10 +21,6 @@ Parameters:
     Type: String
     Description: The user pool stack name
     Default: 'qut-user-pool'
-  WafStackName:
-    Type: String
-    Description: The waf stack name
-    Default: 'waf-qut-general-regional'
   LogBucketSuffix:
     Type: String
     Description: The cloudfront log bucket suffix
@@ -37,6 +33,7 @@ Mappings:
   EnvironmentMap:
     dev:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
+      WafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
       AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
       FrontEndDomainName: "transcription.dev.eresearchqut.net"
       ApiDomainName: "api-transcription.dev.eresearchqut.net"
@@ -48,6 +45,7 @@ Mappings:
         - subnet-0b64a1893e6646035
     qa:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/ce96c960-f8ca-4d95-8eb9-845b57b57301"
+      WafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
       AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
       FrontEndDomainName: "transcription.qa.eresearchqut.net"
       ApiDomainName: "api-transcription.qa.eresearchqut.net"
@@ -145,7 +143,7 @@ Resources:
             Id: !Ref DistributionBucketPolicy
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${DistributionIdentity}"
-        Enabled: 'true'
+        Enabled: true
         DefaultRootObject: index.html
         DefaultCacheBehavior:
           AllowedMethods:
@@ -157,7 +155,7 @@ Resources:
             QueryString: True
         PriceClass: PriceClass_All
         Logging:
-          IncludeCookies: 'false'
+          IncludeCookies: false
           Bucket: !Sub "${Environment}-${LogBucketSuffix}.s3.amazonaws.com"
           Prefix: !Sub
             - '${FrontEndDomainName}/'
@@ -166,6 +164,7 @@ Resources:
           AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
           MinimumProtocolVersion: TLSv1.2_2018
           SslSupportMethod: sni-only
+        WebACLId: !FindInMap [ EnvironmentMap, !Ref Environment, WafArn ]
   DistributionAlias:
     Type: AWS::Route53::RecordSet
     Condition: CreateARecords
@@ -217,7 +216,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Events:
         ApiRoot:
@@ -246,7 +245,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
       Policies:
         - DynamoDBCrudPolicy:
@@ -254,7 +253,7 @@ Resources:
         - S3CrudPolicy:
             BucketName: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
         - Statement:
-            Sid: Transcribe
+          - Sid: Transcribe
             Effect: Allow
             Action:
               - transcribe:GetTranscriptionJob
@@ -262,116 +261,17 @@ Resources:
             Resource:
               - "*"
       Events:
-        WavCreated:
+        FileAdded:
           Properties:
             Bucket: !Ref TranscriptionBucket
             Events: s3:ObjectCreated:*
             Filter:
               S3Key:
                 Rules:
+                  - Name: prefix
+                    Value: private
                   - Name: suffix
-                    Value: .wav
-          Type: S3
-        FlacCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .flac
-          Type: S3
-        AmrCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .amr
-          Type: S3
-        3gaCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .3ga
-          Type: S3
-        Mp3Created:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .mp3
-          Type: S3
-        Mp4Created:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .mp4
-          Type: S3
-        M4aCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-
-                  - Name: suffix
-                    Value: .m4a
-          Type: S3
-        OgaCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .oga
-          Type: S3
-        OggCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .ogg
-          Type: S3
-        OpusCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .opus
-          Type: S3
-        WebmCreated:
-          Properties:
-            Bucket: !Ref TranscriptionBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: suffix
-                    Value: .webm
+                    Value: .upload
           Type: S3
   TranscriptionCopyOutputFunction:
     Type: AWS::Serverless::Function
@@ -433,7 +333,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref Table
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
-          APPLCIATION_NAME: !Ref ApplicationName
+          APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
   TranscriptionJobEventsRuleLambdaPermission:
     Type: AWS::Lambda::Permission
@@ -521,7 +421,7 @@ Resources:
         - !Sub
           - 'https://${FrontEndDomainName}/'
           - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
-        - !Sub 'https://idp.qut.edu.au/idp/Logout'
+        - 'https://idp.qut.edu.au/idp/Logout'
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:

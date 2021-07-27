@@ -1,104 +1,133 @@
-import React, {useState, useEffect, useRef} from 'react';
-import {TranscriptionService} from '../service/TranscriptionService';
-import {UserService} from '../service/UserService';
+import React, { useEffect, useRef, useState } from "react";
+import { Helmet } from "react-helmet";
 
-import {S3FileUpload} from '../components/S3FileUpload';
-import {TranscriptionList} from '../components/TranscriptionList';
-import {Toast} from 'primereact/toast';
+import { Auth } from "aws-amplify";
+import { BreadCrumb } from "primereact/breadcrumb";
+import { Card } from "primereact/card";
+import { Toast } from "primereact/toast";
 
-import {Card} from "primereact/card";
-import {BreadCrumb} from "primereact/breadcrumb";
-import {Auth} from "aws-amplify";
-import {Helmet} from "react-helmet";
+import { S3FileUpload } from "../components/S3FileUpload";
+import { TranscriptionList } from "../components/TranscriptionList";
+import { TranscriptionService } from "../service/TranscriptionService";
+import { UserService } from "../service/UserService";
 
+const FILE_UPLOAD_MIME_TYPES = [
+  "audio/flac",
+  "audio/mpeg",
+  "audio/mp4",
+  "video/mp4",
+  "audio/m4a",
+  "application/ogg",
+  "audio/ogg",
+  "video/ogg",
+  "video/webm",
+  "audio/webm",
+  "audio/amr",
+  "audio/3gpp",
+  "audio/3gpp2",
+  "audio/x-wav",
+  "audio/vnd.wave",
+  "audio/wav",
+  "audio/wave",
+  "audio/x-pn-wav",
+].join(",");
+const APPLICATION_NAME = process.env.REACT_APP_APPLICATION_NAME;
+
+const emptyUploadTemplate = (
+  <p className="p-m-0">Drag and drop files here to upload.</p>
+);
 
 export const Transcriptions = () => {
+  const [user, setUser] = useState(null);
+  const [transcriptions, setTranscriptions] = useState([]);
+  const toast = useRef(null);
 
-    const userService = new UserService();
-    const transcriptionService = new TranscriptionService();
-    const applicationName = process.env.REACT_APP_APPLICATION_NAME;
-    const useInterval = (callback, delay) => {
-        const savedCallback = useRef();
+  const useInterval = (callback, delay) => {
+    const savedCallback = useRef();
 
-        // Remember the latest callback.
-        useEffect(() => {
-            savedCallback.current = callback;
-        }, [callback]);
-
-        // Set up the interval.
-        useEffect(() => {
-            function tick() {
-                savedCallback.current();
-            }
-
-            if (delay !== null) {
-                let id = setInterval(tick, delay);
-                return () => clearInterval(id);
-            }
-        }, [delay]);
-    }
-
-
-    const [user, setUser] = useState({});
-    const [transcriptions, setTranscriptions] = useState([]);
-
-    const uploadDir = `${user['identityId']}/en-AU`;
-    const toast = useRef(null);
-
+    // Remember the latest callback.
     useEffect(() => {
-        const fetchData = async () => {
-            const user = await userService.getUser();
-            setUser(user);
-            const transcriptions = await transcriptionService.getTranscriptions();
-            setTranscriptions(transcriptions);
-        }
-        fetchData().then(r => {
-            console.log("Retrieved user and transcriptions")
-        });
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+      savedCallback.current = callback;
+    }, [callback]);
 
+    // Set up the interval.
+    useEffect(() => {
+      function tick() {
+        savedCallback.current();
+      }
 
-    useInterval(async () => {
-        console.log('Polling transcriptions.')
-        const transcriptions = await transcriptionService.getTranscriptions();
-        setTranscriptions(transcriptions);
-    }, 30000)
+      if (delay !== null) {
+        let id = setInterval(tick, delay);
+        return () => clearInterval(id);
+      }
+    }, [delay]);
+  };
 
+  const uploadDir = user ? `${user["identityId"]}` : null;
 
-    const onUpload = ({file}) => {
-        toast.current.show({severity: "info", summary: "Success", detail: `${file.name} uploaded`})
-        new Promise((resolve) => {
-            setTimeout(resolve, 2000);
-        }).then(() => transcriptionService.getTranscriptions().then((transcriptions) => setTranscriptions(transcriptions)));
+  useEffect(() => {
+    if (!user) {
+      UserService.getUser().then(setUser);
     }
+  }, [user]);
 
-    const onError = ({file, error}) => {
-        toast.current.show({severity: "error", summary: "Failure", detail: `${file.name} failed to upload`})
-    }
+  useEffect(() => {
+    TranscriptionService.getTranscriptions().then(setTranscriptions);
+  }, []);
 
-    const pageTitle = 'My Transcriptions'
-    const title = `${pageTitle} | ${applicationName}`;
+  useInterval(() => {
+    TranscriptionService.getTranscriptions().then(setTranscriptions);
+  }, 2000);
 
-    const home = {icon: "pi pi-home", url: "/"}
-    const breadcrumbs = [{
-        label: pageTitle,
-        command: () => Auth.federatedSignIn({provider: process.env.REACT_APP_AUTH_PROVIDER})
-    }];
+  const onUpload = ({ file }) => {
+    toast.current.show({
+      severity: "info",
+      summary: "Success",
+      detail: `${file.name} uploaded`,
+    });
+  };
 
-    return (
+  const onError = ({ file, _ }) => {
+    toast.current.show({
+      severity: "error",
+      summary: "Failure",
+      detail: `${file.name} failed to upload`,
+    });
+  };
 
-        <React.Fragment>
-            <Toast ref={toast}/>
-            <Helmet>
-                <title>{title}</title>
-            </Helmet>
-            <BreadCrumb model={breadcrumbs} home={home}/>
-            <Card title={pageTitle}>
-                <S3FileUpload mode="advanced" uploadDir={uploadDir} customUpload onUpload={onUpload} onError={onError}
-                              multiple chooseLabel="Add files" accept=".flac,.mp3,.mp4,.ogg,.webm,.amr,.wav"/>
-                <TranscriptionList transcriptions={transcriptions}/>
-            </Card>
-        </React.Fragment>
+  const pageTitle = "My Transcriptions";
+  const title = `${pageTitle} | ${APPLICATION_NAME}`;
 
-    );
-}
+  const home = { icon: "pi pi-home", url: "/" };
+  const breadcrumbs = [
+    {
+      label: pageTitle,
+      command: () =>
+        Auth.federatedSignIn({ provider: process.env.REACT_APP_AUTH_PROVIDER }),
+    },
+  ];
+
+  return (
+    <React.Fragment>
+      <Toast ref={toast} />
+      <Helmet>
+        <title>{title}</title>
+      </Helmet>
+      <BreadCrumb model={breadcrumbs} home={home} />
+      <Card title={pageTitle}>
+        <S3FileUpload
+          mode="advanced"
+          uploadDir={uploadDir}
+          customUpload
+          onUpload={onUpload}
+          onError={onError}
+          multiple
+          chooseLabel="Select files"
+          accept={FILE_UPLOAD_MIME_TYPES}
+          emptyTemplate={emptyUploadTemplate}
+        />
+        <TranscriptionList transcriptions={transcriptions} />
+      </Card>
+    </React.Fragment>
+  );
+};

@@ -1,23 +1,23 @@
 .layout-footer {
-    transition: margin-left $transitionDuration;
-    background-color: $footerBgColor;
-    padding: 1em 2em;
+  transition: margin-left $transitionDuration;
+  background-color: $footerBgColor;
+  padding: 1em 2em;
 
-    .wrapper {
-        flex: 1 1 auto;     /* 1 */
-        position: relative;
-        min-width: $minWidth;
-        max-width: $maxWidth;
-        margin: 0 auto;
-        z-index: 1;
-        width: 100%;
-    }
+  .wrapper {
+    flex: 1 1 auto; /* 1 */
+    position: relative;
+    min-width: $minWidth;
+    max-width: $maxWidth;
+    margin: 0 auto;
+    z-index: 1;
+    width: 100%;
+  }
 
-    img {
-        vertical-align: middle;
-    }
+  img {
+    vertical-align: middle;
+  }
 
-    .footer-text {
-        vertical-align: middle;
-    }
+  .footer-text {
+    vertical-align: middle;
+  }
 }

@@ -1,49 +1,76 @@
-import React, { useState } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { Button } from 'primereact/button';
-import { ClipboardButton } from './ClipboardButton';
+import React, { useState } from "react";
 
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+
+import { ClipboardButton } from "./ClipboardButton";
+import { TranscriptionScript } from "./script/TranscriptionScript";
 
 export const TranscriptionDialog = (props) => {
-    const [dialogDisplayed, setDialogDisplayed] = useState(false);
-    const [rawTranscriptionText, setRawTranscriptionText] = useState("");
-    const [transcriptionText, setTranscriptionText] = useState(null);
-    const [downloadUrl, setDownloadUrl] = useState("")
-    const [dataDownloadUrl, setDataDownloadUrl] = useState("")
+  const [dialogDisplayed, setDialogDisplayed] = useState(false);
+  const [transcriptionScript, setTranscriptionScript] = useState(null);
+  const [rawTranscriptionScript, setRawTranscriptionScript] = useState("");
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [dataDownloadUrl, setDataDownloadUrl] = useState("");
 
-    const displayDialog = async () => {
-        const fileUrl = await props.getUrl();
-        setDataDownloadUrl(fileUrl)
+  const displayDialog = async () => {
+    console.log(props);
 
-        const fileContent = await props.getData();
-        const data = JSON.parse(await fileContent.Body.text());
-        const rawText = data.results.transcripts.map((t) => t.transcript).join("");
+    const fileUrl = await props.getUrl();
 
-        setRawTranscriptionText(rawText);
-        setTranscriptionText(data.results.transcripts.map((t, i) => <p key={i}>{t.transcript}</p>));
+    setDataDownloadUrl(fileUrl);
 
-        const rawUrl = window.URL.createObjectURL(new Blob([rawText]))
-        setDownloadUrl(rawUrl)
+    const fileContent = await props.getData();
+    const data = JSON.parse(await fileContent.Body.text());
+    const results = data.results;
 
-        setDialogDisplayed(true);
-    }
-
-
-    const footer = (
-        <div>
-            <ClipboardButton text={rawTranscriptionText} />
-            <a href={downloadUrl} download="transcription.txt"><Button label="Download transcription " /></a>
-            <a href={dataDownloadUrl} download="transcription.json"><Button label="Download transcription data" /></a>
-        </div>
+    const transcriptionScript = (
+      <TranscriptionScript
+        speakerLabels={results.speaker_labels}
+        scriptSegments={results.segments}
+        getRawText={setRawTranscriptionScript}
+      />
     );
 
-    return (
-        <React.Fragment>
-            <Button label="Download" icon="pi pi-external-link" onClick={displayDialog} disabled={props.disabled} />
+    setTranscriptionScript(transcriptionScript);
 
-            <Dialog header={props.filename} visible={dialogDisplayed} style={{ width: '50vw' }} onHide={() => setDialogDisplayed(false)} footer={footer}>
-                {transcriptionText}
-            </Dialog>
-        </React.Fragment>
-    )
-}
+    const rawUrl = window.URL.createObjectURL(
+      new Blob([transcriptionScript.innerHTML])
+    );
+    setDownloadUrl(rawUrl);
+    setDialogDisplayed(true);
+  };
+
+  const footer = (
+    <div>
+      <ClipboardButton text={rawTranscriptionScript} />
+      <a href={downloadUrl} download="transcription.txt">
+        <Button label="Download transcription " />
+      </a>
+      <a href={dataDownloadUrl} download="transcription.json">
+        <Button label="Download transcription data" />
+      </a>
+    </div>
+  );
+
+  return (
+    <React.Fragment>
+      <Button
+        label="Download"
+        icon="pi pi-external-link"
+        onClick={displayDialog}
+        disabled={props.disabled}
+      />
+
+      <Dialog
+        header={props.filename}
+        visible={dialogDisplayed}
+        style={{ width: "50vw" }}
+        onHide={() => setDialogDisplayed(false)}
+        footer={footer}
+      >
+        {transcriptionScript}
+      </Dialog>
+    </React.Fragment>
+  );
+};
