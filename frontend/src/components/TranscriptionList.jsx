@@ -91,7 +91,7 @@ export const TranscriptionList = (props) => {
       dataKey="pk"
       paginator
       rows={5}
-      rowsPerPageOptions={(5, 10, 25, 100)}
+      rowsPerPageOptions={[5, 10, 25, 100]}
       alwaysShowPaginator={false}
     >
       <Column field="filename" header="File name" sortable></Column>

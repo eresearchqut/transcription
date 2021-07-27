@@ -11,15 +11,16 @@ import { UserService } from "./service/UserService";
 
 export const AppTopbar = () => {
   const [user, setUser] = useState(null);
-  const userService = new UserService();
 
   useEffect(() => {
     const getUser = async () => {
       try {
         await Auth.currentAuthenticatedUser();
-        const user = await userService.getUser();
+        const user = await UserService.getUser();
         setUser(user);
-      } catch {}
+      } catch (e) {
+        console.log(e);
+      }
     };
     getUser().then((r) => {
       console.log("Fetched User Details");
