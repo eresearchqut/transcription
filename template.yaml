@@ -33,7 +33,8 @@ Mappings:
   EnvironmentMap:
     dev:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
-      WafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
+      GlobalWafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
+      RegionalWafArn: "arn:aws:wafv2:ap-southeast-2:854640616043:regional/webacl/waf-qut-general-regional/21661508-d190-4ec7-b48b-f1769aa4f8b3"
       AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
       FrontEndDomainName: "transcription.dev.eresearchqut.net"
       ApiDomainName: "api-transcription.dev.eresearchqut.net"
@@ -45,7 +46,8 @@ Mappings:
         - subnet-0b64a1893e6646035
     qa:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/ce96c960-f8ca-4d95-8eb9-845b57b57301"
-      WafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
+      GlobalWafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
+      RegionalWafArn: "arn:aws:wafv2:ap-southeast-2:488710887118:regional/webacl/waf-qut-general-regional/84edb6a8-1356-4605-a6be-31ceba357f61"
       AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
       FrontEndDomainName: "transcription.qa.eresearchqut.net"
       ApiDomainName: "api-transcription.qa.eresearchqut.net"
@@ -164,7 +166,7 @@ Resources:
           AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
           MinimumProtocolVersion: TLSv1.2_2018
           SslSupportMethod: sni-only
-        WebACLId: !FindInMap [ EnvironmentMap, !Ref Environment, WafArn ]
+        WebACLId: !FindInMap [ EnvironmentMap, !Ref Environment, GlobalWafArn ]
   DistributionAlias:
     Type: AWS::Route53::RecordSet
     Condition: CreateARecords
@@ -564,6 +566,11 @@ Resources:
       Roles:
         authenticated: !GetAtt CognitoAuthorizedRole.Arn
         unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
+  ApiGatewayWaf:
+    Type: 'AWS::WAFv2::WebACLAssociation'
+    Properties:
+      ResourceArn: !Sub 'arn:aws:apigateway:${AWS::Region}::/restapis/${ServerlessRestApi}/stages/${ServerlessRestApiProdStage}'
+      WebACLArn: !FindInMap [EnvironmentMap, !Ref Environment, RegionalWafArn]
 Outputs:
   ApiGatewayEndpoint:
     Description: 'API Gateway endpoint URL for Prod stage'
