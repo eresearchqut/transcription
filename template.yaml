@@ -33,30 +33,43 @@ Mappings:
   EnvironmentMap:
     dev:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:854640616043:certificate/0520143b-7744-4104-afac-97abfd0bbace"
-      GlobalWafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
+      GlobalCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
       RegionalWafArn: "arn:aws:wafv2:ap-southeast-2:854640616043:regional/webacl/waf-qut-general-regional/21661508-d190-4ec7-b48b-f1769aa4f8b3"
-      AcmCertificateArn: "arn:aws:acm:us-east-1:854640616043:certificate/05dcfb8d-d5e2-47ec-983c-749860c58669"
+      GlobalWafArn: "arn:aws:wafv2:us-east-1:854640616043:global/webacl/waf-qut-general-cloudfront/5c121681-28b3-4e2f-acd8-7b178882a053"
       FrontEndDomainName: "transcription.dev.eresearchqut.net"
       ApiDomainName: "api-transcription.dev.eresearchqut.net"
-      VpcId: "vpc-0d673f722007f45eb"
       HostedZoneName: "dev.eresearchqut.net."
+      VpcId: "vpc-0d673f722007f45eb"
       SubnetIds:
         - subnet-063a6e032aa50dc31
         - subnet-0a44efd7e3150f734
         - subnet-0b64a1893e6646035
     qa:
       RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:488710887118:certificate/ce96c960-f8ca-4d95-8eb9-845b57b57301"
-      GlobalWafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
+      GlobalCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
       RegionalWafArn: "arn:aws:wafv2:ap-southeast-2:488710887118:regional/webacl/waf-qut-general-regional/84edb6a8-1356-4605-a6be-31ceba357f61"
-      AcmCertificateArn: "arn:aws:acm:us-east-1:488710887118:certificate/5bc3d6b9-b885-4580-831f-7b958a3c9a02"
+      GlobalWafArn: "arn:aws:wafv2:us-east-1:488710887118:global/webacl/waf-qut-general-cloudfront/b44f6242-8ebd-442d-a8a5-901e88f302ef"
       FrontEndDomainName: "transcription.qa.eresearchqut.net"
       ApiDomainName: "api-transcription.qa.eresearchqut.net"
-      VpcId: "vpc-07be9e7c8d5af440e"
       HostedZoneName: "qa.eresearchqut.net."
+      VpcId: "vpc-07be9e7c8d5af440e"
       SubnetIds:
         - subnet-09bb9365c2ef4b739
         - subnet-09b60f7e440984e55
         - subnet-0fc6b193cb612bc31
+    prod:
+      RegionalCertificateArn: "arn:aws:acm:ap-southeast-2:827511434808:certificate/4ee1151c-90bf-4f27-aa4d-074919fb325b"
+      GlobalCertificateArn: "arn:aws:acm:us-east-1:827511434808:certificate/1a0dfb12-0841-4680-82f9-cb89d25758d7"
+      RegionalWafArn: "arn:aws:wafv2:ap-southeast-2:827511434808:regional/webacl/waf-qut-general-regional/3bc093b5-feec-458a-8876-02dd6636cc72"
+      GlobalWafArn: "arn:aws:wafv2:us-east-1:827511434808:global/webacl/waf-qut-general-cloudfront/e4c7db53-3ea1-484c-acb5-9caeeb6b1456"
+      FrontEndDomainName: "transcription.eresearchqut.net"
+      ApiDomainName: "api-transcription.eresearchqut.net"
+      HostedZoneName: "eresearchqut.net."
+      VpcId: "vpc-0bd70346dd58223ad"
+      SubnetIds:
+        - subnet-045abc03d245237e7
+        - subnet-0a0b9cd6bbafc74a5
+        - subnet-0cb8d571fe5512786
 Conditions:
   CreateARecords: !Not [ !Equals [ !FindInMap [ EnvironmentMap, !Ref Environment, HostedZoneName ], "" ] ]
 Globals:
@@ -163,7 +176,7 @@ Resources:
             - '${FrontEndDomainName}/'
             - FrontEndDomainName: !FindInMap [ EnvironmentMap, !Ref Environment, FrontEndDomainName ]
         ViewerCertificate:
-          AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, AcmCertificateArn ]
+          AcmCertificateArn: !FindInMap [ EnvironmentMap, !Ref Environment, GlobalCertificateArn ]
           MinimumProtocolVersion: TLSv1.2_2018
           SslSupportMethod: sni-only
         WebACLId: !FindInMap [ EnvironmentMap, !Ref Environment, GlobalWafArn ]
