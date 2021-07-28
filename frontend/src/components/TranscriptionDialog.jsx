@@ -8,23 +8,17 @@ import { TranscriptionScript } from "./script/TranscriptionScript";
 
 export const TranscriptionDialog = (props) => {
   const [dialogDisplayed, setDialogDisplayed] = useState(false);
-  const [transcriptionScript, setTranscriptionScript] = useState(null);
+  const [dialogOutput, setDialogOutput] = useState(null);
   const [rawTranscriptionScript, setRawTranscriptionScript] = useState("");
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [dataDownloadUrl, setDataDownloadUrl] = useState("");
 
-  const displayDialog = async () => {
-    console.log(props);
-
+  const buildDialog = async () => {
     const fileUrl = await props.getUrl();
-
-    setDataDownloadUrl(fileUrl);
 
     const fileContent = await props.getData();
     const data = JSON.parse(await fileContent.Body.text());
     const results = data.results;
 
-    const transcriptionScript = (
+    const transcriptionScriptComponent = (
       <TranscriptionScript
         speakerLabels={results.speaker_labels}
         scriptSegments={results.segments}
@@ -32,22 +26,21 @@ export const TranscriptionDialog = (props) => {
       />
     );
 
-    setTranscriptionScript(transcriptionScript);
-
-    const rawUrl = window.URL.createObjectURL(
-      new Blob([transcriptionScript.innerHTML])
-    );
-    setDownloadUrl(rawUrl);
-    setDialogDisplayed(true);
+    setDialogOutput({
+      dataDownloadUrl: fileUrl,
+      transcriptionScriptComponent: transcriptionScriptComponent,
+    });
   };
+
+  const rawUrl = window.URL.createObjectURL(new Blob([rawTranscriptionScript]));
 
   const footer = (
     <div>
       <ClipboardButton text={rawTranscriptionScript} />
-      <a href={downloadUrl} download="transcription.txt">
+      <a href={rawUrl} download="transcription.txt">
         <Button label="Download transcription " />
       </a>
-      <a href={dataDownloadUrl} download="transcription.json">
+      <a href={dialogOutput?.dataDownloadUrl} download="transcription.json">
         <Button label="Download transcription data" />
       </a>
     </div>
@@ -58,7 +51,10 @@ export const TranscriptionDialog = (props) => {
       <Button
         label="Download"
         icon="pi pi-external-link"
-        onClick={displayDialog}
+        onClick={() => {
+          setDialogDisplayed(true);
+          buildDialog();
+        }}
         disabled={props.disabled}
       />
 
@@ -69,7 +65,8 @@ export const TranscriptionDialog = (props) => {
         onHide={() => setDialogDisplayed(false)}
         footer={footer}
       >
-        {transcriptionScript}
+        {dialogOutput?.transcriptionScriptComponent ||
+          "Loading transcription..."}
       </Dialog>
     </React.Fragment>
   );
