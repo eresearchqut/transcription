@@ -12,6 +12,7 @@ export const AppFooter = () => {
           <a
             href="https://eresearchqut.atlassian.net/servicedesk/customer/portal/3/group/4/create/127"
             target="_blank"
+            rel="noreferrer"
           >
             Provide Feedback
           </a>
