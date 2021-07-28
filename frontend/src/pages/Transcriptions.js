@@ -32,6 +32,7 @@ const FILE_UPLOAD_MIME_TYPES = [
   "audio/x-pn-wav",
 ].join(",");
 const APPLICATION_NAME = process.env.REACT_APP_APPLICATION_NAME;
+const POLLING_INTERVAL = 2000;
 
 const emptyUploadTemplate = (
   <p className="p-m-0">Drag and drop files here to upload.</p>
@@ -40,6 +41,7 @@ const emptyUploadTemplate = (
 export const Transcriptions = () => {
   const [user, setUser] = useState(null);
   const [transcriptions, setTranscriptions] = useState([]);
+  const [waitingForUploadEvent, setWaitingForUploadEvent] = useState(false);
   const toast = useRef(null);
 
   const useInterval = (callback, delay) => {
@@ -63,6 +65,10 @@ export const Transcriptions = () => {
     }, [delay]);
   };
 
+  const updateTranslations = () => {
+    TranscriptionService.getTranscriptions().then(setTranscriptions);
+  };
+
   const uploadDir = user ? `${user["identityId"]}` : null;
 
   useEffect(() => {
@@ -71,13 +77,27 @@ export const Transcriptions = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    TranscriptionService.getTranscriptions().then(setTranscriptions);
-  }, []);
+  useEffect(updateTranslations, []);
+
+  const unfinishedTranscription = Boolean(
+    transcriptions.find((transcription) => {
+      const status =
+        transcription.jobStatusUpdated?.detail.TranscriptionJobStatus ||
+        transcription.transcriptionResponse?.TranscriptionJob
+          ?.TranscriptionJobStatus;
+
+      return status === "QUEUED" || status === "IN_PROGRESS";
+    })
+  );
 
   useInterval(() => {
-    TranscriptionService.getTranscriptions().then(setTranscriptions);
-  }, 2000);
+    if (unfinishedTranscription) {
+      setWaitingForUploadEvent(false);
+    }
+    if (unfinishedTranscription || waitingForUploadEvent) {
+      updateTranslations();
+    }
+  }, POLLING_INTERVAL);
 
   const onUpload = ({ file }) => {
     toast.current.show({
@@ -85,6 +105,8 @@ export const Transcriptions = () => {
       summary: "Success",
       detail: `${file.name} uploaded`,
     });
+
+    setWaitingForUploadEvent(true);
   };
 
   const onError = ({ file, _ }) => {
