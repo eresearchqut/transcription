@@ -27,6 +27,7 @@ export class S3FileUpload extends FileUpload {
           level: "private",
           metadata: {
             fileName: file.name,
+            mimeType: file.type,
             fileType: "userUploadedFile",
             languageCode: "en-AU",
           },

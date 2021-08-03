@@ -36,6 +36,7 @@ export const TranscriptionList = (props) => {
         t.jobStatusUpdated?.detail.TranscriptionJobStatus ||
         t.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus;
       const filename = t.metadata?.filename;
+      const mimetype = t.metadata?.mimetype;
       const downloadKey = t.downloadKey;
       const finished = transcriptionStatus === "COMPLETED" && downloadKey;
       const expiry = Date.parse(t.date) + EXPIRY_SECONDS;
@@ -62,6 +63,7 @@ export const TranscriptionList = (props) => {
       return {
         pk: t.pk,
         filename: filename,
+        mimetype: mimetype,
         link: (
           <TranscriptionDialog
             disabled={!finished}
@@ -95,6 +97,7 @@ export const TranscriptionList = (props) => {
       alwaysShowPaginator={false}
     >
       <Column field="filename" header="File name" sortable></Column>
+      <Column field="mimetype" header="Mime Type" sortable></Column>
       <Column field="status" header="Status" sortable></Column>
       <Column
         field="expiryString"
