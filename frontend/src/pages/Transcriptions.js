@@ -23,8 +23,6 @@ const FILE_UPLOAD_MIME_TYPES = [
   "video/webm",
   "audio/webm",
   "audio/amr",
-  "audio/3gpp",
-  "audio/3gpp2",
   "audio/x-wav",
   "audio/vnd.wave",
   "audio/wav",

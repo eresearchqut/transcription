@@ -4,32 +4,33 @@ const {
 } = require("@aws-sdk/client-transcribe");
 const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 const { jobStarted } = require("../service/transcriptionService");
-const { v4: uuid } = require("uuid");
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const transcribeClient = new TranscribeClient({ region });
 
 const uploadPattern = /private\/(.*)\/(.*)\/(.*)\.upload/gm;
-const fileExtensionPattern = /(?:\.([^.]+))?$/; // https://stackoverflow.com/a/680982
 
-const mediaFormat = (fileExtension) => {
-  switch (fileExtension) {
-    case "3ga":
-      return "amr";
-      break;
-    case "m4a":
-      return "mp4";
-      break;
-    case "oga":
-      return "ogg";
-      break;
-    case "opus":
-      return "ogg";
-      break;
-    default:
-      return fileExtension;
-  }
+// Supported mime types mapped to valid media formats mp3 | mp4 | wav | flac | ogg | amr | webm
+const MIME_TYPE_MEDIA_FORMAT = {
+  "audio/flac": "flac",
+  "audio/mpeg": "mp3",
+  "audio/mp4": "mp4",
+  "video/mp4": "mp4",
+  "audio/m4a": "mp4",
+  "application/ogg": "ogg",
+  "audio/ogg": "ogg",
+  "video/ogg": "ogg",
+  "video/webm": "webm",
+  "audio/webm": "webm",
+  "audio/amr": "amr",
+  "audio/3gpp": "3ga",
+  "audio/3gpp2": "3ga",
+  "audio/x-wav": "wav",
+  "audio/vnd.wave": "wav",
+  "audio/wav": "wav",
+  "audio/wave": "wav",
+  "audio/x-pn-wav": "wav",
 };
 
 const s3client = new S3Client({ region: process.env.AWS_REGION });
@@ -60,23 +61,23 @@ exports.handler = async (event) => {
 
         console.log(headResponse);
 
-        const fileName = headResponse.Metadata["filename"];
+        const mimeType = headResponse.Metadata["mimetype"];
         const languageCode = headResponse.Metadata["languagecode"];
 
-        if (fileName && languageCode) {
-          console.log(matchedKey, cognitoId, identityId, fileName);
+        if (mimeType && languageCode) {
+          console.log(matchedKey, cognitoId, identityId, mimeType);
 
-          const fileExtension = fileExtensionPattern.exec(fileName)[1];
+          const mediaFormat = MIME_TYPE_MEDIA_FORMAT[mimeType];
           const cognitoGuid = cognitoId.split("%3A")[1];
 
           // Member must satisfy regular expression pattern: [a-zA-Z0-9-_.!*'()/]{1,1024}$, i.e. no colons or escaped colons
           const outputKey = `transcription/${cognitoGuid}/${identityId}/${jobId}.json`;
 
-          if (fileExtension) {
+          if (mediaFormat) {
             const params = {
               TranscriptionJobName: `${identityId}_${jobId}`,
               LanguageCode: languageCode,
-              MediaFormat: mediaFormat(fileExtension),
+              MediaFormat: mediaFormat,
               Media: {
                 MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
               },
@@ -116,7 +117,7 @@ exports.handler = async (event) => {
               console.error("Failed to save job details", error);
             }
           } else {
-            console.error("Unexpected filename: ", fileName);
+            console.error("Unexpected Mime Type: ", mimeType);
           }
         } else {
           console.error(
