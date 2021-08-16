@@ -12,15 +12,24 @@ export const TranscriptionScript = (props) => {
 
   const dialogueSegments = speakerSegments.map((segment, index) => {
     const [speakerSegment, dialogueSegment] = segment;
-    const mainSpeaker = speakerSegment.speaker_label;
+    const [mainSpeaker, startTime, endTime] = [
+      speakerSegment.speaker_label,
+      speakerSegment.start_time,
+      speakerSegment.end_time,
+    ];
     const transcript = dialogueSegment.alternatives[0].transcript;
 
-    rawText.push(mainSpeaker);
+    rawText.push(`${mainSpeaker}: ${startTime} - ${endTime}`);
     rawText.push(transcript);
     rawText.push("");
 
     return (
-      <DialogueSegment key={index} mainSpeaker={mainSpeaker}>
+      <DialogueSegment
+        key={index}
+        mainSpeaker={mainSpeaker}
+        startTime={startTime}
+        endTime={endTime}
+      >
         {transcript}
       </DialogueSegment>
     );
