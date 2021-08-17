@@ -1,17 +1,27 @@
 import { React, useEffect } from "react";
 
+import { intervalToDuration } from "date-fns";
+
 import { DialogueSegment } from "./ScriptSegment";
 
-const formatTime = (totalSeconds) => {
-  const hours = Math.floor(totalSeconds / 3600)
-    .toString()
-    .padStart(2, "0");
-  const remainingSeconds = totalSeconds % 3600;
-  const minutes = ("00" + Math.floor(remainingSeconds / 60)).slice(-2);
-  const seconds = ("00" + Math.floor(remainingSeconds % 60)).slice(-2);
-  const milliseconds = (remainingSeconds % 1).toFixed(3).toString().slice(1, 5);
+// https://stackoverflow.com/a/11818658
+function toFixed(num, fixed) {
+  var re = new RegExp("^-?\\d+(?:.\\d{0," + (fixed || -1) + "})?");
+  return num.toString().match(re)[0];
+}
 
-  return `${hours}:${minutes}:${seconds}${milliseconds}`;
+let formatTime = (totalSeconds) => {
+  const duration = intervalToDuration({ start: 0, end: totalSeconds * 1000 });
+
+  const hours = duration.hours.toString().padStart(2, "0");
+  const minutes = duration.minutes.toString().padStart(2, "0");
+  const seconds = duration.seconds.toString().padStart(2, "0");
+  const milliseconds = toFixed(totalSeconds % 1, 3)
+    .toString()
+    .slice(2, 5)
+    .padEnd(3, "0");
+
+  return `${hours}:${minutes}:${seconds}.${milliseconds}`;
 };
 
 export const TranscriptionScript = (props) => {
