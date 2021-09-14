@@ -1,5 +1,0 @@
-- Download link
-- Logout button
-- Message that files will be deleted after 2 weeks
-- Progress
-- Update file types and filter them
