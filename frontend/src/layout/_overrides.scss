@@ -1,0 +1,19 @@
+//Suggested location to add your overrides so that migration would be easy by just updating the SASS folder in the future
+
+.p-input-filled
+  .p-float-label
+  .p-autocomplete
+  .p-autocomplete-multiple-container
+  .p-autocomplete-token {
+  padding: 0.5rem;
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}
+
+.p-float-label input:focus ~ label,
+.p-float-label input.p-filled ~ label,
+.p-float-label textarea:focus ~ label,
+.p-float-label textarea.p-filled ~ label,
+.p-float-label .p-inputwrapper-focus ~ label,
+.p-float-label .p-inputwrapper-filled ~ label {
+  margin-left: -0.25rem;
+}

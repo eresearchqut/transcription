@@ -1,0 +1,14 @@
+{
+  "version": "0",
+  "id": "bbd6379d-7a9e-17ff-7259-1861f605e354",
+  "detail-type": "Transcribe Job State Change",
+  "source": "aws.transcribe",
+  "account": "854640616043",
+  "time": "2021-04-09T05:18:03Z",
+  "region": "ap-southeast-2",
+  "resources": [],
+  "detail": {
+    "TranscriptionJobName": "'76c65a59-1c57-489b-be96-020ceaa9675a_0f862d49-def3-405e-9df3-22c520d87ca2'",
+    "TranscriptionJobStatus": "COMPLETED"
+  }
+}

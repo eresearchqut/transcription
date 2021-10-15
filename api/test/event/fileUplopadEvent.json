@@ -1,0 +1,38 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "ap-southeast-2",
+      "eventTime": "2021-07-27T01:22:18.119Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "AWS:AROA4N7EM4JVUOERRHODU:CognitoIdentityCredentials"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "131.181.240.97"
+      },
+      "responseElements": {
+        "x-amz-request-id": "PKTR0182QDFYJZ1S",
+        "x-amz-id-2": "ABVXaioAlK5YtmP0ioiwLA+qK/PGKn8ZpUJ+egx1KalB+CwZjHnFhLQtPXBBdFy/QeSLn3+enQKseWdCXfW9DO7N5ZU4tAIU"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "88c13d00-6684-4b6c-b9eb-eac98e0181e5",
+        "bucket": {
+          "name": "dev-transcription-ap-southeast-2-854640616043",
+          "ownerIdentity": {
+            "principalId": "A3L2ACD44URAOR"
+          },
+          "arn": "arn:aws:s3:::dev-transcription-ap-southeast-2-854640616043"
+        },
+        "object": {
+          "key": "private/ap-southeast-2%3Abcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/2e9b38b5-1df0-4841-8308-f174fb88aac7.upload",
+          "size": 1292288,
+          "eTag": "c2ee56cbea8c6d3d694042bd4f5439fe",
+          "sequencer": "0060FF5FCCD239203C"
+        }
+      }
+    }
+  ]
+}

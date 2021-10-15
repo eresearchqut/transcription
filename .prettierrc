@@ -1,0 +1,5 @@
+{
+  "importOrder": ["^react", "^[\\w\\d]+", "^[./]"],
+  "experimentalBabelParserPluginsList": ["jsx", "typescript"],
+  "importOrderSeparation": true
+}
