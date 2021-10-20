@@ -17,6 +17,6 @@ api.use((error, request, response, next) => {
     .send("Internal Server Error, please check the log for further details.");
 });
 
-api.use(AWSXRay.express.closeSegment());
+api.use(xray.express.closeSegment());
 
 module.exports = api;
