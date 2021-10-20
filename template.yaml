@@ -208,6 +208,7 @@ Resources:
       CodeUri: ./api
       Handler: src/api/apiHandler.handler
       Runtime: nodejs14.x
+      Tracing: Active
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref Table
@@ -240,6 +241,7 @@ Resources:
       CodeUri: ./api
       Handler: src/event/fileUploadHandler.handler
       Runtime: nodejs14.x
+      Tracing: Active
       Description: >
         Starts transcription jobs when triggered by S3 events
       Environment:
@@ -280,6 +282,7 @@ Resources:
       CodeUri: ./api
       Handler: src/event/copyOutputHandler.handler
       Runtime: nodejs14.x
+      Tracing: Active
       Description: >
         Starts transcription jobs when triggered by S3 events
       Environment:
@@ -325,6 +328,7 @@ Resources:
       CodeUri: ./api
       Handler: src/event/transcriptionJobStateChangeHandler.handler
       Runtime: nodejs14.x
+      Tracing: Active
       Description: >
         Triggers when the job state is updated
       Policies:
