@@ -5,7 +5,7 @@
     "main": "src/apiHandler.js",
     "author": "Ryan Bennett",
     "scripts": {
-        "test": "jest ./test",
+        "test": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_XRAY_LOG_LEVEL=silent jest ./test",
         "fmt": "prettier --write .",
         "lint": "eslint --fix ."
     },

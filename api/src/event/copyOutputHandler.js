@@ -1,9 +1,13 @@
 const { S3Client, CopyObjectCommand } = require("@aws-sdk/client-s3");
 const { downloadKey } = require("../service/transcriptionService");
+const xray = require("aws-xray-sdk");
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const outputPattern = /transcription\/(.*)\/(.*)\/(.*)/gm;
+
 const s3Client = new S3Client({ region });
+
+xray.captureAWSv3Client(s3Client);
 
 exports.handler = async (event) => {
   console.log(JSON.stringify(event));

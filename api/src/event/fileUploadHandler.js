@@ -4,14 +4,17 @@ const {
 } = require("@aws-sdk/client-transcribe");
 const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
 const { jobStarted } = require("../service/transcriptionService");
+const xray = require("aws-xray-sdk");
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
-const transcribeClient = new TranscribeClient({ region });
-
 const uploadPattern = /private\/(.*)\/(.*)\/(.*)\.upload/gm;
 
+const transcribeClient = new TranscribeClient({ region });
 const s3client = new S3Client({ region: process.env.AWS_REGION });
+
+xray.captureAWSv3Client(transcribeClient);
+xray.captureAWSv3Client(s3client);
 
 exports.handler = async (event) => {
   console.log(JSON.stringify(event));
