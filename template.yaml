@@ -79,6 +79,7 @@ Globals:
           Identity:
             Header: Authorization
       AddDefaultAuthorizerToCorsPreflight: false
+    TracingEnabled: true
 Resources:
   DistributionIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
