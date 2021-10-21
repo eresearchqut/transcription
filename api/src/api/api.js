@@ -2,11 +2,10 @@ const express = require("express");
 const xray = require("aws-xray-sdk");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const api = express().use(
-  bodyParser.json(),
-  cors(),
-  xray.express.openSegment("Transcription")
-);
+const api = express().use(bodyParser.json(), cors(), (req, res, next) => {
+  req.segment = xray.getSegment();
+  next();
+});
 
 api.use("/transcription", require("../routes/transcriptionRoutes"));
 api.use("/user", require("../routes/userRoutes"));
