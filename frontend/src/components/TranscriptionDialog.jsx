@@ -52,11 +52,11 @@ export const TranscriptionDialog = (props) => {
   const [dialogState, setDialogState] = useState(null);
 
   const buildDialog = async () => {
-    const dataDownloadUrl = await props.getUrl();
-    const mediaUrl = await props.getMedia();
-
-    const fileContent = await props.getData();
-    const data = JSON.parse(await fileContent.Body.text());
+    const [dataDownloadUrl, mediaUrl, data] = await Promise.all([
+      props.getUrl(),
+      props.getMedia(),
+      props.getData(),
+    ]);
     const results = data.results;
 
     const speakerSegments = results.speaker_labels.segments.map(
