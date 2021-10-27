@@ -5,10 +5,7 @@ import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { ListBox } from "primereact/listbox";
 
-export const DialogueSegment = (props) => {
-  const [transcript, setTranscript] = useState(
-    props.segment.alternatives[0].transcript
-  );
+export const ScriptSegment = (props) => {
   const [showDialog, setShowDialog] = useState(false);
   const contentEditable = useRef(null);
 
@@ -46,11 +43,11 @@ export const DialogueSegment = (props) => {
           header="Alternatives"
           dismissableMask={true}
         >
-          <p>{transcript}</p>
+          <p>{props.segment.transcript}</p>
           <ListBox
-            value={transcript}
+            value={props.segment.transcript}
             onChange={(e) => {
-              setTranscript(e.value.transcript);
+              props.setTranscript(props.index, e.value.transcript);
               setShowDialog(false);
             }}
             options={props.segment.alternatives.map((e, i) => {
@@ -67,8 +64,8 @@ export const DialogueSegment = (props) => {
       </h5>
       <ContentEditable
         innerRef={contentEditable}
-        html={transcript}
-        onChange={(e) => (contentEditable.current = e.target.value)}
+        html={props.segment.transcript}
+        onChange={(e) => props.setTranscript(props.index, e.target.value)}
       />
     </div>
   );

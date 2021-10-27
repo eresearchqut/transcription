@@ -4,7 +4,8 @@ import { intervalToDuration } from "date-fns";
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 
-import { ClipboardButton } from "./ClipboardButton";
+import { ClipboardButton } from "./dialog/ClipboardButton";
+import { DownloadButton } from "./dialog/DownloadButton";
 import { TranscriptionScript } from "./script/TranscriptionScript";
 
 // https://stackoverflow.com/a/11818658
@@ -28,12 +29,13 @@ const formatTime = (totalSeconds) => {
 };
 
 const parseSegment = (segment) => {
-  const [speakerSegment, dialogueSegment] = segment;
+  const [speakerSegment, dialogueSegment, savedSegment] = segment;
 
   const mainSpeaker = speakerSegment.speaker_label;
   const startTime = parseFloat(speakerSegment.start_time);
   const endTime = parseFloat(speakerSegment.end_time);
   const alternatives = dialogueSegment.alternatives;
+  const transcript = savedSegment || alternatives[0].transcript;
   const timestamp = `${formatTime(speakerSegment.start_time)} - ${formatTime(
     speakerSegment.end_time
   )}`;
@@ -42,6 +44,7 @@ const parseSegment = (segment) => {
     mainSpeaker,
     timestamp,
     alternatives,
+    transcript,
     startTime,
     endTime,
   };
@@ -49,7 +52,16 @@ const parseSegment = (segment) => {
 
 export const TranscriptionDialog = (props) => {
   const [dialogDisplayed, setDialogDisplayed] = useState(false);
-  const [dialogState, setDialogState] = useState(null);
+  const [dialogState, setDialogState] = useState({
+    mediaUrl: null,
+    scriptSegments: [],
+    dataDownloadUrl: null,
+  });
+
+  const setTranscript = (index, transcript) => {
+    dialogState.scriptSegments[index].transcript = transcript;
+    setDialogState(dialogState);
+  };
 
   const buildDialog = async () => {
     const [dataDownloadUrl, mediaUrl, data] = await Promise.all([
@@ -60,43 +72,37 @@ export const TranscriptionDialog = (props) => {
     const results = data.results;
 
     const speakerSegments = results.speaker_labels.segments.map(
-      (segment, index) => [segment, results.segments[index]]
+      (segment, index) => [
+        segment,
+        results.segments[index],
+        results.savedSegments?.[index],
+      ]
     );
 
     const scriptSegments = speakerSegments.map(parseSegment);
 
-    const rawScript = scriptSegments
+    setDialogState({
+      mediaUrl,
+      scriptSegments,
+      dataDownloadUrl,
+    });
+  };
+
+  const getRawScript = () =>
+    dialogState.scriptSegments
       .map((segment) =>
         [
           `${segment.mainSpeaker}: ${segment.timestamp}`,
-          segment.alternatives[0].transcript,
+          segment.transcript,
           "",
         ].join("\n")
       )
       .join("\n");
 
-    const transcriptionScriptComponent = (
-      <TranscriptionScript
-        mediaUrl={mediaUrl}
-        scriptSegments={scriptSegments}
-      />
-    );
-
-    setDialogState({
-      rawScript,
-      dataDownloadUrl,
-      transcriptionScriptComponent,
-    });
-  };
-
-  const rawUrl = window.URL.createObjectURL(new Blob([dialogState?.rawScript]));
-
   const footer = (
     <div>
-      <ClipboardButton text={dialogState?.rawScript} />
-      <a href={rawUrl} download="transcription.txt">
-        <Button label="Download transcription " />
-      </a>
+      <ClipboardButton text={getRawScript} />
+      <DownloadButton text={getRawScript} />
       <a href={dialogState?.dataDownloadUrl} download="transcription.json">
         <Button label="Download transcription data" />
       </a>
@@ -123,8 +129,11 @@ export const TranscriptionDialog = (props) => {
         footer={footer}
         dismissableMask={true}
       >
-        {dialogState?.transcriptionScriptComponent ||
-          "Loading transcription..."}
+        <TranscriptionScript
+          mediaUrl={dialogState.mediaUrl}
+          scriptSegments={dialogState.scriptSegments}
+          setTranscript={setTranscript}
+        />
       </Dialog>
     </React.Fragment>
   );

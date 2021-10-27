@@ -48,10 +48,11 @@ export const TranscriptionList = (props) => {
 
       const getData = async () => {
         console.log("getData", downloadKey);
-        return await Storage.get(downloadKey, {
+        const fileContent = await Storage.get(downloadKey, {
           level: "private",
           download: true,
         });
+        return JSON.parse(await fileContent.Body.text());
       };
       const getUrl = async () => {
         console.log("getUrl", downloadKey);

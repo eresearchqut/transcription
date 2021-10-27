@@ -6,7 +6,7 @@ export const ClipboardButton = (props) => {
   const [copied, setCopied] = useState(false);
 
   const copyText = () => {
-    navigator.clipboard.writeText(props.text);
+    navigator.clipboard.writeText(props.text());
     setCopied(true);
 
     setTimeout(() => setCopied(false), 3000);

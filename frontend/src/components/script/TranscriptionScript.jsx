@@ -1,6 +1,6 @@
 import { React, useRef, useState } from "react";
 
-import { DialogueSegment } from "./ScriptSegment";
+import { ScriptSegment } from "./ScriptSegment";
 
 export const TranscriptionScript = (props) => {
   const [currentTime, setCurrentTime] = useState(0);
@@ -13,12 +13,14 @@ export const TranscriptionScript = (props) => {
 
   const dialogueSegments = props.scriptSegments.map((segment, index) => {
     return (
-      <DialogueSegment
+      <ScriptSegment
         key={index}
+        index={index}
         isCurrent={
           currentTime > segment.startTime && currentTime < segment.endTime
         }
         segment={segment}
+        setTranscript={props.setTranscript}
         setTime={setTime}
       />
     );
