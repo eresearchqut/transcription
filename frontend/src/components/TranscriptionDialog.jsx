@@ -104,7 +104,7 @@ export const TranscriptionDialog = (props) => {
     <div>
       <ClipboardButton text={getRawScript} />
       <DownloadButton text={getRawScript} />
-      <a href={dialogState?.dataDownloadUrl} download="transcription.json">
+      <a href={dialogState.dataDownloadUrl} download="transcription.json">
         <Button label="Download transcription data" />
       </a>
     </div>
