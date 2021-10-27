@@ -59,8 +59,9 @@ export const TranscriptionDialog = (props) => {
   });
 
   const setTranscript = (index, transcript) => {
-    dialogState.scriptSegments[index].transcript = transcript;
-    setDialogState(dialogState);
+    const scriptSegments = [...dialogState.scriptSegments];
+    scriptSegments[index].transcript = transcript;
+    setDialogState({ ...dialogState, scriptSegments });
   };
 
   const buildDialog = async () => {

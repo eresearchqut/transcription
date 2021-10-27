@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import ContentEditable from "react-contenteditable";
 
 import { Button } from "primereact/button";
 import { Dialog } from "primereact/dialog";
 import { ListBox } from "primereact/listbox";
+
+import styles from "./ScriptSegment.module.css";
 
 export const ScriptSegment = (props) => {
   const [showDialog, setShowDialog] = useState(false);
@@ -62,10 +63,11 @@ export const ScriptSegment = (props) => {
           />
         </Dialog>
       </h5>
-      <ContentEditable
-        innerRef={contentEditable}
-        html={props.segment.transcript}
-        onChange={(e) => props.setTranscript(props.index, e.target.value)}
+      <input
+        type="text"
+        className={styles.transcriptText}
+        value={props.segment.transcript}
+        onInput={(e) => props.setTranscript(props.index, e.target.value)}
       />
     </div>
   );
