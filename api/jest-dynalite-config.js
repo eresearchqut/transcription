@@ -17,21 +17,6 @@ module.exports = {
       },
       data: [],
     },
-    {
-      TableName: "data-management-checklist-search",
-      KeySchema: [
-        { AttributeName: "hashKey", KeyType: "HASH" },
-        { AttributeName: "rangeKey", KeyType: "RANGE" },
-      ],
-      AttributeDefinitions: [
-        { AttributeName: "hashKey", AttributeType: "S" },
-        { AttributeName: "rangeKey", AttributeType: "S" },
-      ],
-      ProvisionedThroughput: {
-        ReadCapacityUnits: 1,
-        WriteCapacityUnits: 1,
-      },
-    },
   ],
   basePort: 8000,
 };
