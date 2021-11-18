@@ -30,7 +30,6 @@ export const Login = () => {
         <h2>
           Thank you for taking part in the transcription service BETA testing!
         </h2>
-
         <p>
           Click the{" "}
           <a href="https://eresearchqut.atlassian.net/servicedesk/customer/portal/3/group/4/create/127">
@@ -52,9 +51,7 @@ export const Login = () => {
           <li>ogg</li>
           <li>opus</li>
         </ul>
-
         <h3>Quotas and Limits</h3>
-
         <div
           className="p-datatable p-component"
           data-scrollselectors=".p-datatable-scrollable-body, .p-datatable-unfrozen-view .p-datatable-scrollable-body"
@@ -92,7 +89,6 @@ export const Login = () => {
             </table>
           </div>
         </div>
-
         <h3>Powered by Amazon Transcribe</h3>
         <blockquote>
           <p>
@@ -110,6 +106,20 @@ export const Login = () => {
             </cite>
           </footer>
         </blockquote>
+        <h3>Data storage and security</h3>
+        <p>Uploaded media and generated transcriptions are:</p>
+        <ul>
+          <li>Stored in the Amazon Web Services (AWS) Sydney region</li>
+          <li>Kept for 14 days and then automatically deleted</li>
+          <li>Encrypted in transit and at rest</li>
+          <li>Accessible only by the uploader</li>
+          <li>
+            Not subject to additional storage or usage by AWS for QA or service
+            improvement purposes
+          </li>
+        </ul>
+        {/* prettier-ignore */}
+        <p>For more information, refer to the <a href="https://docs.aws.amazon.com/transcribe/latest/dg/security.html">Amazon Transcribe Security Documentation</a>.</p>
       </Card>
     </React.Fragment>
   );
