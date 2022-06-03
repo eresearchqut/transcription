@@ -69,7 +69,9 @@ Globals:
     Cors:
       AllowMethods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
       AllowHeaders: "'*'"
-      AllowOrigin: "'*'"
+      AllowOrigin: !Sub "'https://${FrontEndDomainName}"
+      MaxAge: "'600'"
+      AllowCredentials: true
     Auth:
       DefaultAuthorizer: CognitoAuthorizer
       Authorizers:
@@ -104,7 +106,7 @@ Resources:
               - HEAD
               - DELETE
             AllowedOrigins:
-              - '*'
+              - !Ref FrontEndDomainName
             AllowedHeaders:
               - '*'
             ExposedHeaders:
