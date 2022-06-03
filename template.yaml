@@ -67,7 +67,7 @@ Globals:
     MemorySize: 1024
   Api:
     Cors:
-      AllowMethods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+      AllowMethods: "'DELETE,GET,HEAD,PATCH,POST,PUT'"
       AllowHeaders: "'*'"
       AllowOrigin: !Sub "'https://${FrontEndDomainName}"
       MaxAge: "'600'"
