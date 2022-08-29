@@ -1,7 +1,6 @@
-import type {NextPage} from 'next'
-import * as React from "react"
+import {Box, Stack, Text} from "@chakra-ui/layout";
+import React from "react";
 import {
-    Box,
     Button,
     Divider,
     Heading,
@@ -9,55 +8,56 @@ import {
     Link,
     SimpleGrid,
     Spacer,
-    Stack,
-    Text,
-    useColorMode
-} from '@chakra-ui/react'
+    useColorMode,
+    useColorModeValue
+} from "@chakra-ui/react";
 
-const Home: NextPage = () => {
 
-    const {colorMode, toggleColorMode} = useColorMode()
+export const Layout = ({children}: any) => {
+
+    const {colorMode, toggleColorMode} = useColorMode();
+    // const bg = useColorModeValue('red.500', 'red.200')
 
     return (
         <SimpleGrid
             columns={1}
             height={'100vh'}
             width={'100%'}
-            gridTemplateRows={'90px 1fr 30px 30px'}
+            gridTemplateRows={'60px 1fr 30px 30px'}
         >
-            <Box bg={'blue.900'} color={'white'} width={'100%'} >
-                <Stack direction='row' pt={4} alignItems={'center'} maxWidth={'1576px'} m={'auto'} >
+            <Box bg={'blue.900'} color={'white'} width={'100%'}>
+                <Stack direction='row' p={2} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                     <Image
                         alt="QUT logo"
                         src="logo.png"
-                        width={"60px"}
-                        height={"60px"}
+                        width={"40px"}
+                        height={"40px"}
                     />
                     <Divider orientation='vertical'/>
                     <Heading>Transcribe</Heading>
                     <Spacer/>
-                    <Button onClick={toggleColorMode} >
+                    <Button onClick={toggleColorMode}>
                         Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
                     </Button>
                 </Stack>
             </Box>
 
-            <Box width={'100%'}>
-                <Box p={5} shadow='md' m={'auto'}  mt={4} mb={4} borderWidth='1px' maxWidth={'1576px'} >
-                    <Heading>Transcribe</Heading>
+            <Box width={'100%'} p={2}>
+                <Box p={2} shadow='md' m={'auto'} borderWidth='1px' maxWidth={'1576px'}>
+                    {children}
                 </Box>
             </Box>
 
             <Box bg={'blue.900'} color={'white'} width={'100%'}>
-                <Stack direction='row' pt={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                <Stack direction='row' p={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                     <Text color={'white'} as={'b'} fontSize={"sm"} noOfLines={1}>Developed by the Office of
                         eResearch
                         QUT</Text>
-
                 </Stack>
             </Box>
+
             <Box bg={'white'} color={'blue.900'} width={'100%'}>
-                <Stack direction='row' pt={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                <Stack direction='row' p={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                     <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal fontSize={"sm"}>
                         QUT acknowledges the Traditional Owners of the lands where QUT now stands.
                     </Link>
@@ -66,6 +66,7 @@ const Home: NextPage = () => {
         </SimpleGrid>
 
     )
-}
+};
 
-export default Home
+export default Layout;
+
