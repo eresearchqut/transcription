@@ -13,6 +13,7 @@
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
     "@moxy/next-layout": "^2.2.3",
+    "aws-amplify": "^4.3.26",
     "framer-motion": "^6",
     "next": "12.2.5",
     "react": "18.2.0",

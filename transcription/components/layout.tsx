@@ -1,22 +1,23 @@
 import {Box, Stack, Text} from "@chakra-ui/layout";
 import React from "react";
-import {
-    Button,
-    Divider,
-    Heading,
-    Image,
-    Link,
-    SimpleGrid,
-    Spacer,
-    useColorMode,
-    useColorModeValue
-} from "@chakra-ui/react";
+import {Button, Divider, Heading, Image, Link, SimpleGrid, Spacer, useColorMode} from "@chakra-ui/react";
 
+
+import {withAnonymous, withAuthentication} from "../context/with-auth";
+import {useAuth, useLogin, useLogout} from "../context/auth-context";
 
 export const Layout = ({children}: any) => {
 
     const {colorMode, toggleColorMode} = useColorMode();
-    // const bg = useColorModeValue('red.500', 'red.200')
+    const {
+        handleLogin
+    } = useLogin();
+
+    const {
+        handleLogout
+    } = useLogout();
+
+    const {state: {isAuthenticated}} = useAuth();
 
     return (
         <SimpleGrid
@@ -39,6 +40,17 @@ export const Layout = ({children}: any) => {
                     <Button onClick={toggleColorMode}>
                         Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
                     </Button>
+
+                    {!isAuthenticated &&
+                        <Button onClick={handleLogin}>
+                            Login
+                        </Button>
+                    }
+                    {isAuthenticated &&
+                        <Button onClick={handleLogout}>
+                            Logout
+                        </Button>
+                    }
                 </Stack>
             </Box>
 
@@ -68,5 +80,5 @@ export const Layout = ({children}: any) => {
     )
 };
 
-export default Layout;
-
+export default withAuthentication(Layout);
+export const LoginLayout = withAnonymous(Layout);

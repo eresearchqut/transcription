@@ -1,19 +1,20 @@
 import type {NextPage} from 'next'
 import * as React from "react"
 import {withLayout} from '@moxy/next-layout'
-import Layout from '../components/layout'
+import {LoginLayout} from '../components/layout'
 import Quotas from "../components/quotas";
 import {Heading} from "@chakra-ui/react";
 
-const Home: NextPage = () => {
+const Login: NextPage = () => {
 
 
     return (
-
-        <Heading>Home</Heading>
-
+        <>
+            <Heading>Login</Heading>
+            <Quotas/>
+        </>
 
     )
 }
 
-export default withLayout(<Layout/>)(Home);
+export default withLayout(<LoginLayout/>)(Login);
