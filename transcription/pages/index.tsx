@@ -3,7 +3,7 @@ import * as React from "react"
 import {useEffect, useState} from "react"
 import {withLayout} from '@moxy/next-layout'
 import Layout from '../components/layout'
-import {Flex, Heading, Spacer} from "@chakra-ui/react";
+import {Flex, Heading, Link, Spacer, Text} from "@chakra-ui/react";
 import {getAuthHeader, useAuth} from "../context/auth-context";
 import FileUpload from "../components/fileUpload";
 
@@ -53,6 +53,7 @@ export interface Transcription {
     uploadEvent: {
         object: {
             size: number;
+            key: string;
         }
     }
 }
@@ -66,26 +67,41 @@ const Home: NextPage = () => {
 
     const formatBytes = (bytes: number, decimals = 2) => {
         if (bytes === 0) return '0 Bytes';
-
         const k = 1024;
         const dm = decimals < 0 ? 0 : decimals;
         const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-
         return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
     }
+
+    const mediaLink = (transcription: Transcription) => {
+        const [href, setHref] = useState<string | undefined>(undefined);
+        useEffect(() => {
+            const fileLocation = transcription.uploadEvent.object.key.split('/').slice(-2).join('/');
+            Storage.get(fileLocation, {
+                level: 'private',
+                contentDisposition: `attachment; filename = ${transcription.metadata.filename}`
+            }).then((signedUrl) => setHref(signedUrl))
+        }, [transcription]);
+        if (href) {
+            return <Link href={href} isExternal>{transcription.metadata.filename}</Link>
+        }
+        return <Text>{transcription.metadata.filename}</Text>;
+    };
 
     const endpoint = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
 
     const columns: ColumnDef<Transcription>[] = [
         {
             header: "File Name",
-            accessorFn: (transcription) => transcription.metadata.filename
-        }, {
+            accessorFn: (transcription) => transcription.metadata.filename,
+            cell: (props) => mediaLink(props.row.original)
+        },
+        {
             header: "Type",
             accessorFn: (transcription) => transcription.metadata.mimetype
-        }, {
+        },
+        {
             header: "Size",
             accessorFn: (transcription) => formatBytes(transcription.uploadEvent.object.size)
         }
