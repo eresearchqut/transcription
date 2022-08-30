@@ -2,6 +2,7 @@ import type {CognitoUser} from "@aws-amplify/auth";
 
 export type User = {
     username: string;
+    id: string;
     groups: string[];
 };
 

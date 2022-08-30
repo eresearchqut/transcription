@@ -35,6 +35,8 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({children}) => {
 
 export type CognitoUserAttributes = {
     sub: string;
+    'custom:qutIdentityId': string
+    'custom:uid': string
 };
 
 function useAuth() {
@@ -69,12 +71,14 @@ function useAuth() {
             const cognitoUser = await getCurrentUser();
             const groups = (await cognitoUser.getSignInUserSession()?.getAccessToken().payload["cognito:groups"]) || [];
             setTokenInLocalStorage(cognitoUser);
+            await setIdentityIdInLocalStorage();
             const {attributes} = cognitoUser;
             dispatch({
                 type: "LOGIN_SUCCESS",
                 userConfig: cognitoUser,
                 user: {
-                    username: attributes.sub,
+                    username:attributes['custom:uid'],
+                    id: attributes['custom:qutIdentityId'],
                     groups,
                 },
             });
@@ -91,6 +95,7 @@ function useAuth() {
                 });
             }
             localStorage.removeItem(JWT_LOCALSTORAGE_KEY);
+            localStorage.removeItem(IDENTITY_LOCALSTORAGE_KEY);
         }
     }, [dispatch, getCurrentUser, setIdentityIdInLocalStorage, setTokenInLocalStorage]);
 
@@ -149,7 +154,11 @@ function useLogin() {
 }
 
 export const getAuthHeader = (): Record<string, string> => {
-    return {Authorization: localStorage.getItem(JWT_LOCALSTORAGE_KEY) || ''}
+    return {['Authorization']: localStorage.getItem(JWT_LOCALSTORAGE_KEY) || ''}
+};
+
+export const getIdentityId = (): string => {
+    return localStorage.getItem(IDENTITY_LOCALSTORAGE_KEY) || '';
 };
 
 
