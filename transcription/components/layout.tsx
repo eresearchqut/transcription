@@ -36,11 +36,11 @@ export const Layout = ({children}: any) => {
             columns={1}
             height={'100vh'}
             width={'100%'}
-            gridTemplateRows={'60px 1fr 30px 30px'}
+            gridTemplateRows={'70px 1fr 30px 30px'}
         >
             <Box bg={'blue.900'} color={'white'} width={'100%'}>
                 <DarkMode>
-                    <Stack direction='row' p={2} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                    <Stack direction='row'  alignItems={'center'} maxWidth={'1576px'} m={'auto'}  p={4}>
                         <Image
                             alt="QUT logo"
                             src="logo.png"
@@ -68,15 +68,15 @@ export const Layout = ({children}: any) => {
                 </DarkMode>
             </Box>
 
-            <Box width={'100%'} p={2}>
-                <Box p={2} maxWidth={'1576px'}>
+            <Box width={'100%'} >
+                <Box maxWidth={'1576px'} m={'auto'}  p={4}>
                     {children}
                 </Box>
             </Box>
 
-            <Box bg={'blue.900'} color={'white'} width={'100%'}>
+            <Box bg={'blue.900'} color={'white'} width={'100%'} >
                 <DarkMode>
-                    <Stack direction='row' p={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                    <Stack direction='row' p={1} pl={4} pr={4} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                         <Text color={'white'} as={'b'} fontSize={"sm"} noOfLines={1}>Developed by the Office of
                             eResearch
                             QUT</Text>
@@ -86,7 +86,7 @@ export const Layout = ({children}: any) => {
 
             <Box bg={'white'} color={'blue.900'} width={'100%'}>
                 <LightMode>
-                    <Stack direction='row' p={1} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                    <Stack direction='row' p={1} pl={4} pr={4}  alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                         <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal fontSize={"sm"}>
                             QUT acknowledges the Traditional Owners of the lands where QUT now stands.
                         </Link>
