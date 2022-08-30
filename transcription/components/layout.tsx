@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 
 
+
 import {withAnonymous, withAuthentication} from "../context/with-auth";
 import {useAuth, useLogin, useLogout} from "../context/auth-context";
 
@@ -47,7 +48,7 @@ export const Layout = ({children}: any) => {
                             height={"40px"}
                         />
                         <Divider orientation='vertical'/>
-                        <Heading>Transcribe</Heading>
+                        <Heading size={"lg"}>Transcribe</Heading>
                         <Spacer/>
                         <Button onClick={toggleColorMode}>
                             Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
@@ -68,7 +69,7 @@ export const Layout = ({children}: any) => {
             </Box>
 
             <Box width={'100%'} p={2}>
-                <Box p={2} shadow='md' m={'auto'} borderWidth='1px' maxWidth={'1576px'}>
+                <Box p={2} maxWidth={'1576px'}>
                     {children}
                 </Box>
             </Box>

@@ -148,6 +148,10 @@ function useLogin() {
     return {error, isLoggingIn, handleLogin};
 }
 
+export const getAuthHeader = (): Record<string, string> => {
+    return {Authorization: localStorage.getItem(JWT_LOCALSTORAGE_KEY) || ''}
+};
+
 
 export {
     AuthProvider,
