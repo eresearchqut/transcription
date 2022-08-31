@@ -32,6 +32,8 @@ import {ExternalLinkIcon} from "@chakra-ui/icons";
 import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
 import startCase from "lodash/startCase";
+import * as srtConvert from "aws-transcription-to-srt";
+import {Readable} from "stream";
 
 const SUPPORTED_MIME_TYPES = [
     "audio/flac",
@@ -143,12 +145,39 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
 
 }
 
+export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileName, label}) => {
+
+
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+
+    const handleDownload = () => {
+        setIsLoading(() => true);
+        Storage.get(objectKey, {
+            level: 'private',
+            download: true,
+            contentDisposition: `attachment; filename = ${fileName}`
+        })
+            .then((output) => (output.Body as Blob).text())
+            .then((text) => JSON.parse(text))
+            .then((json) => srtConvert(json))
+            .then((srt) => console.log(srt))
+            .finally(() => setIsLoading(false));
+
+    }
+
+    return <>
+        <Button rightIcon={<ExternalLinkIcon/>} colorScheme='teal' variant='link' isLoading={isLoading}
+                onClick={handleDownload}>{label}</Button>
+    </>
+
+}
+
 
 const Home: NextPage = () => {
 
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
     const [transcriptionsLoading, setTranscriptionsLoading] = useState<boolean>(true);
-    const toast = useToast()
     const [pollDelay, setPollDelay] = useState<number | null>(1000);
 
     const {state: {user}} = useAuth();
@@ -218,7 +247,7 @@ const Home: NextPage = () => {
                         label: 'Download Transcription',
                         fileName: [transcription.metadata.filename.split(".")[0], 'json'].join('.')
                     }
-                    return <Download {...downloadProps}/>
+                    return <DownloadSrt {...downloadProps}/>
                 }
 
                 return transcription.jobStatusUpdated?.detail.FailureReason || null;
@@ -246,7 +275,8 @@ const Home: NextPage = () => {
     }, pollDelay);
 
     useEffect(() => {
-        if (transcriptions) {
+        console.log(transcriptions)
+        if (!transcriptionsLoading) {
             const hasQueuedOrInProgress = transcriptions.map(status).find((status) => ['QUEUED', 'IN_PROGRESS'].find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status));
             if (hasQueuedOrInProgress) {
                 setPollDelay(5000);
@@ -277,14 +307,6 @@ const Home: NextPage = () => {
                     console.log(file.name, progressPercent, progress)
                     if (progressPercent >= 1) {
                         update.delete(file.name);
-                        toast({
-                            id,
-                            title: 'File upload complete',
-                            description: `${file.name} uploaded successfully. The transcription progress will be updated shortly.`,
-                            status: 'success',
-                            duration: 10000,
-                            isClosable: true,
-                        });
                         setPollDelay(2000)
                     } else {
                         update.set(file.name, progressPercent);

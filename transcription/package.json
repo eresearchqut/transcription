@@ -17,6 +17,7 @@
     "@tanstack/react-table": "^8.5.11",
     "@tanstack/table-core": "^8.5.11",
     "aws-amplify": "^4.3.26",
+    "aws-transcription-to-srt": "^1.0.6",
     "axios": "^0.27.2",
     "framer-motion": "^6",
     "lodash": "^4.17.21",

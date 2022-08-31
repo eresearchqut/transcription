@@ -3355,6 +3355,11 @@ ast-types-flow@^0.0.7:
   resolved "https://registry.yarnpkg.com/ast-types-flow/-/ast-types-flow-0.0.7.tgz#f70b735c6bca1a5c9c22d982c3e39e7feba3bdad"
   integrity sha512-eBvWn1lvIApYMhzQMsu9ciLfkBY499mFZlNqG+/9WR7PVlroQw0vG30cOQQbaKz3sCEc44TAOu2ykzqXSNnwag==
 
+async@^3.2.0:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/async/-/async-3.2.4.tgz#2d22e00f8cddeb5fde5dd33522b56d1cf569a81c"
+  integrity sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==
+
 asynckit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
@@ -3378,6 +3383,13 @@ aws-amplify@^4.3.26:
     "@aws-amplify/storage" "4.5.4"
     "@aws-amplify/ui" "2.0.5"
     "@aws-amplify/xr" "3.0.51"
+
+aws-transcription-to-srt@^1.0.6:
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/aws-transcription-to-srt/-/aws-transcription-to-srt-1.0.6.tgz#1eb796859aa857631b85a86f6a1ce04afe026d52"
+  integrity sha512-sVizTrSLgCkjDn0c/0DmvVjVr/RA+cx8dsreOZ7YAO8mWIQr1ABGjZDDn0GEay9rbVrU5BMPwkDyKcPS3f9z/A==
+  dependencies:
+    async "^3.2.0"
 
 axe-core@^4.4.3:
   version "4.4.3"
