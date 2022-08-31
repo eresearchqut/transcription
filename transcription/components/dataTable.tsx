@@ -13,6 +13,7 @@ import {
     Table,
     TableCellProps,
     TableColumnHeaderProps,
+    TableContainer,
     TableContainerProps,
     TableProps,
     TableRowProps,
@@ -21,7 +22,8 @@ import {
     Text,
     TextProps,
     Th,
-    Thead, ThemingProps,
+    Thead,
+    ThemingProps,
     Tooltip,
     Tr,
 } from "@chakra-ui/react";
@@ -97,57 +99,61 @@ export const DataTable = (props: DataTableProps) => {
 
     return (
         <>
-            <Table {...tableProps}>
-                <Thead>
-                    {table.getHeaderGroups().map((headerGroup) => (
-                        <Tr key={headerGroup.id}>
-                            {headerGroup.headers.map((header) => (
-                                <Th
-                                    textTransform={"revert"}
-                                    key={header.id}
-                                    colSpan={header.colSpan}
-                                    cursor={header.column.getCanSort() ? "pointer" : "none"}
-                                    onClick={header.column.getToggleSortingHandler()}
-                                    {...(header.column.columnDef as Column).tableColumnHeaderProps}
-                                >
-                                    {!header.isPlaceholder && header.column.getCanSort() && (
-                                        <Flex>
-                                            <chakra.span>
-                                                {flexRender(header.column.columnDef.header, header.getContext())}
-                                            </chakra.span>
-                                            <Spacer/>
-                                            <chakra.span>
-                                                {{
-                                                    asc: <TriangleUpIcon aria-label="sorted ascending"/>,
-                                                    desc: <TriangleDownIcon aria-label="sorted descending"/>,
-                                                }[header.column.getIsSorted() as string] ?? null}
-                                            </chakra.span>
-                                        </Flex>
-                                    )}
-                                    {!header.isPlaceholder &&
-                                        !header.column.getCanSort() &&
-                                        flexRender(header.column.columnDef.header, header.getContext())}
-                                </Th>
-                            ))}
-                        </Tr>
-                    ))}
-                </Thead>
-                <Tbody>
-                    {table.getRowModel().rows.map((row) => {
-                        return (
-                            <Tr key={row.id}>
-                                {row.getVisibleCells().map((cell, index) => {
-                                    return (
-                                        <Td key={cell.id} {...(cell.column.columnDef as Column).tableCellProps}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </Td>
-                                    );
-                                })}
+            <TableContainer>
+                <Table {...tableProps}>
+                    <Thead>
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <Tr key={headerGroup.id}>
+                                {headerGroup.headers.map((header) => (
+                                    <Th
+                                        pl={0}
+                                        textTransform={"revert"}
+                                        key={header.id}
+                                        colSpan={header.colSpan}
+                                        cursor={header.column.getCanSort() ? "pointer" : "none"}
+                                        onClick={header.column.getToggleSortingHandler()}
+                                        {...(header.column.columnDef as Column).tableColumnHeaderProps}
+                                    >
+                                        {!header.isPlaceholder && header.column.getCanSort() && (
+                                            <Flex>
+                                                <chakra.span>
+                                                    {flexRender(header.column.columnDef.header, header.getContext())}
+                                                </chakra.span>
+                                                <Spacer/>
+                                                <chakra.span>
+                                                    {{
+                                                        asc: <TriangleUpIcon aria-label="sorted ascending"/>,
+                                                        desc: <TriangleDownIcon aria-label="sorted descending"/>,
+                                                    }[header.column.getIsSorted() as string] ?? null}
+                                                </chakra.span>
+                                            </Flex>
+                                        )}
+                                        {!header.isPlaceholder &&
+                                            !header.column.getCanSort() &&
+                                            flexRender(header.column.columnDef.header, header.getContext())}
+                                    </Th>
+                                ))}
                             </Tr>
-                        );
-                    })}
-                </Tbody>
-            </Table>
+                        ))}
+                    </Thead>
+                    <Tbody>
+                        {table.getRowModel().rows.map((row) => {
+                            return (
+                                <Tr key={row.id}>
+                                    {row.getVisibleCells().map((cell, index) => {
+                                        return (
+                                            <Td pl={0}
+                                                key={cell.id} {...(cell.column.columnDef as Column).tableCellProps}>
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </Td>
+                                        );
+                                    })}
+                                </Tr>
+                            );
+                        })}
+                    </Tbody>
+                </Table>
+            </TableContainer>
             {paginate && (
                 <Flex justifyContent="space-between" m={4} alignItems="center">
                     <Flex>

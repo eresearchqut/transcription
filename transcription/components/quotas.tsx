@@ -4,36 +4,36 @@ import {ListItem, Table, Tbody, Td, Thead, Tr, UnorderedList,} from '@chakra-ui/
 const Quotas = () => {
 
     return (
-        <Table>
+        <Table variant={"simple"} m={0}>
             <Thead>
                 <Tr>
-                    <Td>Description</Td>
+                    <Td pl={0}>Description</Td>
                     <Td>Quota/Limit/Type</Td>
                 </Tr>
             </Thead>
             <Tbody>
                 <Tr>
-                    <Td>
+                    <Td pl={0}>
                         Minimum audio file duration, in milliseconds (ms)
                     </Td>
                     <Td>500</Td>
                 </Tr>
                 <Tr>
-                    <Td>Maximum audio file duration</Td>
+                    <Td pl={0}>Maximum audio file duration</Td>
                     <Td>4:00:00 (four) hours, 14,400 seconds</Td>
                 </Tr>
                 <Tr>
-                    <Td>Maximum audio file size</Td>
+                    <Td pl={0}>Maximum audio file size</Td>
                     <Td>2 GB</Td>
                 </Tr>
                 <Tr>
-                    <Td>
+                    <Td pl={0}>
                         Number of days that transcriptions are retained
                     </Td>
                     <Td>14</Td>
                 </Tr>
                 <Tr>
-                    <Td>
+                    <Td pl={0}>
                         Supported File Formats
                     </Td>
                     <Td>

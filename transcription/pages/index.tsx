@@ -185,8 +185,8 @@ export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileNa
 const Home: NextPage = () => {
 
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
-    const [transcriptionsLoading, setTranscriptionsLoading] = useState<boolean>(true);
-    const [pollDelay, setPollDelay] = useState<number | null>(1000);
+    const [transcriptionsUploading, setTranscriptionsUploading] = useState<boolean>(true);
+    const [pollDelay, setPollDelay] = useState<number | null>(null);
 
     const {state: {user}} = useAuth();
     const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(new Map());
@@ -234,7 +234,6 @@ const Home: NextPage = () => {
             cell: (props) => formatBytes(props.row.original.uploadEvent.object.size)
         },
         {
-
             header: "Date Uploaded",
             accessorFn: (transcription) => transcription.date,
             cell: (props) => formatDate(props.row.original.date)
@@ -294,20 +293,28 @@ const Home: NextPage = () => {
             })
                 .then((res) => res.json())
                 .then((response) => setTranscriptions(() => response)))
-            .then(() => setTranscriptionsLoading(false));
     }, pollDelay);
 
     useEffect(() => {
-        console.log(transcriptions)
-        if (!transcriptionsLoading) {
-            const hasQueuedOrInProgress = transcriptions.map(status).find((status) => ['QUEUED', 'IN_PROGRESS'].find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status));
-            if (hasQueuedOrInProgress) {
-                setPollDelay(5000);
-            } else {
-                setPollDelay(null);
-            }
+        const inProgress = transcriptions.find((transcription) => ['QUEUED', 'IN_PROGRESS']
+                .find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status(transcription))
+            || ('COMPLETED' === status(transcription) && !transcription.downloadKey));
+        if (inProgress) {
+            setPollDelay(10000);
+        } else {
+            setPollDelay(null);
         }
     }, [transcriptions]);
+
+    useEffect(() => {
+        console.log(uploadProgress.size)
+        if (uploadProgress.size > 0) {
+            setTranscriptionsUploading(() => true);
+        } else {
+            setTranscriptionsUploading(() => false);
+            setPollDelay(500);
+        }
+    }, [uploadProgress]);
 
     const handelUpload = (file: File) => {
 
@@ -329,7 +336,6 @@ const Home: NextPage = () => {
                     const progressPercent = progress.loaded / progress.total;
                     if (progressPercent >= 1) {
                         update.delete(file.name);
-                        setPollDelay(2000)
                     } else {
                         update.set(file.name, progressPercent);
                     }
@@ -339,15 +345,6 @@ const Home: NextPage = () => {
         }).then();
     }
 
-    if (transcriptionsLoading) {
-        return <>
-            <Progress size='xs' isIndeterminate/>
-            <Alert status='info'>
-                <AlertIcon/>
-                Please wait while we load your transcriptions.
-            </Alert>
-        </>
-    }
 
     return (
         <VStack spacing={4} align='stretch'>
@@ -359,14 +356,23 @@ const Home: NextPage = () => {
                 <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
                             multiple={true}/>
             </Flex>
-            {uploadProgress.size > 0 && Array.from(uploadProgress.entries()).map(([fileName, progress], index) =>
-                <Grid
-                    gridTemplateColumns={'25% 1fr'} gap={4} key={index}>
-                    <GridItem>Uploading {fileName}: </GridItem>
-                    <GridItem><Progress hasStripe value={progress * 100}/></GridItem>
-                </Grid>
-            )}
-            {transcriptions.length === 0 &&
+            {transcriptionsUploading &&
+                <>
+                    <Alert status='info'>
+                        <AlertIcon/>
+                        Please wait while your media uploads. You can select more files while you wait.
+                    </Alert>
+                    {Array.from(uploadProgress.entries()).map(([fileName, progress], index) =>
+                        <Grid
+                            gridTemplateColumns={'25% 1fr'} gap={4} key={index}>
+                            <GridItem>Uploading {fileName}: </GridItem>
+                            <GridItem><Progress hasStripe value={progress * 100}/></GridItem>
+                        </Grid>
+                    )}
+                </>
+            }
+
+            {!transcriptionsUploading && transcriptions.length === 0 &&
                 <>
                     <Alert status='info'>
                         <AlertIcon/>
@@ -381,7 +387,7 @@ const Home: NextPage = () => {
                     <Quotas/>
                 </>
             }
-            {transcriptions.length > 0 &&
+            {!transcriptionsUploading && transcriptions.length > 0 &&
                 <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}/>
             }
         </VStack>
