@@ -6,14 +6,10 @@ const config: ThemeConfig = {
 }
 
 const colors = {
-
     blue: {
         900: '#012A4C'
-    },
-    
-
+    }
 }
 
-
-const theme = extendTheme({config, colors})
+export const theme = extendTheme({config, colors});
 export default theme;

@@ -14,10 +14,18 @@ import {
     GridItem,
     Heading,
     Link,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
     Progress,
     Spacer,
+    useDisclosure,
     VisuallyHidden,
-    VStack
+    VStack,
 } from "@chakra-ui/react";
 import {useAuth} from "../context/auth-context";
 import FileUpload from "../components/fileUpload";
@@ -184,6 +192,9 @@ export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileNa
 
 const Home: NextPage = () => {
 
+    const {isOpen, onOpen, onClose} = useDisclosure()
+    const finalRef = React.useRef(null)
+
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
     const [transcriptionsUploading, setTranscriptionsUploading] = useState<boolean>(true);
     const [pollDelay, setPollDelay] = useState<number | null>(null);
@@ -347,50 +358,73 @@ const Home: NextPage = () => {
 
 
     return (
-        <VStack spacing={4} align='stretch'>
-            <Flex minWidth='max-content' alignItems='center' gap='2'>
-                <Box>
-                    <Heading size={"md"}>My Transcriptions</Heading>
-                </Box>
-                <Spacer/>
-                <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
-                            multiple={true}/>
-            </Flex>
-            {transcriptionsUploading &&
-                <>
-                    <Alert status='info'>
-                        <AlertIcon/>
-                        Please wait while your media uploads. You can select more files while you wait.
-                    </Alert>
-                    {Array.from(uploadProgress.entries()).map(([fileName, progress], index) =>
-                        <Grid
-                            gridTemplateColumns={'25% 1fr'} gap={4} key={index}>
-                            <GridItem>Uploading {fileName}: </GridItem>
-                            <GridItem><Progress hasStripe value={progress * 100}/></GridItem>
-                        </Grid>
-                    )}
-                </>
-            }
+        <>
+            <VStack spacing={4} align='stretch'>
+                <Flex minWidth='max-content' alignItems='center' gap='2'>
+                    <Box>
+                        <Heading size={"md"}>My Transcriptions</Heading>
+                    </Box>
+                    <Spacer/>
+                    <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
+                                multiple={true}/>
+                </Flex>
+                {transcriptionsUploading &&
+                    <>
+                        <Alert status='info'>
+                            <AlertIcon/>
+                            Please wait while your media uploads. You can select more files while you wait.
+                        </Alert>
+                        {Array.from(uploadProgress.entries()).map(([fileName, progress], index) =>
+                            <Grid
+                                gridTemplateColumns={'25% 1fr'} gap={4} key={index}>
+                                <GridItem>Uploading {fileName}: </GridItem>
+                                <GridItem><Progress hasStripe value={progress * 100}/></GridItem>
+                            </Grid>
+                        )}
+                    </>
+                }
 
-            {!transcriptionsUploading && transcriptions.length === 0 &&
-                <>
-                    <Alert status='info'>
-                        <AlertIcon/>
-                        <Box>
-                            <AlertTitle>Getting Started</AlertTitle>
-                            <AlertDescription>
-                                Click the Upload Files button to start the transcription process. Please refer to the
-                                following table for guidance on supported file formats, size and duration.
-                            </AlertDescription>
-                        </Box>
-                    </Alert>
-                    <Quotas/>
-                </>
-            }
-            {!transcriptionsUploading && transcriptions.length > 0 &&
-                <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}/>
-            }
-        </VStack>
+                {!transcriptionsUploading && transcriptions.length === 0 &&
+                    <>
+                        <Alert status='info'>
+                            <AlertIcon/>
+                            <Box>
+                                <AlertTitle>Getting Started</AlertTitle>
+                                <AlertDescription>
+                                    Click the Upload Files button to start the transcription process. Please refer to
+                                    the
+                                    following table for guidance on supported file formats, size and duration.
+                                </AlertDescription>
+                            </Box>
+                        </Alert>
+                        <Quotas/>
+                    </>
+                }
+                {!transcriptionsUploading && transcriptions.length > 0 &&
+                    <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}/>
+                }
+
+
+            </VStack>
+
+
+            <Modal finalFocusRef={finalRef} isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay/>
+                <ModalContent>
+                    <ModalHeader>Modal Title</ModalHeader>
+                    <ModalCloseButton/>
+                    <ModalBody>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button colorScheme='blue' mr={3} onClick={onClose}>
+                            Close
+                        </Button>
+                        <Button variant='ghost'>Secondary Action</Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+        </>
 
     )
 }
