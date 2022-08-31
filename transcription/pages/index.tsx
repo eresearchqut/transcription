@@ -16,7 +16,6 @@ import {
     Link,
     Progress,
     Spacer,
-    useToast,
     VisuallyHidden,
     VStack
 } from "@chakra-ui/react";
@@ -33,7 +32,6 @@ import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
 import startCase from "lodash/startCase";
 import * as srtConvert from "aws-transcription-to-srt";
-import {Readable} from "stream";
 
 const SUPPORTED_MIME_TYPES = [
     "audio/flac",
@@ -148,25 +146,35 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
 export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileName, label}) => {
 
 
+    const [href, setHref] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const linkRef = useRef<HTMLAnchorElement | null>(null);
 
+    useEffect(() => {
+        if (href) {
+            linkRef.current?.click();
+        }
+    }, [href]);
 
     const handleDownload = () => {
         setIsLoading(() => true);
         Storage.get(objectKey, {
             level: 'private',
             download: true,
-            contentDisposition: `attachment; filename = ${fileName}`
         })
             .then((output) => (output.Body as Blob).text())
             .then((text) => JSON.parse(text))
             .then((json) => srtConvert(json))
-            .then((srt) => console.log(srt))
+            .then((srt) => new Blob([srt], {type: "text/plain"}))
+            .then((blob) => URL.createObjectURL(blob))
+            .then((url) => setHref(url))
             .finally(() => setIsLoading(false));
-
     }
 
     return <>
+        <VisuallyHidden>
+            <Link href={href} ref={linkRef} download={fileName}/>
+        </VisuallyHidden>
         <Button rightIcon={<ExternalLinkIcon/>} colorScheme='teal' variant='link' isLoading={isLoading}
                 onClick={handleDownload}>{label}</Button>
     </>
@@ -237,7 +245,7 @@ const Home: NextPage = () => {
             cell: (props) => formatStatus(props.row.original)
         },
         {
-            header: "Transcription",
+            header: "Transcription (JSON)",
             enableSorting: false,
             cell: (props) => {
                 const transcription = props.row.original;
@@ -247,10 +255,25 @@ const Home: NextPage = () => {
                         label: 'Download Transcription',
                         fileName: [transcription.metadata.filename.split(".")[0], 'json'].join('.')
                     }
-                    return <DownloadSrt {...downloadProps}/>
+                    return <Download {...downloadProps}/>
                 }
-
                 return transcription.jobStatusUpdated?.detail.FailureReason || null;
+            }
+        },
+        {
+            header: "Subtitle (SRT)",
+            enableSorting: false,
+            cell: (props) => {
+                const transcription = props.row.original;
+                if (transcription.downloadKey) {
+                    const srtProps: DownloadProps = {
+                        objectKey: transcription.downloadKey,
+                        label: 'Download Subtitles',
+                        fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.')
+                    }
+                    return <DownloadSrt {...srtProps}/>
+                }
+                return null;
             }
         }
     ]
@@ -304,7 +327,6 @@ const Home: NextPage = () => {
                 setUploadProgress((current) => {
                     const update = new Map(current);
                     const progressPercent = progress.loaded / progress.total;
-                    console.log(file.name, progressPercent, progress)
                     if (progressPercent >= 1) {
                         update.delete(file.name);
                         setPollDelay(2000)
