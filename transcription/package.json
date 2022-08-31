@@ -9,20 +9,20 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@chakra-ui/react": "^2.2.9",
     "@chakra-ui/icons": "^2.0.9",
+    "@chakra-ui/react": "^2.2.9",
     "@emotion/react": "^11",
     "@emotion/styled": "^11",
+    "@moxy/next-layout": "^2.2.3",
     "@tanstack/react-table": "^8.5.11",
     "@tanstack/table-core": "^8.5.11",
-    "@moxy/next-layout": "^2.2.3",
     "aws-amplify": "^4.3.26",
     "axios": "^0.27.2",
     "framer-motion": "^6",
+    "lodash": "^4.17.21",
     "next": "12.2.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-
     "uuid": "^8.3.2"
   },
   "devDependencies": {

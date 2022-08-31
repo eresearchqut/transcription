@@ -16,6 +16,7 @@ import {
     Link,
     Progress,
     Spacer,
+    useToast,
     VisuallyHidden,
     VStack
 } from "@chakra-ui/react";
@@ -30,6 +31,7 @@ import {Box} from "@chakra-ui/layout";
 import {ExternalLinkIcon} from "@chakra-ui/icons";
 import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
+import startCase from "lodash/startCase";
 
 
 const SUPPORTED_MIME_TYPES = [
@@ -85,6 +87,27 @@ export interface Transcription {
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
 
 
+type Delay = number | null;
+type TimerHandler = (...args: any[]) => void;
+
+const useInterval = (callback: TimerHandler, delay: Delay) => {
+    const savedCallbackRef = useRef<TimerHandler>();
+
+    useEffect(() => {
+        savedCallbackRef.current = callback;
+    }, [callback]);
+
+    useEffect(() => {
+        const handler = (...args: any[]) => savedCallbackRef.current!(...args);
+
+        if (delay !== null) {
+            const intervalId = setInterval(handler, delay);
+            return () => clearInterval(intervalId);
+        }
+    }, [delay]);
+};
+
+
 export interface DownloadProps {
     objectKey: string;
     fileName: string;
@@ -130,8 +153,8 @@ const Home: NextPage = () => {
 
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
     const [transcriptionsLoading, setTranscriptionsLoading] = useState<boolean>(true);
-    const [transcriptionsPolling, setTranscriptionsPolling] = useState<any[]>([]);
-
+    const toast = useToast()
+    const [pollDelay, setPollDelay] = useState<number>(1000);
 
     const {state: {user}} = useAuth();
     const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(new Map());
@@ -147,29 +170,13 @@ const Home: NextPage = () => {
 
     const status = (transcription: Transcription) =>
         transcription.jobStatusUpdated?.detail.TranscriptionJobStatus ||
-        transcription.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus;
+        transcription.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus || ''
+
+    const formatStatus = (transcription: Transcription) => startCase(status(transcription).toLowerCase());
 
     const formatDate = (isoDateString: string) => {
         return new Date(isoDateString).toLocaleString()
     }
-
-
-    // const TranscriptionLink = (transcription: Transcription) => useMemo(() => {
-    //     const [href, setHref] = useState<string | undefined>(undefined);
-    //     useEffect(() => {
-    //         if (transcription.downloadKey) {
-    //             Storage.get(transcription.downloadKey, {
-    //                 level: 'private',
-    //                 contentDisposition: `attachment; filename = transcription-${transcription.metadata.filename}.json`
-    //             }).then((signedUrl) => setHref(signedUrl))
-    //         }
-    //     }, [transcription]);
-    //     if (href) {
-    //         return <Link href={href} isExternal>Download Transcription <ExternalLinkIcon ml={'2px'} boxSize={'0.8em'}/></Link>
-    //     }
-    //     return <Text>{transcription.metadata.filename}</Text>;
-    // }, [transcription.downloadKey, transcription.metadata.filename]);
-
 
     const columns: ColumnDef<Transcription>[] = [
         {
@@ -194,19 +201,37 @@ const Home: NextPage = () => {
             accessorFn: (transcription) => transcription.uploadEvent.object.size,
             cell: (props) => formatBytes(props.row.original.uploadEvent.object.size)
         },
+
         {
+
             header: "Date Uploaded",
             accessorFn: (transcription) => transcription.date,
             cell: (props) => formatDate(props.row.original.date)
         },
-        // {
-        //     header: "Transcription",
-        //     enableSorting: false,
-        //     cell: (props) => TranscriptionLink(props.row.original)
-        // }
+        {
+            header: "Transcription Status",
+            accessorFn: (transcription) => status(transcription),
+            cell: (props) => formatStatus(props.row.original)
+        },
+        {
+            header: "Transcription",
+            enableSorting: false,
+            cell: (props) => {
+                const transcription = props.row.original;
+                if (transcription.downloadKey) {
+                    const downloadProps: DownloadProps = {
+                        objectKey: transcription.downloadKey,
+                        label: 'Download Transcription',
+                        fileName: [transcription.metadata.filename.split(".")[0], 'json'].join('.')
+                    }
+                    return <Download {...downloadProps}/>
+                }
+                return null;
+            }
+        }
     ]
 
-    useEffect(() => {
+    useInterval(() => {
         Auth.currentSession()
             .then((currentSession) => currentSession.getIdToken().getJwtToken())
             .then(
@@ -223,7 +248,7 @@ const Home: NextPage = () => {
                 .then((res) => res.json())
                 .then((response) => setTranscriptions(() => response)))
             .then(() => setTranscriptionsLoading(false));
-    }, [])
+    }, pollDelay);
 
     useEffect(() => {
         console.log(transcriptions);
@@ -231,7 +256,8 @@ const Home: NextPage = () => {
 
     const handelUpload = (file: File) => {
 
-        const key = `${user?.id}/${uuid()}.upload`;
+        const id = uuid();
+        const key = `${user?.id}/${id}.upload`;
         const metadata = {
             filename: encodeURIComponent(file.name),
             mimetype: file.type,
@@ -246,9 +272,18 @@ const Home: NextPage = () => {
                 setUploadProgress((current) => {
                     const update = new Map(current);
                     const progressPercent = progress.loaded / progress.total;
-                    console.log(file.name, progressPercent)
+                    console.log(file.name, progressPercent, progress)
                     if (progressPercent >= 1) {
                         update.delete(file.name);
+                        toast({
+                            id,
+                            title: 'File upload complete',
+                            description: `${file.name} uploaded successfully. The transcription progress will be updated shortly.`,
+                            status: 'success',
+                            duration: 10000,
+                            isClosable: true,
+                        });
+                        setPollDelay(2000)
                     } else {
                         update.set(file.name, progressPercent);
                     }
@@ -276,12 +311,13 @@ const Home: NextPage = () => {
                     <Heading size={"md"}>My Transcriptions</Heading>
                 </Box>
                 <Spacer/>
-                <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'} multiple={true}/>
+                <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
+                            multiple={true}/>
             </Flex>
             {uploadProgress.size > 0 && Array.from(uploadProgress.entries()).map(([fileName, progress], index) =>
                 <Grid
                     gridTemplateColumns={'25% 1fr'} gap={4} key={index}>
-                    <GridItem>{fileName}</GridItem>
+                    <GridItem>Uploading {fileName}: </GridItem>
                     <GridItem><Progress hasStripe value={progress * 100}/></GridItem>
                 </Grid>
             )}
@@ -301,7 +337,7 @@ const Home: NextPage = () => {
                 </>
             }
             {transcriptions.length > 0 &&
-                <DataTable data={transcriptions} columns={columns} paginate={false}/>
+                <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}/>
             }
         </VStack>
 

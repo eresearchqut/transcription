@@ -5,6 +5,7 @@ import {
     DarkMode,
     Divider,
     Heading,
+    IconButton,
     Image,
     LightMode,
     Link,
@@ -14,9 +15,9 @@ import {
 } from "@chakra-ui/react";
 
 
-
 import {withAnonymous, withAuthentication} from "../context/with-auth";
 import {useAuth, useLogin, useLogout} from "../context/auth-context";
+import {MoonIcon, SunIcon} from "@chakra-ui/icons";
 
 export const Layout = ({children}: any) => {
 
@@ -40,7 +41,7 @@ export const Layout = ({children}: any) => {
         >
             <Box bg={'blue.900'} color={'white'} width={'100%'}>
                 <DarkMode>
-                    <Stack direction='row'  alignItems={'center'} maxWidth={'1576px'} m={'auto'}  p={4}>
+                    <Stack direction='row' alignItems={'center'} maxWidth={'1576px'} m={'auto'} p={4}>
                         <Image
                             alt="QUT logo"
                             src="logo.png"
@@ -50,31 +51,33 @@ export const Layout = ({children}: any) => {
                         <Divider orientation='vertical'/>
                         <Heading size={"lg"}>Transcribe</Heading>
                         <Spacer/>
-                        <Button onClick={toggleColorMode}>
-                            Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
-                        </Button>
+
 
                         {!isAuthenticated &&
-                            <Button onClick={handleLogin}>
+                            <Button onClick={handleLogin} variant='outline'>
                                 Login
                             </Button>
                         }
                         {isAuthenticated &&
-                            <Button onClick={handleLogout}>
+                            <Button onClick={handleLogout} variant='outline'>
                                 Logout
                             </Button>
                         }
+
+                        <IconButton variant='outline' onClick={toggleColorMode}
+                                    icon={colorMode === 'light' ? <SunIcon/> : <MoonIcon/>}
+                                    aria-label={`Toggle ${colorMode === 'light' ? 'Dark' : 'Light'} Mode`}/>
                     </Stack>
                 </DarkMode>
             </Box>
 
-            <Box width={'100%'} >
-                <Box maxWidth={'1576px'} m={'auto'}  p={4}>
+            <Box width={'100%'}>
+                <Box maxWidth={'1576px'} m={'auto'} p={4}>
                     {children}
                 </Box>
             </Box>
 
-            <Box bg={'blue.900'} color={'white'} width={'100%'} >
+            <Box bg={'blue.900'} color={'white'} width={'100%'}>
                 <DarkMode>
                     <Stack direction='row' p={1} pl={4} pr={4} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                         <Text color={'white'} as={'b'} fontSize={"sm"} noOfLines={1}>Developed by the Office of
@@ -86,7 +89,7 @@ export const Layout = ({children}: any) => {
 
             <Box bg={'white'} color={'blue.900'} width={'100%'}>
                 <LightMode>
-                    <Stack direction='row' p={1} pl={4} pr={4}  alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
+                    <Stack direction='row' p={1} pl={4} pr={4} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                         <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal fontSize={"sm"}>
                             QUT acknowledges the Traditional Owners of the lands where QUT now stands.
                         </Link>
