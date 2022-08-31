@@ -33,7 +33,6 @@ import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
 import startCase from "lodash/startCase";
 
-
 const SUPPORTED_MIME_TYPES = [
     "audio/flac",
     "audio/mpeg",
@@ -68,7 +67,8 @@ export interface Transcription {
     ttl: number;
     jobStatusUpdated?: {
         detail: {
-            TranscriptionJobStatus: string
+            TranscriptionJobStatus: string,
+            FailureReason?: string,
         }
     },
     transcriptionResponse?: {
@@ -85,8 +85,6 @@ export interface Transcription {
 }
 
 const API_ENDPOINT = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
-
-
 type Delay = number | null;
 type TimerHandler = (...args: any[]) => void;
 
@@ -99,7 +97,6 @@ const useInterval = (callback: TimerHandler, delay: Delay) => {
 
     useEffect(() => {
         const handler = (...args: any[]) => savedCallbackRef.current!(...args);
-
         if (delay !== null) {
             const intervalId = setInterval(handler, delay);
             return () => clearInterval(intervalId);
@@ -136,7 +133,6 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
             .finally(() => setIsLoading(() => false))
     }
 
-
     return <>
         <VisuallyHidden>
             <Link href={href} ref={linkRef} isExternal/>
@@ -150,11 +146,10 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
 
 const Home: NextPage = () => {
 
-
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
     const [transcriptionsLoading, setTranscriptionsLoading] = useState<boolean>(true);
     const toast = useToast()
-    const [pollDelay, setPollDelay] = useState<number>(1000);
+    const [pollDelay, setPollDelay] = useState<number | null>(1000);
 
     const {state: {user}} = useAuth();
     const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(new Map());
@@ -201,7 +196,6 @@ const Home: NextPage = () => {
             accessorFn: (transcription) => transcription.uploadEvent.object.size,
             cell: (props) => formatBytes(props.row.original.uploadEvent.object.size)
         },
-
         {
 
             header: "Date Uploaded",
@@ -226,7 +220,8 @@ const Home: NextPage = () => {
                     }
                     return <Download {...downloadProps}/>
                 }
-                return null;
+
+                return transcription.jobStatusUpdated?.detail.FailureReason || null;
             }
         }
     ]
@@ -251,8 +246,15 @@ const Home: NextPage = () => {
     }, pollDelay);
 
     useEffect(() => {
-        console.log(transcriptions);
-    }, [transcriptions])
+        if (transcriptions) {
+            const hasQueuedOrInProgress = transcriptions.map(status).find((status) => ['QUEUED', 'IN_PROGRESS'].find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status));
+            if (hasQueuedOrInProgress) {
+                setPollDelay(5000);
+            } else {
+                setPollDelay(null);
+            }
+        }
+    }, [transcriptions]);
 
     const handelUpload = (file: File) => {
 
@@ -302,7 +304,6 @@ const Home: NextPage = () => {
             </Alert>
         </>
     }
-
 
     return (
         <VStack spacing={4} align='stretch'>
