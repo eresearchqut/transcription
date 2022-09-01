@@ -45,7 +45,7 @@ export S3_PREFIX=dev-transcription
 
 ```
 sam build
-sam deploy --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $ENV-$STACK_NAME --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --profile account-role
+sam deploy --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $STACK_NAME --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --profile account-role
 aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' > ./frontend/.env.production
 ```
 
@@ -53,8 +53,8 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 
 ```
 yarn install
-yarn build-$ENV
-export $(aws cloudformation describe-stacks --stack-name $ENV-transcription --region ap-southeast-2 --query "Stacks[0].Outputs[?OutputKey=='DistributionEnvironment'].OutputValue" --output text | sed '/^[[:space:]]*$/d' | xargs)
-aws s3 sync frontend/build $DISTRIBUTION_BUCKET
-aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+yarn build
+export $(aws cloudformation describe-stacks --stack-name $ENV-transcription --region ap-southeast-2 --query "Stacks[0].Outputs[?OutputKey=='DistributionEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' | xargs)
+aws s3 sync out $DISTRIBUTION_BUCKET --profile account-role
+aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" --profile account-role
 ```

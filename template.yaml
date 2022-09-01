@@ -60,6 +60,7 @@ Parameters:
     Description: VPC subnets
 Conditions:
   CreateARecords: !Not [ !Equals [ !Ref HostedZoneName, "" ] ]
+  IsDev: !Equals [ !Ref Environment, "dev" ]
 Globals:
   Function:
     Timeout: 15
@@ -416,10 +417,17 @@ Resources:
       CallbackURLs:
         - http://localhost:3000/
         - !Sub "https://${FrontEndDomainName}/"
+        - !If
+          - IsDev
+          - http://localhost:3000/
+          - !Ref 'AWS::NoValue'
       LogoutURLs:
-        - http://localhost:3000/
         - !Sub "https://${FrontEndDomainName}/"
         - !Ref IdentityProviderLogoutURL
+        - !If
+          - IsDev
+          - http://localhost:3000/
+          - !Ref 'AWS::NoValue'
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
@@ -605,16 +613,16 @@ Outputs:
     Description: Front end react app configuration
     Value: !Sub
       - |
-        REACT_APP_ENV=${Environment}
-        REACT_APP_APPLICATION_NAME=Transcription
-        REACT_APP_API_ENDPOINT=https://${ApiDomainName}
-        REACT_APP_AUTH_IDENTITY_POOL_ID=${IdentityPool}
-        REACT_APP_AUTH_USER_POOL_ID=${UserPoolId}
-        REACT_APP_AUTH_USER_WEB_CLIENT_ID=${UserPoolClient}
-        REACT_APP_AUTH_SIGN_IN_REDIRECT=https://${FrontEndDomainName}/
-        REACT_APP_AUTH_SIGN_OUT_REDIRECT=https://${FrontEndDomainName}/
-        REACT_APP_AUTH_DOMAIN=${AuthDomain}
-        REACT_APP_TRANSCRIPTION_BUCKET=${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
+        NEXT_PUBLIC_ENV=${Environment}
+        NEXT_PUBLIC_APPLICATION_NAME=Transcription
+        NEXT_PUBLIC_API_ENDPOINT=https://${ApiDomainName}
+        NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID=${IdentityPool}
+        NEXT_PUBLIC_AUTH_USER_POOL_ID=${UserPoolId}
+        NEXT_PUBLIC_AUTH_USER_WEB_CLIENT_ID=${UserPoolClient}
+        NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=https://${FrontEndDomainName}/
+        NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT=https://${FrontEndDomainName}/
+        NEXT_PUBLIC_AUTH_DOMAIN=${AuthDomain}
+        NEXT_PUBLIC_TRANSCRIPTION_BUCKET=${AWS::StackName}-${AWS::Region}-${AWS::AccountId}
       - UserPoolId:
           Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
         AuthDomain:
