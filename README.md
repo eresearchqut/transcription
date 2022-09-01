@@ -53,8 +53,8 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 
 ```
 yarn install
-yarn build-$ENV
+yarn build
 export $(aws cloudformation describe-stacks --stack-name $ENV-transcription --region ap-southeast-2 --query "Stacks[0].Outputs[?OutputKey=='DistributionEnvironment'].OutputValue" --output text | sed '/^[[:space:]]*$/d' | xargs)
-aws s3 sync frontend/build $DISTRIBUTION_BUCKET
+aws s3 sync frontend/out $DISTRIBUTION_BUCKET
 aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 ```
