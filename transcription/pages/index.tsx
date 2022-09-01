@@ -40,6 +40,9 @@ import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
 import startCase from "lodash/startCase";
 import * as srtConvert from "aws-transcription-to-srt";
+import {AiOutlinePlaySquare} from 'react-icons/ai';
+import {Player} from "webvtt-player";
+import toWebVTT from "srt-webvtt";
 
 const SUPPORTED_MIME_TYPES = [
     "audio/flac",
@@ -151,9 +154,25 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
 
 }
 
-export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileName, label}) => {
+export const transcriptUrl = (objectKey: string, format: 'srt' | 'vtt'): Promise<string> => {
+    return Storage.get(objectKey, {
+        level: 'private',
+        download: true,
+    })
+        .then((output) => (output.Body as Blob).text())
+        .then((text) => JSON.parse(text))
+        .then((json) => srtConvert(json))
+        .then((srt) => new Blob([srt], {type: "text/plain"}))
+        .then((srtBlob) => format === 'vtt' ? toWebVTT(srtBlob) : URL.createObjectURL(srtBlob))
+}
 
+export interface DownloadTranscriptProps extends DownloadProps {
+    format?: 'srt' | 'vtt'
+}
 
+export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
+    = ({objectKey, fileName, label, format = 'srt'}) => {
+    
     const [href, setHref] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const linkRef = useRef<HTMLAnchorElement | null>(null);
@@ -166,15 +185,7 @@ export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileNa
 
     const handleDownload = () => {
         setIsLoading(() => true);
-        Storage.get(objectKey, {
-            level: 'private',
-            download: true,
-        })
-            .then((output) => (output.Body as Blob).text())
-            .then((text) => JSON.parse(text))
-            .then((json) => srtConvert(json))
-            .then((srt) => new Blob([srt], {type: "text/plain"}))
-            .then((blob) => URL.createObjectURL(blob))
+        transcriptUrl(objectKey, format)
             .then((url) => setHref(url))
             .finally(() => setIsLoading(false));
     }
@@ -190,14 +201,36 @@ export const DownloadSrt: FunctionComponent<DownloadProps> = ({objectKey, fileNa
 }
 
 
+interface PlayProps {
+    mediaUrl: string;
+    transcriptUrl: string;
+}
+
 const Home: NextPage = () => {
 
     const {isOpen, onOpen, onClose} = useDisclosure()
     const finalRef = React.useRef(null)
 
+
     const [transcriptions, setTranscriptions] = useState<any[]>([]);
+    const [play, setPlay] = useState<PlayProps | undefined>(undefined);
     const [transcriptionsUploading, setTranscriptionsUploading] = useState<boolean>(true);
     const [pollDelay, setPollDelay] = useState<number | null>(null);
+
+    const mediaKey = (transcription: Transcription): string =>
+        transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
+
+    const loadMediaPlayer = (transcription: Transcription) => {
+        if (transcription.downloadKey !== undefined) {
+            Storage.get(mediaKey(transcription), {
+                level: 'private'
+            })
+                .then((mediaUrl) => transcriptUrl(transcription.downloadKey as string, 'vtt')
+                    .then((transcriptUrl) => setPlay(() => ({mediaUrl, transcriptUrl}))))
+                .then(() => onOpen());
+
+        }
+    }
 
     const {state: {user}} = useAuth();
     const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(new Map());
@@ -228,7 +261,7 @@ const Home: NextPage = () => {
             cell: (props) => {
                 const transcription = props.row.original;
                 const downloadProps: DownloadProps = {
-                    objectKey: transcription.uploadEvent.object.key.split("/").slice(-2).join("/"),
+                    objectKey: mediaKey(transcription),
                     label: transcription.metadata.filename,
                     fileName: transcription.metadata.filename
                 }
@@ -281,7 +314,20 @@ const Home: NextPage = () => {
                         label: 'Download Subtitles',
                         fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.')
                     }
-                    return <DownloadSrt {...srtProps}/>
+                    return <DownloadTranscript {...srtProps}/>
+                }
+                return null;
+            }
+        },
+        {
+            header: "",
+            id: "player",
+            enableSorting: false,
+            cell: (props) => {
+                const transcription = props.row.original;
+                if (transcription.downloadKey) {
+                    return <Button onClick={() => loadMediaPlayer(transcription)}
+                                   variant={"link"} leftIcon={<AiOutlinePlaySquare/>}>Play</Button>
                 }
                 return null;
             }
@@ -411,9 +457,15 @@ const Home: NextPage = () => {
             <Modal finalFocusRef={finalRef} isOpen={isOpen} onClose={onClose}>
                 <ModalOverlay/>
                 <ModalContent>
-                    <ModalHeader>Modal Title</ModalHeader>
+                    <ModalHeader>Play</ModalHeader>
                     <ModalCloseButton/>
                     <ModalBody>
+                        {play &&
+                            <Player
+                                audio={play.mediaUrl}
+                                transcript={play.transcriptUrl}
+                            />
+                        }
                     </ModalBody>
 
                     <ModalFooter>
