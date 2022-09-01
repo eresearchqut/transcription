@@ -1,6 +1,6 @@
 import type {NextPage} from 'next'
 import * as React from "react"
-import {FunctionComponent, useEffect, useMemo, useRef, useState} from "react"
+import {FunctionComponent, useEffect, useRef, useState} from "react"
 import {withLayout} from '@moxy/next-layout'
 import Layout from '../components/layout'
 import {
@@ -18,9 +18,12 @@ import {
     Grid,
     GridItem,
     Heading,
+    HStack,
     Link,
     Progress,
     Spacer,
+    Spinner,
+    Text,
     useDisclosure,
     VisuallyHidden,
     VStack,
@@ -39,8 +42,11 @@ import Quotas from "../components/quotas";
 import startCase from "lodash/startCase";
 import * as srtConvert from "aws-transcription-to-srt";
 import {AiOutlinePlaySquare} from 'react-icons/ai';
+import {MdOutlineSubtitles} from 'react-icons/md';
+import {VscJson} from 'react-icons/vsc';
 import {Player} from "webvtt-player";
 import toWebVTT from "srt-webvtt";
+
 
 const SUPPORTED_MIME_TYPES = [
     "audio/flac",
@@ -146,7 +152,8 @@ export const Download: FunctionComponent<DownloadProps> = ({objectKey, fileName,
         <VisuallyHidden>
             <Link href={href} ref={linkRef} isExternal/>
         </VisuallyHidden>
-        <Button rightIcon={<ExternalLinkIcon/>} colorScheme='teal' variant='link' isLoading={isLoading}
+        <Button leftIcon={fileName.endsWith('json') ? <VscJson/> : <ExternalLinkIcon/>} variant='outline'
+                isLoading={isLoading}
                 onClick={handleDownload}>{label}</Button>
     </>
 
@@ -192,7 +199,7 @@ export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
         <VisuallyHidden>
             <Link href={href} ref={linkRef} download={fileName}/>
         </VisuallyHidden>
-        <Button rightIcon={<ExternalLinkIcon/>} colorScheme='teal' variant='link' isLoading={isLoading}
+        <Button leftIcon={<MdOutlineSubtitles/>} variant='outline' isLoading={isLoading}
                 onClick={handleDownload}>{label}</Button>
     </>
 
@@ -284,51 +291,46 @@ const Transcription: NextPage = () => {
         {
             header: "Transcription Status",
             accessorFn: (transcription) => status(transcription),
-            cell: (props) => formatStatus(props.row.original)
+            cell: (props) => <HStack spacing={2}>
+                <Text>{formatStatus(props.row.original)}</Text>
+                {status(props.row.original) === 'IN_PROGRESS' && <Spinner size={"sm"}/>}
+            </HStack>
+
+
         },
         {
-            header: "Transcription (JSON)",
+            id: "actions",
+
             enableSorting: false,
             cell: (props) => {
                 const transcription = props.row.original;
                 if (transcription.downloadKey) {
                     const downloadProps: DownloadProps = {
                         objectKey: transcription.downloadKey,
-                        label: 'Download Transcription',
+                        label: 'JSON',
                         fileName: [transcription.metadata.filename.split(".")[0], 'json'].join('.')
                     }
-                    return <Download {...downloadProps}/>
-                }
-                return transcription.jobStatusUpdated?.detail.FailureReason || null;
-            }
-        },
-        {
-            header: "Subtitle (SRT)",
-            enableSorting: false,
-            cell: (props) => {
-                const transcription = props.row.original;
-                if (transcription.downloadKey) {
-                    const srtProps: DownloadProps = {
+                    const srtProps: DownloadTranscriptProps = {
                         objectKey: transcription.downloadKey,
-                        label: 'Download Subtitles',
+                        label: 'SRT',
                         fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.')
                     }
-                    return <DownloadTranscript {...srtProps}/>
+                    const vttProps: DownloadTranscriptProps = {
+                        objectKey: transcription.downloadKey,
+                        label: 'VTT',
+                        fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.'),
+                        format: 'vtt'
+                    }
+                    return <HStack spacing={2}>
+                        <Spacer/>
+                        <Download {...downloadProps}/>
+                        <DownloadTranscript {...srtProps}/>
+                        <DownloadTranscript {...vttProps}/>
+                        <Button onClick={() => loadMediaPlayer(transcription)}
+                                variant={"outline"} leftIcon={<AiOutlinePlaySquare/>}>Play</Button>
+                    </HStack>
                 }
-                return null;
-            }
-        },
-        {
-            header: "",
-            id: "player",
-            enableSorting: false,
-            cell: (props) => {
-                const transcription = props.row.original;
-                if (transcription.downloadKey) {
-                    return <Button onClick={() => loadMediaPlayer(transcription)}
-                                   variant={"link"} leftIcon={<AiOutlinePlaySquare/>}>Play</Button>
-                }
-                return null;
+                return transcription.jobStatusUpdated?.detail.FailureReason || null;
             }
         }
     ]
@@ -355,7 +357,7 @@ const Transcription: NextPage = () => {
                 .then((loaded: Transcription[]) => {
                     setExpectedCount((current) => current === 0 ? loaded.length : current)
                     setTranscriptions(() => loaded)
-                }))
+                }));
     }, pollDelay);
 
     useEffect(() => {
@@ -368,7 +370,6 @@ const Transcription: NextPage = () => {
             } else {
                 setPollDelay(null);
             }
-
         }
     }, [transcriptions, expectedCount]);
 
@@ -401,7 +402,6 @@ const Transcription: NextPage = () => {
         }).then(() => setExpectedCount((current) => current + 1));
     }
 
-
     return (
         <>
             <VStack spacing={4} align='stretch'>
@@ -430,7 +430,7 @@ const Transcription: NextPage = () => {
                 }
 
                 {!transcriptions &&
-                    <Progress isIndeterminate   />
+                    <Progress isIndeterminate/>
                 }
 
                 {transcriptions && transcriptions.length === 0 &&
@@ -453,9 +453,17 @@ const Transcription: NextPage = () => {
                                initialState={initialSortState}/>
                 }
 
-
+                {transcriptions && transcriptions.length < expectedCount &&
+                    <Alert status='info'>
+                        <AlertIcon/>
+                        <Box>
+                            <AlertDescription>
+                                Your media files are being queued for processing. The table above will update shortly.
+                            </AlertDescription>
+                        </Box>
+                    </Alert>
+                }
             </VStack>
-
 
             <Drawer
                 isOpen={isOpen}
@@ -466,7 +474,6 @@ const Transcription: NextPage = () => {
             >
                 <DrawerOverlay/>
                 <DrawerContent>
-
                     <Alert status='info'>
                         <AlertIcon/>
                         <Box>
