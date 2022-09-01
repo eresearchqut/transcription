@@ -43,7 +43,7 @@ import {Storage} from "aws-amplify";
 import {v4 as uuid} from "uuid";
 import {ColumnDef, SortingState} from "@tanstack/react-table";
 import DataTable from "../components/dataTable";
-import {Box} from "@chakra-ui/layout";
+import { Box, Stack } from "@chakra-ui/layout";
 import {ExternalLinkIcon} from "@chakra-ui/icons";
 import Auth from "@aws-amplify/auth";
 import Quotas from "../components/quotas";
@@ -327,13 +327,13 @@ const Transcription: NextPage = () => {
                         fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.'),
                         format: 'vtt'
                     }
-                    return <HStack>
+                    return <Stack direction={['column', 'row']}>
                         <Download {...downloadProps}/>
                         <DownloadTranscript {...srtProps}/>
                         <DownloadTranscript {...vttProps}/>
                         <Button onClick={() => loadMediaPlayer(transcription)}
                                 variant={"outline"} leftIcon={<AiOutlinePlaySquare/>}>Play</Button>
-                    </HStack>
+                    </Stack>
                 }
                 if (transcription.jobStatusUpdated?.detail.FailureReason) {
                     return <Alert status='error'>
