@@ -19,7 +19,15 @@ import {
     GridItem,
     Heading,
     HStack,
+    IconButton,
     Link,
+    Popover,
+    PopoverArrow,
+    PopoverBody,
+    PopoverCloseButton,
+    PopoverContent,
+    PopoverHeader,
+    PopoverTrigger,
     Progress,
     Spacer,
     Spinner,
@@ -46,6 +54,7 @@ import {MdOutlineSubtitles} from 'react-icons/md';
 import {VscJson} from 'react-icons/vsc';
 import {Player} from "webvtt-player";
 import toWebVTT from "srt-webvtt";
+import {FiHelpCircle} from "react-icons/fi";
 
 
 const SUPPORTED_MIME_TYPES = [
@@ -216,7 +225,6 @@ const Transcription: NextPage = () => {
     const {isOpen, onOpen, onClose} = useDisclosure()
     const finalRef = React.useRef(null)
 
-
     const [transcriptions, setTranscriptions] = useState<Transcription[] | undefined>();
     const [play, setPlay] = useState<PlayProps | undefined>(undefined);
     const [expectedCount, setExpectedCount] = useState<number>(0);
@@ -295,12 +303,10 @@ const Transcription: NextPage = () => {
                 <Text>{formatStatus(props.row.original)}</Text>
                 {status(props.row.original) === 'IN_PROGRESS' && <Spinner size={"sm"}/>}
             </HStack>
-
-
         },
         {
             id: "actions",
-
+            header: "Transcriptions",
             enableSorting: false,
             cell: (props) => {
                 const transcription = props.row.original;
@@ -321,8 +327,7 @@ const Transcription: NextPage = () => {
                         fileName: [transcription.metadata.filename.split(".")[0], 'srt'].join('.'),
                         format: 'vtt'
                     }
-                    return <HStack spacing={2}>
-                        <Spacer/>
+                    return <HStack>
                         <Download {...downloadProps}/>
                         <DownloadTranscript {...srtProps}/>
                         <DownloadTranscript {...vttProps}/>
@@ -330,7 +335,17 @@ const Transcription: NextPage = () => {
                                 variant={"outline"} leftIcon={<AiOutlinePlaySquare/>}>Play</Button>
                     </HStack>
                 }
-                return transcription.jobStatusUpdated?.detail.FailureReason || null;
+                if (transcription.jobStatusUpdated?.detail.FailureReason) {
+                    return <Alert status='error'>
+                        <AlertIcon/>
+                        <Box>
+                            <AlertDescription>
+                                {transcription.jobStatusUpdated?.detail.FailureReason}
+                            </AlertDescription>
+                        </Box>
+                    </Alert>
+                }
+                return;
             }
         }
     ]
@@ -410,6 +425,17 @@ const Transcription: NextPage = () => {
                         <Heading size={"md"}>My Transcriptions</Heading>
                     </Box>
                     <Spacer/>
+                    <Popover>
+                        <PopoverTrigger>
+                            <IconButton icon={<FiHelpCircle/>} variant={"outline"} aria-label={'Help'}/>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                            <PopoverArrow/>
+                            <PopoverCloseButton/>
+                            <PopoverHeader></PopoverHeader>
+                            <PopoverBody><Heading>Quotas</Heading><Quotas/></PopoverBody>
+                        </PopoverContent>
+                    </Popover>
                     <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
                                 multiple={true}/>
                 </Flex>

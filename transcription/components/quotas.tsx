@@ -4,7 +4,7 @@ import {ListItem, Table, Tbody, Td, Thead, Tr, UnorderedList,} from '@chakra-ui/
 const Quotas = () => {
 
     return (
-        <Table variant={"simple"} m={0}>
+        <Table  m={0}>
             <Thead>
                 <Tr>
                     <Td pl={0}>Description</Td>
