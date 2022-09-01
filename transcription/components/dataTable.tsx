@@ -78,7 +78,7 @@ export const DataTable = (props: DataTableProps) => {
         inputProps = {},
     } = props;
 
-    const [sorting, setSorting] = useState<SortingState>([]);
+    const [sorting, setSorting] = useState<SortingState>(initialState?.sorting || []);
     const {variant: inputVariant} = inputProps;
 
     const table = useReactTable({

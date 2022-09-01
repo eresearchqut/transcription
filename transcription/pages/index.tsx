@@ -1,6 +1,6 @@
 import type {NextPage} from 'next'
 import * as React from "react"
-import {FunctionComponent, useEffect, useRef, useState} from "react"
+import {FunctionComponent, useEffect, useMemo, useRef, useState} from "react"
 import {withLayout} from '@moxy/next-layout'
 import Layout from '../components/layout'
 import {
@@ -9,18 +9,16 @@ import {
     AlertIcon,
     AlertTitle,
     Button,
+    Drawer,
+    DrawerBody,
+    DrawerContent,
+    DrawerFooter,
+    DrawerOverlay,
     Flex,
     Grid,
     GridItem,
     Heading,
     Link,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
     Progress,
     Spacer,
     useDisclosure,
@@ -32,7 +30,7 @@ import FileUpload from "../components/fileUpload";
 
 import {Storage} from "aws-amplify";
 import {v4 as uuid} from "uuid";
-import {ColumnDef} from "@tanstack/react-table";
+import {ColumnDef, SortingState} from "@tanstack/react-table";
 import DataTable from "../components/dataTable";
 import {Box} from "@chakra-ui/layout";
 import {ExternalLinkIcon} from "@chakra-ui/icons";
@@ -172,7 +170,7 @@ export interface DownloadTranscriptProps extends DownloadProps {
 
 export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
     = ({objectKey, fileName, label, format = 'srt'}) => {
-    
+
     const [href, setHref] = useState<string | undefined>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const linkRef = useRef<HTMLAnchorElement | null>(null);
@@ -206,16 +204,16 @@ interface PlayProps {
     transcriptUrl: string;
 }
 
-const Home: NextPage = () => {
+const Transcription: NextPage = () => {
 
     const {isOpen, onOpen, onClose} = useDisclosure()
     const finalRef = React.useRef(null)
 
 
-    const [transcriptions, setTranscriptions] = useState<any[]>([]);
+    const [transcriptions, setTranscriptions] = useState<Transcription[] | undefined>();
     const [play, setPlay] = useState<PlayProps | undefined>(undefined);
-    const [transcriptionsUploading, setTranscriptionsUploading] = useState<boolean>(true);
-    const [pollDelay, setPollDelay] = useState<number | null>(null);
+    const [expectedCount, setExpectedCount] = useState<number>(0);
+    const [pollDelay, setPollDelay] = useState<number | null>(100);
 
     const mediaKey = (transcription: Transcription): string =>
         transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
@@ -228,7 +226,6 @@ const Home: NextPage = () => {
                 .then((mediaUrl) => transcriptUrl(transcription.downloadKey as string, 'vtt')
                     .then((transcriptUrl) => setPlay(() => ({mediaUrl, transcriptUrl}))))
                 .then(() => onOpen());
-
         }
     }
 
@@ -278,6 +275,8 @@ const Home: NextPage = () => {
             cell: (props) => formatBytes(props.row.original.uploadEvent.object.size)
         },
         {
+
+            id: "dateUploaded",
             header: "Date Uploaded",
             accessorFn: (transcription) => transcription.date,
             cell: (props) => formatDate(props.row.original.date)
@@ -334,6 +333,10 @@ const Home: NextPage = () => {
         }
     ]
 
+    const initialSortState = {
+        sorting: [{id: "dateUploaded", desc: true}] as SortingState
+    }
+
     useInterval(() => {
         Auth.currentSession()
             .then((currentSession) => currentSession.getIdToken().getJwtToken())
@@ -349,29 +352,25 @@ const Home: NextPage = () => {
                 headers
             })
                 .then((res) => res.json())
-                .then((response) => setTranscriptions(() => response)))
+                .then((loaded: Transcription[]) => {
+                    setExpectedCount((current) => current === 0 ? loaded.length : current)
+                    setTranscriptions(() => loaded)
+                }))
     }, pollDelay);
 
     useEffect(() => {
-        const inProgress = transcriptions.find((transcription) => ['QUEUED', 'IN_PROGRESS']
-                .find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status(transcription))
-            || ('COMPLETED' === status(transcription) && !transcription.downloadKey));
-        if (inProgress) {
-            setPollDelay(10000);
-        } else {
-            setPollDelay(null);
-        }
-    }, [transcriptions]);
+        if (transcriptions) {
+            const inProgress = transcriptions.length < expectedCount || transcriptions.find((transcription) => ['QUEUED', 'IN_PROGRESS']
+                    .find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status(transcription))
+                || ('COMPLETED' === status(transcription) && !transcription.downloadKey));
+            if (inProgress) {
+                setPollDelay(500);
+            } else {
+                setPollDelay(null);
+            }
 
-    useEffect(() => {
-        console.log(uploadProgress.size)
-        if (uploadProgress.size > 0) {
-            setTranscriptionsUploading(() => true);
-        } else {
-            setTranscriptionsUploading(() => false);
-            setPollDelay(500);
         }
-    }, [uploadProgress]);
+    }, [transcriptions, expectedCount]);
 
     const handelUpload = (file: File) => {
 
@@ -399,7 +398,7 @@ const Home: NextPage = () => {
                     return update;
                 })
             },
-        }).then();
+        }).then(() => setExpectedCount((current) => current + 1));
     }
 
 
@@ -414,7 +413,7 @@ const Home: NextPage = () => {
                     <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={'Uploads Files'}
                                 multiple={true}/>
                 </Flex>
-                {transcriptionsUploading &&
+                {uploadProgress.size > 0 &&
                     <>
                         <Alert status='info'>
                             <AlertIcon/>
@@ -430,7 +429,11 @@ const Home: NextPage = () => {
                     </>
                 }
 
-                {!transcriptionsUploading && transcriptions.length === 0 &&
+                {!transcriptions &&
+                    <Progress isIndeterminate   />
+                }
+
+                {transcriptions && transcriptions.length === 0 &&
                     <>
                         <Alert status='info'>
                             <AlertIcon/>
@@ -438,47 +441,62 @@ const Home: NextPage = () => {
                                 <AlertTitle>Getting Started</AlertTitle>
                                 <AlertDescription>
                                     Click the Upload Files button to start the transcription process. Please refer to
-                                    the
-                                    following table for guidance on supported file formats, size and duration.
+                                    the following table for guidance on supported file formats, size and duration.
                                 </AlertDescription>
                             </Box>
                         </Alert>
                         <Quotas/>
                     </>
                 }
-                {!transcriptionsUploading && transcriptions.length > 0 &&
-                    <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}/>
+                {transcriptions && transcriptions.length > 0 &&
+                    <DataTable data={transcriptions} columns={columns} paginate={transcriptions.length > 10}
+                               initialState={initialSortState}/>
                 }
 
 
             </VStack>
 
 
-            <Modal finalFocusRef={finalRef} isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay/>
-                <ModalContent>
-                    <ModalHeader>Play</ModalHeader>
-                    <ModalCloseButton/>
-                    <ModalBody>
+            <Drawer
+                isOpen={isOpen}
+                placement='right'
+                onClose={onClose}
+                finalFocusRef={finalRef}
+                size={'md'}
+            >
+                <DrawerOverlay/>
+                <DrawerContent>
+
+                    <Alert status='info'>
+                        <AlertIcon/>
+                        <Box>
+                            <AlertTitle>Web Player</AlertTitle>
+                            <AlertDescription>
+                                Scroll to any point in the transcript and click the dialogue to hear the associated
+                                audio.
+                            </AlertDescription>
+                        </Box>
+                    </Alert>
+
+                    <DrawerBody>
                         {play &&
                             <Player
                                 audio={play.mediaUrl}
                                 transcript={play.transcriptUrl}
                             />
                         }
-                    </ModalBody>
+                    </DrawerBody>
 
-                    <ModalFooter>
-                        <Button colorScheme='blue' mr={3} onClick={onClose}>
-                            Close
+                    <DrawerFooter>
+                        <Button variant='outline' mr={3} onClick={onClose}>
+                            Close player
                         </Button>
-                        <Button variant='ghost'>Secondary Action</Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
+                    </DrawerFooter>
+                </DrawerContent>
+            </Drawer>
         </>
 
     )
 }
 
-export default withLayout(<Layout/>)(Home);
+export default withLayout(<Layout/>)(Transcription);
