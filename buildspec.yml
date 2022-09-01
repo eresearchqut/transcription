@@ -19,5 +19,5 @@ phases:
       - (cd frontend; yarn install)
       - (cd frontend; yarn build)
       - export $(aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='DistributionEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' | xargs)
-      - aws s3 sync ./frontend/build $DISTRIBUTION_BUCKET --profile account-role
+      - aws s3 sync ./frontend/out $DISTRIBUTION_BUCKET --profile account-role
       - aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" --profile account-role
