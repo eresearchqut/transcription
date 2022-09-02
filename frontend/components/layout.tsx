@@ -37,6 +37,7 @@ export const Layout = ({children}: any) => {
             columns={1}
             height={'100vh'}
             width={'100%'}
+
             gridTemplateRows={'70px 1fr 30px 30px'}
         >
             <Box bg={'blue.900'} color={'white'} width={'100%'}>
