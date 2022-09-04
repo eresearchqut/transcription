@@ -38,9 +38,10 @@ import {
   Tr,
   useDisclosure,
   VisuallyHidden,
-  VStack, Wrap
+  VStack,
+  Wrap
 } from "@chakra-ui/react";
-import { useAuth } from "../context/auth-context";
+import { useAuth, useLogout } from "../context/auth-context";
 import FileUpload from "../components/fileUpload";
 
 import { Storage } from "aws-amplify";
@@ -56,7 +57,7 @@ import * as srtConvert from "aws-transcription-to-srt";
 import { AiOutlinePlaySquare } from "react-icons/ai";
 import { MdOutlineSubtitles } from "react-icons/md";
 import { VscJson } from "react-icons/vsc";
-import { Player } from "webvtt-player";
+import { Player } from "../components/player";
 import toWebVTT from "srt-webvtt";
 import { FiHelpCircle } from "react-icons/fi";
 
@@ -144,6 +145,7 @@ export const Download: FunctionComponent<DownloadProps> = ({ objectKey, fileName
   const [href, setHref] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const linkRef = useRef<HTMLAnchorElement | null>(null);
+  const { handleLogout } = useLogout();
 
   useEffect(() => {
     if (href) {
@@ -152,13 +154,15 @@ export const Download: FunctionComponent<DownloadProps> = ({ objectKey, fileName
   }, [href]);
 
   const handleDownload = () => {
+
     if (objectKey) {
       setIsLoading(() => true);
-      Storage.get(objectKey, {
-        level: "private",
-        contentDisposition: `attachment; filename = ${fileName}`
-      })
-        .then((signedUrl) => setHref(() => signedUrl))
+      Auth.currentSession()
+        .then(() => Storage.get(objectKey, {
+          level: "private",
+          contentDisposition: `attachment; filename = ${fileName}`
+        }).then((signedUrl) => setHref(() => signedUrl)))
+        .catch((e) => handleLogout())
         .finally(() => setIsLoading(() => false));
     }
   };
@@ -175,15 +179,16 @@ export const Download: FunctionComponent<DownloadProps> = ({ objectKey, fileName
 };
 
 export const transcriptUrl = (objectKey: string, format: "srt" | "vtt"): Promise<string> => {
-  return Storage.get(objectKey, {
-    level: "private",
-    download: true
-  })
-    .then((output) => (output.Body as Blob).text())
-    .then((text) => JSON.parse(text))
-    .then((json) => srtConvert(json))
-    .then((srt) => new Blob([srt], { type: "text/plain" }))
-    .then((srtBlob) => format === "vtt" ? toWebVTT(srtBlob) : URL.createObjectURL(srtBlob));
+  return Auth.currentSession().then(() =>
+    Storage.get(objectKey, {
+      level: "private",
+      download: true
+    })
+      .then((output) => (output.Body as Blob).text())
+      .then((text) => JSON.parse(text))
+      .then((json) => srtConvert(json))
+      .then((srt) => new Blob([srt], { type: "text/plain" }))
+      .then((srtBlob) => format === "vtt" ? toWebVTT(srtBlob) : URL.createObjectURL(srtBlob)));
 };
 
 export interface DownloadTranscriptProps extends DownloadProps {
@@ -196,6 +201,7 @@ export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
   const [href, setHref] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const linkRef = useRef<HTMLAnchorElement | null>(null);
+  const { handleLogout } = useLogout();
 
   useEffect(() => {
     if (href) {
@@ -208,6 +214,7 @@ export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
       setIsLoading(() => true);
       transcriptUrl(objectKey, format)
         .then((url) => setHref(url))
+        .catch((e) => handleLogout())
         .finally(() => setIsLoading(false));
     }
   };
@@ -237,18 +244,24 @@ const Transcription: NextPage = () => {
   const [play, setPlay] = useState<PlayProps | undefined>(undefined);
   const [expectedCount, setExpectedCount] = useState<number>(0);
   const [pollDelay, setPollDelay] = useState<number | null>(100);
+  const { handleLogout } = useLogout();
 
   const mediaKey = (transcription: Transcription): string =>
     transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
 
-  const loadMediaPlayer = (transcription: Transcription) => {
+  const loadPlayer = (transcription: Transcription) => {
     if (transcription.downloadKey !== undefined) {
-      Storage.get(mediaKey(transcription), {
-        level: "private"
-      })
-        .then((mediaUrl) => transcriptUrl(transcription.downloadKey as string, "vtt")
-          .then((transcriptUrl) => setPlay(() => ({ mediaUrl, transcriptUrl }))))
-        .then(() => onOpen());
+      return Auth.currentSession().then(() =>
+        Storage.get(mediaKey(transcription), {
+          level: "private"
+        })
+          .then((mediaUrl) => transcriptUrl(transcription.downloadKey as string, "vtt")
+            .then((transcriptUrl) => setPlay(() => ({
+              mediaUrl,
+              transcriptUrl
+            }))))
+          .catch((e) => handleLogout())
+          .then(() => onOpen()));
     }
   };
 
@@ -271,6 +284,29 @@ const Transcription: NextPage = () => {
     transcription.transcriptionResponse?.TranscriptionJob?.TranscriptionJobStatus || "";
 
   const formatStatus = (transcription: Transcription) => startCase(status(transcription).toLowerCase());
+
+  const mediaProps = (transcription: Transcription): DownloadProps => ({
+    objectKey: mediaKey(transcription),
+    label: "Media",
+    fileName: transcription.metadata.filename
+  });
+  const transcriptionProps = (transcription: Transcription): DownloadProps => ({
+    objectKey: transcription.downloadKey,
+    label: "JSON",
+    fileName: [transcription.metadata.filename.split(".")[0], "json"].join(".")
+  });
+  const srtProps = (transcription: Transcription): DownloadTranscriptProps => ({
+    objectKey: transcription.downloadKey,
+    label: "SRT",
+    fileName: [transcription.metadata.filename.split(".")[0], "srt"].join(".")
+  });
+  const vttProps = (transcription: Transcription): DownloadTranscriptProps => ({
+    objectKey: transcription.downloadKey,
+    label: "VTT",
+    fileName: [transcription.metadata.filename.split(".")[0], "vtt"].join("."),
+    format: "vtt"
+  });
+
 
   const formatDate = (isoDateString: string) => {
     return new Date(isoDateString).toLocaleString();
@@ -313,34 +349,15 @@ const Transcription: NextPage = () => {
       enableSorting: false,
       cell: (props) => {
         const transcription = props.row.original;
-        const mediaProps: DownloadProps = {
-          objectKey: mediaKey(transcription),
-          label: "Media",
-          fileName: transcription.metadata.filename
-        };
+
         if (transcription.downloadKey) {
-          const transcriptionProps: DownloadProps = {
-            objectKey: transcription.downloadKey,
-            label: "JSON",
-            fileName: [transcription.metadata.filename.split(".")[0], "json"].join(".")
-          };
-          const srtProps: DownloadTranscriptProps = {
-            objectKey: transcription.downloadKey,
-            label: "SRT",
-            fileName: [transcription.metadata.filename.split(".")[0], "srt"].join(".")
-          };
-          const vttProps: DownloadTranscriptProps = {
-            objectKey: transcription.downloadKey,
-            label: "VTT",
-            fileName: [transcription.metadata.filename.split(".")[0], "srt"].join("."),
-            format: "vtt"
-          };
+
           return <Stack direction={["column", "column", "column", "column", "row"]}>
-            <Download {...mediaProps} />
-            <Download {...transcriptionProps} />
-            <DownloadTranscript {...srtProps} />
-            <DownloadTranscript {...vttProps} />
-            <Button onClick={() => loadMediaPlayer(transcription)}
+            <Download {...mediaProps(transcription)} />
+            <Download {...transcriptionProps(transcription)} />
+            <DownloadTranscript {...srtProps(transcription)} />
+            <DownloadTranscript {...vttProps(transcription)} />
+            <Button onClick={() => loadPlayer(transcription)}
                     variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>Play</Button>
           </Stack>;
         }
@@ -354,7 +371,7 @@ const Transcription: NextPage = () => {
             </Box>
           </Alert>;
         }
-        return <Download {...mediaProps} />;
+        return <Download {...mediaProps(transcription)} />;
       }
     }
   ];
@@ -366,30 +383,10 @@ const Transcription: NextPage = () => {
       accessorFn: (transcription) => transcription.date,
       cell: (props) => {
         const transcription = props.row.original;
-        const mediaProps: DownloadProps = {
-          objectKey: mediaKey(transcription),
-          label: "Media",
-          fileName: transcription.metadata.filename
-        };
-        const transcriptionProps: DownloadProps = {
-          objectKey: transcription.downloadKey,
-          label: "JSON",
-          fileName: [transcription.metadata.filename.split(".")[0], "json"].join(".")
-        };
-        const srtProps: DownloadTranscriptProps = {
-          objectKey: transcription.downloadKey,
-          label: "SRT",
-          fileName: [transcription.metadata.filename.split(".")[0], "srt"].join(".")
-        };
-        const vttProps: DownloadTranscriptProps = {
-          objectKey: transcription.downloadKey,
-          label: "VTT",
-          fileName: [transcription.metadata.filename.split(".")[0], "srt"].join("."),
-          format: "vtt"
-        };
         return <Table>
           <Tr>
-            <Td colSpan={2}><Heading as="h4" size={"sm"}>{formatFilename(transcription.metadata.filename)}</Heading></Td>
+            <Td colSpan={2}><Heading as="h4"
+                                     size={"sm"}>{formatFilename(transcription.metadata.filename)}</Heading></Td>
           </Tr>
           <Tr>
             <Td>Uploaded:</Td>
@@ -410,7 +407,7 @@ const Transcription: NextPage = () => {
           </Tr>
           {transcription.jobStatusUpdated?.detail.FailureReason &&
             <Tr>
-              <Td colSpan={2}><Alert status={'error'}>
+              <Td colSpan={2}><Alert status={"error"}>
                 <AlertIcon />
                 <Box>
                   <AlertDescription>
@@ -422,14 +419,14 @@ const Transcription: NextPage = () => {
           }
           <Tr>
             <Td colSpan={2}>
-              <Wrap >
-                <Download {...mediaProps} />
+              <Wrap>
+                <Download {...mediaProps(transcription)} />
                 {transcription.downloadKey &&
                   <>
-                    <Download {...transcriptionProps} />
-                    <DownloadTranscript {...srtProps} />
-                    <DownloadTranscript {...vttProps} />
-                    <Button onClick={() => loadMediaPlayer(transcription)}
+                    <Download {...transcriptionProps(transcription)} />
+                    <DownloadTranscript {...srtProps(transcription)} />
+                    <DownloadTranscript {...vttProps(transcription)} />
+                    <Button onClick={() => loadPlayer(transcription)}
                             variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>Play</Button>
                   </>
                 }
@@ -491,22 +488,24 @@ const Transcription: NextPage = () => {
       languagecode: "en-AU"
     };
 
-    Storage.put(key, file, {
-      level: "private",
-      metadata,
-      progressCallback: (progress) => {
-        setUploadProgress((current) => {
-          const update = new Map(current);
-          const progressPercent = progress.loaded / progress.total;
-          if (progressPercent >= 1) {
-            update.delete(file.name);
-          } else {
-            update.set(file.name, progressPercent);
-          }
-          return update;
-        });
-      }
-    }).then(() => setExpectedCount((current) => current + 1));
+    Auth.currentSession().then(() =>
+      Storage.put(key, file, {
+        level: "private",
+        metadata,
+        progressCallback: (progress) => {
+          setUploadProgress((current) => {
+            const update = new Map(current);
+            const progressPercent = progress.loaded / progress.total;
+            if (progressPercent >= 1) {
+              update.delete(file.name);
+            } else {
+              update.set(file.name, progressPercent);
+            }
+            return update;
+          });
+        }
+      }).then(() => setExpectedCount((current) => current + 1)))
+      .catch((e) => handleLogout());
   };
 
   return (
@@ -569,7 +568,8 @@ const Transcription: NextPage = () => {
         {transcriptions && transcriptions.length > 0 &&
           <>
             <Hide above="md">
-              <DataTable data={transcriptions} columns={mobileColumns} paginate={transcriptions.length > 10} tableProps={{variant: "unstyled"}}
+              <DataTable data={transcriptions} columns={mobileColumns} paginate={transcriptions.length > 10}
+                         tableProps={{ variant: "unstyled" }}
                          initialState={initialSortState}
               />
             </Hide>
