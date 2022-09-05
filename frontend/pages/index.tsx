@@ -33,6 +33,7 @@ import {
   Spacer,
   Spinner,
   Table,
+  Tbody,
   Td,
   Text,
   Tr,
@@ -60,6 +61,8 @@ import { VscJson } from "react-icons/vsc";
 import { Player } from "../components/player";
 import toWebVTT from "srt-webvtt";
 import { FiHelpCircle } from "react-icons/fi";
+import document, { TranscriptJob } from "../components/document";
+import { Packer } from "docx";
 
 
 const SUPPORTED_MIME_TYPES = [
@@ -178,21 +181,23 @@ export const Download: FunctionComponent<DownloadProps> = ({ objectKey, fileName
 
 };
 
-export const transcriptUrl = (objectKey: string, format: "srt" | "vtt"): Promise<string> => {
+export const transcriptUrl = (objectKey: string, format: "srt" | "vtt" | "docx"): Promise<string> => {
   return Auth.currentSession().then(() =>
     Storage.get(objectKey, {
       level: "private",
       download: true
     })
       .then((output) => (output.Body as Blob).text())
-      .then((text) => JSON.parse(text))
-      .then((json) => srtConvert(json))
-      .then((srt) => new Blob([srt], { type: "text/plain" }))
-      .then((srtBlob) => format === "vtt" ? toWebVTT(srtBlob) : URL.createObjectURL(srtBlob)));
+      .then((text) => JSON.parse(text) as TranscriptJob)
+      .then((transcriptJob) => format === "docx" ?
+        Packer.toBlob(document(transcriptJob)) :
+        new Blob([srtConvert(transcriptJob)], { type: "text/plain" }))
+      .then((blob) => format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob)));
 };
 
+
 export interface DownloadTranscriptProps extends DownloadProps {
-  format?: "srt" | "vtt";
+  format?: "srt" | "vtt" | "docx";
 }
 
 export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
@@ -306,6 +311,12 @@ const Transcription: NextPage = () => {
     fileName: [transcription.metadata.filename.split(".")[0], "vtt"].join("."),
     format: "vtt"
   });
+  const docxProps = (transcription: Transcription): DownloadTranscriptProps => ({
+    objectKey: transcription.downloadKey,
+    label: "DOCX",
+    fileName: [transcription.metadata.filename.split(".")[0], "docx"].join("."),
+    format: "docx"
+  });
 
 
   const formatDate = (isoDateString: string) => {
@@ -316,7 +327,6 @@ const Transcription: NextPage = () => {
     {
       header: "File Name",
       accessorFn: (transcription) => formatFilename(transcription.metadata.filename)
-
     },
     {
 
@@ -357,6 +367,7 @@ const Transcription: NextPage = () => {
             <Download {...transcriptionProps(transcription)} />
             <DownloadTranscript {...srtProps(transcription)} />
             <DownloadTranscript {...vttProps(transcription)} />
+            <DownloadTranscript {...docxProps(transcription)} />
             <Button onClick={() => loadPlayer(transcription)}
                     variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>Play</Button>
           </Stack>;
@@ -384,56 +395,57 @@ const Transcription: NextPage = () => {
       cell: (props) => {
         const transcription = props.row.original;
         return <Table>
-          <Tr>
-            <Td colSpan={2}><Heading as="h4"
-                                     size={"sm"}>{formatFilename(transcription.metadata.filename)}</Heading></Td>
-          </Tr>
-          <Tr>
-            <Td>Uploaded:</Td>
-            <Td>{formatDate(transcription.date)}</Td>
-          </Tr>
-          <Tr>
-            <Td>Type:</Td>
-            <Td>{transcription.metadata.mimetype}</Td>
-          </Tr>
-          <Tr>
-            <Td>Size:</Td>
-            <Td>{formatBytes(transcription.uploadEvent.object.size)}</Td>
-          </Tr>
-
-          <Tr>
-            <Td>Status:</Td>
-            <Td>{formatStatus(transcription)}</Td>
-          </Tr>
-          {transcription.jobStatusUpdated?.detail.FailureReason &&
+          <Tbody>
             <Tr>
-              <Td colSpan={2}><Alert status={"error"}>
-                <AlertIcon />
-                <Box>
-                  <AlertDescription>
-                    {transcription.jobStatusUpdated?.detail.FailureReason}
-                  </AlertDescription>
-                </Box>
-              </Alert></Td>
+              <Td colSpan={2}><Heading as="h4"
+                                       size={"sm"}>{formatFilename(transcription.metadata.filename)}</Heading></Td>
             </Tr>
-          }
-          <Tr>
-            <Td colSpan={2}>
-              <Wrap>
-                <Download {...mediaProps(transcription)} />
-                {transcription.downloadKey &&
-                  <>
-                    <Download {...transcriptionProps(transcription)} />
-                    <DownloadTranscript {...srtProps(transcription)} />
-                    <DownloadTranscript {...vttProps(transcription)} />
-                    <Button onClick={() => loadPlayer(transcription)}
-                            variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>Play</Button>
-                  </>
-                }
-              </Wrap>
-            </Td>
-          </Tr>
-
+            <Tr>
+              <Td>Uploaded:</Td>
+              <Td>{formatDate(transcription.date)}</Td>
+            </Tr>
+            <Tr>
+              <Td>Type:</Td>
+              <Td>{transcription.metadata.mimetype}</Td>
+            </Tr>
+            <Tr>
+              <Td>Size:</Td>
+              <Td>{formatBytes(transcription.uploadEvent.object.size)}</Td>
+            </Tr>
+            <Tr>
+              <Td>Status:</Td>
+              <Td>{formatStatus(transcription)}</Td>
+            </Tr>
+            {transcription.jobStatusUpdated?.detail.FailureReason &&
+              <Tr>
+                <Td colSpan={2}><Alert status={"error"}>
+                  <AlertIcon />
+                  <Box>
+                    <AlertDescription>
+                      {transcription.jobStatusUpdated?.detail.FailureReason}
+                    </AlertDescription>
+                  </Box>
+                </Alert></Td>
+              </Tr>
+            }
+            <Tr>
+              <Td colSpan={2}>
+                <Wrap>
+                  <Download {...mediaProps(transcription)} />
+                  {transcription.downloadKey &&
+                    <>
+                      <Download {...transcriptionProps(transcription)} />
+                      <DownloadTranscript {...srtProps(transcription)} />
+                      <DownloadTranscript {...vttProps(transcription)} />
+                      <DownloadTranscript {...docxProps(transcription)} />
+                      <Button onClick={() => loadPlayer(transcription)}
+                              variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>Play</Button>
+                    </>
+                  }
+                </Wrap>
+              </Td>
+            </Tr>
+          </Tbody>
         </Table>;
       }
     }
