@@ -1,4 +1,4 @@
-import { Document, Paragraph, Table, TableCell, TableRow, WidthType } from "docx";
+import { Document, HeadingLevel, Paragraph, Table, TableCell, TableRow, WidthType } from "docx";
 
 export interface Item {
   start_time: string; // "0.14"
@@ -78,7 +78,7 @@ const formatTime = (time: string) => {
   return padTime(hours, 2) + ":" + padTime(minutes, 2) + ":" + padTime(seconds, 2);
 };
 
-const table = (job: TranscriptJob) => new Table({
+const table = (job: TranscriptJob, withAlternatives: boolean = false) => new Table({
   rows: [
     new TableRow({
       children: [
@@ -102,28 +102,61 @@ const table = (job: TranscriptJob) => new Table({
       ]
     }),
     ...job.results.segments
-      .map((segment, segmentIndex) => segment.alternatives.map((alternative, index) => new TableRow({
-        children: [
-          new TableCell({
-            children: index === 0 ? [new Paragraph(formatTime(segment.start_time))] : []
-          }),
-          new TableCell({
-            children: index === 0 ? [new Paragraph(speakers[job.results.speaker_labels.segments[segmentIndex].speaker_label])] : []
-          }),
-          new TableCell({
-            children: [new Paragraph(alternative.transcript)]
-          })
-        ]
-      }))).flat(1)
+      .map((segment, segmentIndex) => (withAlternatives ? segment.alternatives : segment.alternatives.slice(0, 1))
+        .map((alternative, index) => new TableRow({
+          children: index === 0
+            ? [
+              cell(formatTime(segment.start_time)),
+              cell(speakers[job.results.speaker_labels.segments[segmentIndex].speaker_label]),
+              cell(alternative.transcript)]
+            : [
+              cell(`Alternative ${index}`, 2),
+              cell(alternative.transcript)
+            ]
+        }))).flat(1)
   ]
 });
+
+export const cell = (text: string, columnSpan?: number) =>
+  new TableCell({
+    margins: {
+      left: 40,
+      right: 40,
+      top: 40,
+      bottom: 40
+    },
+    children: [new Paragraph(text)], columnSpan
+  });
+
+export const heading = (text: string, pageBreakBefore: boolean = false) =>
+  new Paragraph({
+    text,
+    heading: HeadingLevel.HEADING_1,
+    pageBreakBefore
+  });
 
 
 const document = (job: TranscriptJob) => new Document({
   sections: [
     {
       children: [
+        heading("Transcript with speakers", true),
         table(job)
+      ]
+    },
+    {
+
+      children: [
+        heading("Transcript with alternatives", true),
+        table(job, true)
+      ]
+    },
+    {
+
+      children: [
+        heading("Transcript", true),
+        ...job.results.transcripts.map((transcript) => transcript.transcript)
+          .map((transcript) => new Paragraph(transcript))
       ]
     }
   ]

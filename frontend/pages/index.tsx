@@ -219,7 +219,7 @@ export const DownloadTranscript: FunctionComponent<DownloadTranscriptProps>
       setIsLoading(() => true);
       transcriptUrl(objectKey, format)
         .then((url) => setHref(url))
-        .catch((e) => console.log(e))
+        .catch((e) => handleLogout())
         .finally(() => setIsLoading(false));
     }
   };
