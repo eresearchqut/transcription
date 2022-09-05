@@ -97,7 +97,6 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         <track default
                kind="subtitles"
                src={props.transcript}
-               onLoad={() => setTranscriptLoaded(true)}
                ref={track} />
       </audio>
 
