@@ -2,7 +2,7 @@ import React, { Fragment, FunctionComponent, useEffect, useRef, useState } from 
 
 import { Input, InputGroup, InputLeftElement } from "@chakra-ui/input";
 import { SearchIcon } from "@chakra-ui/icons";
-import { Grid, GridItem, Highlight, Text } from "@chakra-ui/react";
+import { Grid, GridItem, Highlight, Text, useColorMode } from "@chakra-ui/react";
 
 export interface PlayerProps {
   audio: string,
@@ -14,10 +14,15 @@ export interface PlayerProps {
 export interface TranscriptionProps {
   track?: TextTrack;
   seek: (seconds: number) => void;
+  currentTime: number;
   query?: string;
+
 }
 
-export const Transcription: FunctionComponent<TranscriptionProps> = ({ track, seek, query }) => {
+export const Transcription: FunctionComponent<TranscriptionProps> = ({ track, seek, currentTime, query }) => {
+
+
+  const { colorMode } = useColorMode();
 
   const formatTime = (t: number): string => {
     let minutes: string | number = Math.floor(t / 60);
@@ -37,20 +42,19 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({ track, se
         .map((index) => {
           const cues = track?.cues as TextTrackCueList;
           const cue = cues[index] as TextTrackCue & { text: string };
-          const match = !query || cue.text.match(new RegExp(query, "i"));
-          if (match) {
-            return <Fragment key={index}>
-              <GridItem colSpan={2}>{formatTime(cue.startTime)} - {formatTime(cue.endTime)}</GridItem>
-              <GridItem colSpan={4} onClick={() => seek(cue.startTime)} cursor={"pointer"}>
-                {query &&
-                  <Highlight query={query.split(" ")}
-                             styles={{ bg: "blue.100" }}>{cue.text}</Highlight>
-                }
-                {!query && <Text>{cue.text}</Text>}
-              </GridItem>
-            </Fragment>;
-          }
-          return null;
+          const isCurrent = currentTime >= cue.startTime && currentTime < cue.endTime;
+
+          return <Fragment key={index}>
+            <GridItem  colSpan={2} onClick={() => seek(cue.startTime)} cursor={"pointer"}><Text as={isCurrent ? 'u': undefined}>{formatTime(cue.startTime)} - {formatTime(cue.endTime)}</Text></GridItem>
+            <GridItem  colSpan={4} onClick={() => seek(cue.startTime)} cursor={"pointer"}>
+              {query &&
+                <Text as={isCurrent ? 'u': undefined}><Highlight query={query.split(" ")}
+                           styles={{ bg: "blue.100" }}>{cue.text}</Highlight></Text>
+              }
+              {!query && <Text as={isCurrent ? 'u': undefined}>{cue.text}</Text>}
+            </GridItem>
+          </Fragment>;
+
         })}
     </Grid>;
   }
@@ -61,6 +65,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({ track, se
 export const Player: FunctionComponent<PlayerProps> = (props) => {
 
   const [transcriptLoaded, setTranscriptLoaded] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<number>(0);
   const [tries, setTries] = useState<number>(0);
   const [query, setQuery] = useState<string>(props.query || "");
   const audio = useRef<HTMLAudioElement>(null);
@@ -92,6 +97,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         controls
         crossOrigin="anonymous"
         preload={`${props.preload}`}
+        onTimeUpdate={(e) => setCurrentTime(audio.current?.currentTime || 0)}
         ref={audio}>
         <source src={props.audio} />
         <track default
@@ -107,7 +113,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         <Input value={query} placeholder="Search" onChange={(e) => setQuery(e.target.value)} />
       </InputGroup>
       {transcriptLoaded &&
-        <Transcription track={track.current?.track} seek={seek} query={query} />
+        <Transcription track={track.current?.track} seek={seek} query={query} currentTime={currentTime}/>
       }
 
     </>
