@@ -21,9 +21,6 @@ export interface TranscriptionProps {
 
 export const Transcription: FunctionComponent<TranscriptionProps> = ({ track, seek, currentTime, query }) => {
 
-
-  const { colorMode } = useColorMode();
-
   const formatTime = (t: number): string => {
     let minutes: string | number = Math.floor(t / 60);
     if (minutes < 10) {
