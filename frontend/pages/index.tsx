@@ -539,7 +539,7 @@ const Transcription: NextPage = () => {
               <PopoverBody><Heading>Quotas</Heading><Quotas /></PopoverBody>
             </PopoverContent>
           </Popover>
-          <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={"Uploads Files"}
+          <FileUpload handleFile={handelUpload} accepted={SUPPORTED_MIME_TYPES} label={"Upload Files"}
                       multiple={true} />
         </Flex>
         {uploadProgress.size > 0 &&
