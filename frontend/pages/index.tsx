@@ -482,7 +482,7 @@ const Transcription: NextPage = () => {
           .find((queuedOrInProgressStatus) => queuedOrInProgressStatus === status(transcription))
         || ("COMPLETED" === status(transcription) && !transcription.downloadKey));
       if (inProgress) {
-        setPollDelay(500);
+        setPollDelay(5000);
       } else {
         setPollDelay(null);
       }
