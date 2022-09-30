@@ -282,7 +282,7 @@ const Transcription: NextPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
   };
 
-  const formatFilename = (filename: string) => decodeURI(filename);
+  const formatFilename = (filename: string) => decodeURIComponent(filename);
 
   const status = (transcription: Transcription) =>
     transcription.jobStatusUpdated?.detail.TranscriptionJobStatus ||
