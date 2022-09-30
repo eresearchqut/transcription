@@ -1,3 +1,7 @@
+const tsPreset = require("ts-jest/jest-preset");
+const dynalitePreset = require("jest-dynalite/jest-preset");
+
 module.exports = {
-  preset: "jest-dynalite",
+  ...tsPreset,
+  ...dynalitePreset,
 };

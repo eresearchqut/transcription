@@ -4,8 +4,7 @@ phases:
     runtime-versions:
       nodejs: 14
     commands:
-      - npm install -g yarn
-      - echo yarn -v
+      - npm install -g yarn esbuild
       - yarn -v
   pre_build:
     commands:
@@ -13,6 +12,8 @@ phases:
       - echo "[profile account-role]\nrole_arn = ${ACCOUNT_ROLE}\ncredential_source = EcsContainer" >> ~/.aws/config
   build:
     commands:
+      - (cd api; npm install)
+      - (cd api; npm run build)
       - sam build
       - sam deploy --config-env $ENV --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $ENV-$STACK_NAME --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --profile account-role
       - aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' > ./frontend/.env.production

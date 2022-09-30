@@ -236,6 +236,14 @@ Resources:
         SecurityGroupIds:
           - !Ref ApiSecurityGroup
         SubnetIds: !Ref SubnetIds
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/api/apiHandler.ts
   TranscriptionJobStartFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -276,6 +284,14 @@ Resources:
                   - Name: suffix
                     Value: .upload
           Type: S3
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/event/fileUploadHandler.ts
   TranscriptionCopyOutputFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -321,6 +337,14 @@ Resources:
                   - Name: suffix
                     Value: .json
           Type: S3
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/event/copyOutputHandler.ts
   TranscriptionJobStateChangeFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -338,6 +362,14 @@ Resources:
           BUCKET_NAME: !Sub "${AWS::StackName}-${AWS::Region}-${AWS::AccountId}"
           APPLICATION_NAME: !Ref ApplicationName
           ENVIRONMENT: !Ref Environment
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2020"
+        Sourcemap: true
+        EntryPoints:
+          - src/event/transcriptionJobStateChangeHandler.ts
   TranscriptionJobEventsRuleLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:

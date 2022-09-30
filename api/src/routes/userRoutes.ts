@@ -1,10 +1,6 @@
-const express = require("express");
+import express from "express";
 
-const {
-  getIdentityId,
-  getRoles,
-  getUserName,
-} = require("../util/requestUtils");
+import { getIdentityId, getRoles, getUserName } from "../util/requestUtils";
 
 const router = express.Router();
 
@@ -20,4 +16,4 @@ router.get("/identity", (request, response, next) => {
   response.json({ identityId });
 });
 
-module.exports = router;
+export default router;

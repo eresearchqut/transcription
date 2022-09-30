@@ -1,16 +1,19 @@
-const {
+import {
+  DeleteItemCommand,
   GetItemCommand,
   PutItemCommand,
-  DeleteItemCommand,
-  UpdateItemCommand,
   QueryCommand,
-} = require("@aws-sdk/client-dynamodb");
-const dynamoDBClient = require("./dynamoDBClient");
-const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+  UpdateItemCommand,
+} from "@aws-sdk/client-dynamodb";
+import { AttributeValue } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+
+import dynamoDBClient from "./dynamoDBClient";
+
 const tableName = process.env.TABLE_NAME || "transcription";
 const TTL_DELTA = 60 * 60 * 24 * 14; // 14 days
 
-const getResource = (pk, sk) =>
+export const getResource = (pk: string, sk: string) =>
   dynamoDBClient
     .send(
       new GetItemCommand({
@@ -20,7 +23,11 @@ const getResource = (pk, sk) =>
     )
     .then((result) => result.Item && unmarshall(result.Item));
 
-const putResource = (pk, sk, attributes) =>
+export const putResource = (
+  pk: string,
+  sk: string,
+  attributes: Record<string, unknown>
+) =>
   dynamoDBClient.send(
     new PutItemCommand({
       TableName: tableName,
@@ -37,7 +44,12 @@ const putResource = (pk, sk, attributes) =>
     })
   );
 
-const updateResource = (pk, sk, attributeName, attributeValue) =>
+export const updateResource = (
+  pk: string,
+  sk: string,
+  attributeName: string,
+  attributeValue: string
+) =>
   dynamoDBClient.send(
     new UpdateItemCommand({
       TableName: tableName,
@@ -61,7 +73,7 @@ const updateResource = (pk, sk, attributeName, attributeValue) =>
     })
   );
 
-const deleteResource = (pk, sk) =>
+export const deleteResource = (pk: string, sk: string) =>
   dynamoDBClient.send(
     new DeleteItemCommand({
       TableName: tableName,
@@ -69,9 +81,12 @@ const deleteResource = (pk, sk) =>
     })
   );
 
-const getResources = async (pk, exclusiveStartKey) => {
+export const getResources = async (
+  pk: string,
+  exclusiveStartKey?: Record<string, AttributeValue>
+) => {
+  const items: Record<string, any> = [];
   let lastEvaluatedKey;
-  let items = [];
   do {
     const { LastEvaluatedKey, Items } = await dynamoDBClient.send(
       new QueryCommand({
@@ -86,16 +101,10 @@ const getResources = async (pk, exclusiveStartKey) => {
         }),
       })
     );
-    Items.map((item) => unmarshall(item)).forEach((item) => items.push(item));
+    (Items ?? [])
+      .map((item) => unmarshall(item))
+      .forEach((item) => items.push(item));
     lastEvaluatedKey = LastEvaluatedKey;
   } while (lastEvaluatedKey);
   return items;
-};
-
-module.exports = {
-  deleteResource,
-  getResource,
-  getResources,
-  putResource,
-  updateResource,
 };

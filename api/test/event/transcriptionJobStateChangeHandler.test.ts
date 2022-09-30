@@ -1,6 +1,4 @@
-const {
-  handler,
-} = require("../../src/event/transcriptionJobStateChangeHandler");
+import { handler } from "../../src/event/transcriptionJobStateChangeHandler";
 
 describe("config", () => {
   it("start job after file upload", async () => {

@@ -1,9 +1,9 @@
-const {
-  jobStarted,
+import {
   getTranscriptions,
-} = require("../../src/service/transcriptionService");
+  jobStarted,
+} from "../../src/service/transcriptionService";
 
-describe("transcription service test", function () {
+describe("transcription service test", () =>
   it("job started event is returned as resource", async () => {
     await jobStarted(
       "76c65a59-1c57-489b-be96-020ceaa9675a",
@@ -25,30 +25,21 @@ describe("transcription service test", function () {
         },
       },
       {
-        $metadata: {
-          httpStatusCode: 200,
-          requestId: "84eab607-c3e0-4d04-90f5-41acb59f7587",
-          extendedRequestId: undefined,
-          cfId: undefined,
-          attempts: 1,
-          totalRetryDelay: 0,
-        },
         TranscriptionJob: {
           CompletionTime: undefined,
           ContentRedaction: undefined,
-          CreationTime: "2021-04-09T01:21:45.830Z",
+          CreationTime: new Date("2021-04-09T01:21:45.830Z"),
           FailureReason: undefined,
           IdentifiedLanguageScore: undefined,
           IdentifyLanguage: undefined,
           JobExecutionSettings: undefined,
           LanguageCode: "en-AU",
           LanguageOptions: undefined,
-          Media: [Object],
           MediaFormat: undefined,
           MediaSampleRateHertz: undefined,
           ModelSettings: undefined,
           Settings: undefined,
-          StartTime: "2021-04-09T01:21:45.860Z",
+          StartTime: new Date("2021-04-09T01:21:45.860Z"),
           Transcript: undefined,
           TranscriptionJobName:
             "76c65a59-1c57-489b-be96-020ceaa9675a|95edf479-b991-4d0c-9e9e-d34474880b65",
@@ -70,16 +61,9 @@ describe("transcription service test", function () {
         pk: "76c65a59-1c57-489b-be96-020ceaa9675a",
         sk: "95edf479-b991-4d0c-9e9e-d34474880b65",
         transcriptionResponse: {
-          $metadata: {
-            attempts: 1,
-            httpStatusCode: 200,
-            requestId: "84eab607-c3e0-4d04-90f5-41acb59f7587",
-            totalRetryDelay: 0,
-          },
           TranscriptionJob: {
             CreationTime: "2021-04-09T01:21:45.830Z",
             LanguageCode: "en-AU",
-            Media: [null],
             StartTime: "2021-04-09T01:21:45.860Z",
             TranscriptionJobName:
               "76c65a59-1c57-489b-be96-020ceaa9675a|95edf479-b991-4d0c-9e9e-d34474880b65",
@@ -103,5 +87,4 @@ describe("transcription service test", function () {
         },
       }),
     ]);
-  });
-});
+  }));

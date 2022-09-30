@@ -1,5 +1,6 @@
-const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
-const xray = require("aws-xray-sdk");
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+
+import xray from "aws-xray-sdk";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const dynamoDbClientConfig = {
@@ -13,4 +14,4 @@ const dynamoDbClientConfig = {
 const dynamoDBClient = new DynamoDBClient(dynamoDbClientConfig);
 xray.captureAWSv3Client(dynamoDBClient);
 
-module.exports = dynamoDBClient;
+export default dynamoDBClient;

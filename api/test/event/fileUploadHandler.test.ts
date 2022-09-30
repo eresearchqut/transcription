@@ -1,11 +1,12 @@
-const { handler } = require("../../src/event/fileUploadHandler");
-const { mockClient } = require("aws-sdk-client-mock");
-const {
-  TranscribeClient,
+import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
   StartTranscriptionJobCommand,
-} = require("@aws-sdk/client-transcribe");
+  TranscribeClient,
+} from "@aws-sdk/client-transcribe";
 
-const { S3Client, HeadObjectCommand } = require("@aws-sdk/client-s3");
+import { mockClient } from "aws-sdk-client-mock";
+
+import { handler } from "../../src/event/fileUploadHandler";
 
 describe("config", () => {
   it("start job after file upload", async () => {
