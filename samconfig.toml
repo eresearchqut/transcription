@@ -64,7 +64,7 @@ parameter_overrides = [
 
     "LogBucketSuffix=qut-cloudfront-logs",
 
-    "SupportedIdentityProviders=QUT,QUT-Test",
+    "SupportedIdentityProviders=QUT",
     "IdentityProviderLogoutURL=https://idp.qut.edu.au/idp/Logout",
 
     "RegionalCertificateArn=arn:aws:acm:ap-southeast-2:827511434808:certificate/4ee1151c-90bf-4f27-aa4d-074919fb325b",
