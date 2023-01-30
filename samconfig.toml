@@ -73,9 +73,11 @@ parameter_overrides = [
     "RegionalWafArn=arn:aws:wafv2:ap-southeast-2:827511434808:regional/webacl/waf-qut-general-regional/3bc093b5-feec-458a-8876-02dd6636cc72",
     "GlobalWafArn=arn:aws:wafv2:us-east-1:827511434808:global/webacl/waf-qut-general-cloudfront/e4c7db53-3ea1-484c-acb5-9caeeb6b1456",
 
-    "HostedZoneName=eresearchqut.net.",
-    "FrontEndDomainName=transcription.eresearchqut.net",
-    "ApiDomainName=api-transcription.eresearchqut.net",
+    "HostedZoneName=prod.eresearchqut.net.",
+    "FrontEndDomainName=transcription.prod.eresearchqut.net",
+    "ExternalFrontEndDomainName=transcription.eresearchqut.net",
+    "ApiDomainName=api-transcription.prod.eresearchqut.net",
+    "ExternalApiDomainName=api-transcription.eresearchqut.net",
 
     "VpcId=vpc-0bd70346dd58223ad",
     "SubnetIds=subnet-045abc03d245237e7,subnet-0a0b9cd6bbafc74a5,subnet-0cb8d571fe5512786"

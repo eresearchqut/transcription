@@ -49,9 +49,17 @@ Parameters:
   FrontEndDomainName:
     Type: String
     Description: Domain serving the frontend
+  ExternalFrontEndDomainName:
+    Type: String
+    Description: Domain serving the frontend
+    Default: ""
   ApiDomainName:
     Type: String
     Description: Domain serving the API
+  ExternalApiDomainName:
+    Type: String
+    Description: Domain serving the API
+    Default: ""
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: VPC to host the API in
@@ -61,6 +69,8 @@ Parameters:
 Conditions:
   CreateARecords: !Not [ !Equals [ !Ref HostedZoneName, "" ] ]
   IsDev: !Equals [ !Ref Environment, "dev" ]
+  HasExternalFrontEndDomainName: !Not [ !Equals [ !Ref ExternalFrontEndDomainName, "" ] ]
+  HasExternalApiDomainName: !Not [ !Equals [ !Ref ExternalApiDomainName, "" ] ]
 Globals:
   Function:
     Timeout: 15
@@ -142,7 +152,7 @@ Resources:
       DistributionConfig:
         Comment: !Sub '${AWS::StackName}'
         Aliases:
-          - !Ref FrontEndDomainName
+          - !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
         Origins:
           - DomainName: !GetAtt DistributionBucket.RegionalDomainName
             Id: !Ref DistributionBucketPolicy
@@ -404,14 +414,14 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       RegionalCertificateArn: !Ref RegionalCertificateArn
-      DomainName: !Ref ApiDomainName
+      DomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
       EndpointConfiguration:
         Types:
           - REGIONAL
   ApiGatewayBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !Ref ApiGatewayDomainName
+      DomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
       RestApiId: !Ref ServerlessRestApi
       Stage: !Ref ServerlessRestApiProdStage
     DependsOn: ApiFunction
@@ -447,19 +457,14 @@ Resources:
       ExplicitAuthFlows:
         - ALLOW_REFRESH_TOKEN_AUTH
       CallbackURLs:
-        - http://localhost:3000/
         - !Sub "https://${FrontEndDomainName}/"
-        - !If
-          - IsDev
-          - http://localhost:3000/
-          - !Ref 'AWS::NoValue'
+        - !If [HasExternalFrontEndDomainName:, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
+        - !If [IsDev, http://localhost:3000/, !Ref 'AWS::NoValue']
       LogoutURLs:
         - !Sub "https://${FrontEndDomainName}/"
+        - !If [HasExternalFrontEndDomainName:, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
         - !Ref IdentityProviderLogoutURL
-        - !If
-          - IsDev
-          - http://localhost:3000/
-          - !Ref 'AWS::NoValue'
+        - !If [IsDev, http://localhost:3000/, !Ref 'AWS::NoValue']
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
@@ -619,10 +624,14 @@ Outputs:
     Value: !GetAtt ApiFunction.Arn
   FrontendEndpoint:
     Description: "Frontend URL"
-    Value: !Sub "https://${FrontEndDomainName}/"
+    Value: !Sub 
+      - "https://${FrontEndDomainName}/"
+      - FrontEndDomainName: !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
   ApiEndpoint:
     Description: "API Endpoint"
-    Value: !Sub "https://${ApiDomainName}/"
+    Value: !Sub
+      - "https://${ApiDomainName}/"
+      - ApiDomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
   ClientId:
     Description: 'Web Application Client Id'
     Value: !Ref UserPoolClient
@@ -659,11 +668,10 @@ Outputs:
           Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
         AuthDomain:
           Fn::ImportValue: !Sub "${UserPoolStackName}-DomainName"
-        ApiDomainName: !Ref ApiDomainName
-        FrontEndDomainName: !Ref FrontEndDomainName
+        ApiDomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+        FrontEndDomainName: !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
   DistributionEnvironment:
     Description: Environment Configuration
     Value: !Sub |
       DISTRIBUTION_BUCKET=s3://${DistributionBucket}
       DISTRIBUTION_ID=${Distribution}
-
