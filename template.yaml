@@ -152,7 +152,7 @@ Resources:
       DistributionConfig:
         Comment: !Sub '${AWS::StackName}'
         Aliases:
-          - !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
+          - !If [HasExternalFrontEndDomainName, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
         Origins:
           - DomainName: !GetAtt DistributionBucket.RegionalDomainName
             Id: !Ref DistributionBucketPolicy
@@ -414,14 +414,14 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       RegionalCertificateArn: !Ref RegionalCertificateArn
-      DomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+      DomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
       EndpointConfiguration:
         Types:
           - REGIONAL
   ApiGatewayBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+      DomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
       RestApiId: !Ref ServerlessRestApi
       Stage: !Ref ServerlessRestApiProdStage
     DependsOn: ApiFunction
@@ -458,11 +458,11 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
       CallbackURLs:
         - !Sub "https://${FrontEndDomainName}/"
-        - !If [HasExternalFrontEndDomainName:, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
+        - !If [HasExternalFrontEndDomainName, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
         - !If [IsDev, http://localhost:3000/, !Ref 'AWS::NoValue']
       LogoutURLs:
         - !Sub "https://${FrontEndDomainName}/"
-        - !If [HasExternalFrontEndDomainName:, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
+        - !If [HasExternalFrontEndDomainName, !Sub "https://${ExternalFrontEndDomainName}/", !Ref 'AWS::NoValue']
         - !Ref IdentityProviderLogoutURL
         - !If [IsDev, http://localhost:3000/, !Ref 'AWS::NoValue']
   IdentityPool:
@@ -626,12 +626,12 @@ Outputs:
     Description: "Frontend URL"
     Value: !Sub 
       - "https://${FrontEndDomainName}/"
-      - FrontEndDomainName: !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
+      - FrontEndDomainName: !If [HasExternalFrontEndDomainName, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
   ApiEndpoint:
     Description: "API Endpoint"
     Value: !Sub
       - "https://${ApiDomainName}/"
-      - ApiDomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+      - ApiDomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
   ClientId:
     Description: 'Web Application Client Id'
     Value: !Ref UserPoolClient
@@ -668,8 +668,8 @@ Outputs:
           Fn::ImportValue: !Sub "${UserPoolStackName}-UserPoolId"
         AuthDomain:
           Fn::ImportValue: !Sub "${UserPoolStackName}-DomainName"
-        ApiDomainName: !If [HasExternalApiDomainName:, !Ref ExternalApiDomainName, !Ref ApiDomainName]
-        FrontEndDomainName: !If [HasExternalFrontEndDomainName:, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
+        ApiDomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+        FrontEndDomainName: !If [HasExternalFrontEndDomainName, !Ref ExternalFrontEndDomainName, !Ref FrontEndDomainName]
   DistributionEnvironment:
     Description: Environment Configuration
     Value: !Sub |
