@@ -414,14 +414,14 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       RegionalCertificateArn: !Ref RegionalCertificateArn
-      DomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+      DomainName: ApiDomainName
       EndpointConfiguration:
         Types:
           - REGIONAL
   ApiGatewayBasePathMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !If [HasExternalApiDomainName, !Ref ExternalApiDomainName, !Ref ApiDomainName]
+      DomainName: ApiDomainName
       RestApiId: !Ref ServerlessRestApi
       Stage: !Ref ServerlessRestApiProdStage
     DependsOn: ApiFunction
