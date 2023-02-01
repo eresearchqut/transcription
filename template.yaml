@@ -425,6 +425,23 @@ Resources:
       RestApiId: !Ref ServerlessRestApi
       Stage: !Ref ServerlessRestApiProdStage
     DependsOn: ApiFunction
+  ExternalApiGatewayDomainName:
+    Type: AWS::ApiGateway::DomainName
+    Condition: HasExternalApiDomainName
+    Properties:
+      RegionalCertificateArn: !Ref RegionalCertificateArn
+      DomainName: !Ref ExternalApiDomainName
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+  ExternalApiGatewayBasePathMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: HasExternalApiDomainName
+    Properties:
+      DomainName: !Ref ExternalApiDomainName
+      RestApiId: !Ref ServerlessRestApi
+      Stage: !Ref ServerlessRestApiProdStage
+    DependsOn: ApiFunction
   ApiDomain:
     Type: AWS::Route53::RecordSetGroup
     Condition: CreateARecords
