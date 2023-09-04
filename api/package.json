@@ -36,6 +36,11 @@
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2"
     },
+    "prettier": {
+        "importOrder": ["^react", "^[\\w\\d]+", "^[./]"],
+        "importOrderSeparation": true,
+        "plugins": ["@trivago/prettier-plugin-sort-imports"]
+    },
     "eslintConfig": {
         "extends": [
             "plugin:prettier/recommended"
