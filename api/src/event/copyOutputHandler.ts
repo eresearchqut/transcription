@@ -28,13 +28,13 @@ export const handler: S3Handler = async (event) => {
             Bucket: bucketName,
             CopySource: `${bucketName}/${key}`,
             Key: privateKey,
-          })
+          }),
         );
         await downloadKey(identityId, jobId, `${identityId}/${fileName}`);
       } catch (e) {
         console.error(
           `Failed to copy ${key} to ${privateKey} because: ${e}`,
-          e
+          e,
         );
       }
     } else {

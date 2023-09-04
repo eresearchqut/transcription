@@ -5,7 +5,7 @@ describe("config", () => {
     const jobStateChangeEvent = require("./jobStateChangeEvent.json");
 
     expect(await handler(jobStateChangeEvent)).toEqual(
-      "Transcription job status updated"
+      "Transcription job status updated",
     );
   });
 });

@@ -14,7 +14,7 @@ export const getClaims = (request: Request): Claims => {
   if (token) {
     try {
       const base64decoded = Buffer.from(token.split(".")[1], "base64").toString(
-        "ascii"
+        "ascii",
       );
       return JSON.parse(base64decoded);
     } catch (e) {
@@ -23,7 +23,7 @@ export const getClaims = (request: Request): Claims => {
     }
   } else {
     throw new Error(
-      `No token found in Authorization header. Cannot resolve claims.`
+      `No token found in Authorization header. Cannot resolve claims.`,
     );
   }
 };

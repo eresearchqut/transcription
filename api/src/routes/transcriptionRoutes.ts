@@ -8,7 +8,7 @@ const router = express.Router();
 router.get("/", (request, response) => {
   const identityId = getIdentityId(request);
   getTranscriptions(identityId).then((transcriptions) =>
-    response.json(transcriptions)
+    response.json(transcriptions),
   );
 });
 
