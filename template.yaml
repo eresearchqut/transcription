@@ -249,7 +249,7 @@ Resources:
     Properties:
       CodeUri: ./api
       Handler: src/event/fileUploadHandler.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs18.x
       Description: >
         Starts transcription jobs when triggered by S3 events
       Environment:
@@ -297,7 +297,7 @@ Resources:
     Properties:
       CodeUri: ./api
       Handler: src/event/copyOutputHandler.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs18.x
       Description: >
         Starts transcription jobs when triggered by S3 events
       Environment:
@@ -350,7 +350,7 @@ Resources:
     Properties:
       CodeUri: ./api
       Handler: src/event/transcriptionJobStateChangeHandler.handler
-      Runtime: nodejs14.x
+      Runtime: nodejs18.x
       Description: >
         Triggers when the job state is updated
       Policies:
