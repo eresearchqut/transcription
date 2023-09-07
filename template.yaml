@@ -158,6 +158,9 @@ Resources:
           ViewerProtocolPolicy: redirect-to-https
           ForwardedValues:
             QueryString: True
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              LambdaFunctionARN: !Ref ServeFunction.Version
         PriceClass: PriceClass_All
         Logging:
           IncludeCookies: false
@@ -244,6 +247,34 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/api/apiHandler.ts
+  ServeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Architectures:
+        - x86_64
+      Timeout: 5
+      CodeUri: serve/
+      Runtime: nodejs18.x
+      Handler: index.handler
+      AutoPublishAlias: edge
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - index.ts
+        Minify: true
+        Sourcemap: true
+        Target: "es2020"
   TranscriptionJobStartFunction:
     Type: AWS::Serverless::Function
     Properties:
