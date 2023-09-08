@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Edge Lambda
+Resources:
+  EdgeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Architectures:
+        - x86_64
+      Timeout: 5
+      CodeUri: serve/
+      Runtime: nodejs18.x
+      Handler: index.handler
+      AutoPublishAlias: edge
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - index.ts
+        Minify: true
+        Sourcemap: true
+        Target: "es2020"
+Outputs:
+  EdgeLambdaVersion:
+    Description: ARN Of the Lambda at the latest version
+    Value: !Ref EdgeFunction.Version
+    Export:
+      Name: !Sub "${AWS::StackName}-EdgeLambdaVersion"
