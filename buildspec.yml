@@ -12,6 +12,9 @@ phases:
       - echo "[profile account-role]\nrole_arn = ${ACCOUNT_ROLE}\ncredential_source = EcsContainer" >> ~/.aws/config
   build:
     commands:
+      - sam build -t edge.yaml
+      - sam deploy --config-env $ENV --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $ENV-$STACK_NAME --stack-name $STACK_NAME-edge --capabilities CAPABILITY_IAM --profile account-role --region us-east-1 -t edge.yaml
+
       - (cd api; npm install)
       - (cd api; npm run build)
       - sam build
