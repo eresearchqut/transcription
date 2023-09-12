@@ -19,6 +19,9 @@ Parameters:
     Type: String
     Default: Z2FDTNDATAQYW2
     Description: CloudFront resources HostedZoneId
+  EdgeStackName:
+    Type: String
+    Description: Name of the edge stack containing the routing lambda in us-east-1
   UserPoolStackName:
     Type: String
     Description: The user pool stack name
@@ -58,9 +61,6 @@ Parameters:
   SubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: VPC subnets
-  EdgeStackName:
-    Type: String
-    Description: Name of the edge stack containing the routing lambda in us-east-1
 Conditions:
   CreateARecords: !Not [ !Equals [ !Ref HostedZoneName, "" ] ]
   IsDev: !Equals [ !Ref Environment, "dev" ]
@@ -164,7 +164,7 @@ Resources:
           LambdaFunctionAssociations:
             - EventType: viewer-request
               LambdaFunctionARN:
-                Fn::ImportValue: !Sub "EdgeStackName-EdgeLambdaVersion"
+                Fn::ImportValue: !Sub "${EdgeStackName}-EdgeLambdaVersion"
         PriceClass: PriceClass_All
         Logging:
           IncludeCookies: false

@@ -1,0 +1,34 @@
+name: Deploy CDK Stack
+on:
+  push:
+    branches:
+      - cdk
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: test-app
+      - name: Install CDK
+        run: npm install -g aws-cdk
+      - name: Install dependencies
+        working-directory: test-app
+        run: npm install
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: arn:aws:iam::854640616043:role/GitHubStack-deployroleC69923DD-BV0NXT8YQN38
+          role-duration-seconds: 900
+          output-credentials: true
+      - name: Deploy CDK Stack
+        working-directory: test-app
+        run: cdk deploy TestAppStack
