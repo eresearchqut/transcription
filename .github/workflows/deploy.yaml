@@ -1,0 +1,49 @@
+name: Deploy CDK Stack
+on:
+  push:
+    branches:
+      - dev
+      - qa
+      - prod
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: deployment
+      - name: Install CDK
+        run: npm install -g aws-cdk
+      - name: Install dependencies
+        working-directory: deployment
+        run: npm install
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: ${{ env.API_ROLE_ARN }}
+          role-duration-seconds: 900
+          output-credentials: true
+      - name: Deploy base stack
+        working-directory: deployment
+        run: cdk deploy TranscriptionStack
+      - name: Save FrontEndEnvironment to file
+        working-directory: frontend
+        run: aws cloudformation describe-stacks --stack-name ${{ env.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ env.FRONTEND_ROLE_ARN }}
+          role-duration-seconds: 900
+          output-credentials: true
+      - name: Deploy frontend stack
+        working-directory: deployment
+        run: cdk deploy TranscriptionFrontEndStack

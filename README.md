@@ -5,8 +5,6 @@
 ![homepage](images/homepage.png)
 ![transcription](images/transcription.png)
 
-[Custom deployment instructions](INSTRUCTIONS.md)
-
 ## Linting and Formatting
 
 ### Frontend
@@ -34,27 +32,67 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ## Manual deployment instructions
 
 ```
-export ENV=dev # or qa, prod
-
-export STACK_NAME=$ENV-transcription
-export LAMBDA_BUCKET_NAME=qut-lambda-code-ap-southeast-2-dev
-export S3_PREFIX=dev-transcription
+cd deployment
+npm install
 ```
 
-### In root
+### *Optional: Create GitHub deployment stack*
 
 ```
-sam build
-sam deploy --s3-bucket $LAMBDA_BUCKET_NAME --s3-prefix $STACK_NAME --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --profile account-role
-aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' > ./frontend/.env.production
+cdk deploy TranscriptionGitHubStack
+cdk deploy TranscriptionFrontEndGitHubStack
 ```
 
-### In frontend
+### *Optional: Assume the GitHub role locally*
+
+
+`~/.aws/config`:
+
+```
+[profile qut-dev]
+region = ap-southeast-2
+
+[profile qut-dev-github]
+role_arn = <TranscriptionGitHubStack.deployRoleArn>
+source_profile = qut-dev
+
+[profile qut-dev-github-frontend]
+role_arn = <TranscriptionFrontEndGitHubStack.deployRoleArn>
+source_profile = qut-dev
+region = us-east-1
+```
+
+Deploy the stacks with the GitHub role:
+
+```
+AWS_PROFILE=qut-dev-github cdk deploy TranscriptionStack
+AWS_PROFILE=qut-dev-github-frontend cdk deploy TranscriptionFrontEndStack
+```
+
+### Deploy base stack
+
+Also builds the lambda functions
+
+```
+cdk deploy TranscriptionStack
+```
+
+### Build the frontend
+
+```
+export STACK_NAME=dev-transcription
+aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > ../frontend/.env.production
+```
+
+From the top-level `frontend` directory:
 
 ```
 yarn install
 yarn build
-export $(aws cloudformation describe-stacks --stack-name $ENV-transcription --region ap-southeast-2 --query "Stacks[0].Outputs[?OutputKey=='DistributionEnvironment'].OutputValue" --output text --profile account-role | sed '/^[[:space:]]*$/d' | xargs)
-aws s3 sync out $DISTRIBUTION_BUCKET --profile account-role
-aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" --profile account-role
+```
+
+### Deploy frontend stack
+
+```
+cdk deploy FrontEndStack
 ```
