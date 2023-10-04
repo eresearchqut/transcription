@@ -32,6 +32,17 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 ## Manual deployment instructions
 
 ```
+cd api
+npm install
+```
+
+```
+cd frontend
+yarn install
+mkdir -p out
+```
+
+```
 cd deployment
 npm install
 ```
@@ -87,7 +98,6 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 From the top-level `frontend` directory:
 
 ```
-yarn install
 yarn build
 ```
 
