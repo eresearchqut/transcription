@@ -104,7 +104,7 @@ export class GitHubStack extends cdk.Stack {
     const ssmPolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ["ssm:GetParameter"],
-      resources: [`arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter/app/${props.envName}/${props.repo}/env`]
+      resources: [`arn:aws:ssm:*:${cdk.Aws.ACCOUNT_ID}:parameter/app/${props.envName}/${props.repo}/env`]
     });
 
     const deployRole = new iam.Role(this, "deploy-role", {
