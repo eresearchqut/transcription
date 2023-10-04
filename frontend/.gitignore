@@ -28,6 +28,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# prod env file
+.env.production
+
 # vercel
 .vercel
 
