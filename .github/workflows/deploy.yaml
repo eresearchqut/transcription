@@ -15,7 +15,18 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Node.js
+      - name: Create frontend output dir
+        run: mkdir -p frontend/out
+      - name: Setup api
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: api
+      - name: Install api dependencies
+        working-directory: api
+        run: npm install
+      - name: Setup deployment
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -23,7 +34,7 @@ jobs:
           cache-dependency-path: deployment
       - name: Install CDK
         run: npm install -g aws-cdk
-      - name: Install dependencies
+      - name: Install deployment dependencies
         working-directory: deployment
         run: npm install
       - uses: aws-actions/configure-aws-credentials@v4
@@ -38,6 +49,18 @@ jobs:
       - name: Save FrontEndEnvironment to file
         working-directory: frontend
         run: aws cloudformation describe-stacks --stack-name ${{ env.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
+      - name: Setup frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install
+      - name: Build frontend
+        working-directory: frontend
+        run: yarn build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: us-east-1
