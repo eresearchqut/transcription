@@ -63,7 +63,6 @@ jobs:
         run: yarn build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: us-east-1
           role-to-assume: ${{ secrets.FRONTEND_ROLE_ARN }}
           role-duration-seconds: 900
           output-credentials: true

@@ -66,11 +66,12 @@ region = ap-southeast-2
 [profile qut-dev-github]
 role_arn = <TranscriptionGitHubStack.deployRoleArn>
 source_profile = qut-dev
+region = ap-southeast-2
 
 [profile qut-dev-github-frontend]
 role_arn = <TranscriptionFrontEndGitHubStack.deployRoleArn>
 source_profile = qut-dev
-region = us-east-1
+region = ap-southeast-2
 ```
 
 Deploy the stacks with the GitHub role:
