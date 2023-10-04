@@ -128,7 +128,7 @@ export class ApiStack extends cdk.Stack {
     const userPoolArn = cdk.Fn.importValue(`${props.parameters.UserPoolStackName}-UserPoolArn`);
     const userPool = cognito.UserPool.fromUserPoolArn(this, "UserPool", userPoolArn);
     const auth = new apigateway.CognitoUserPoolsAuthorizer(this, "Authorizer", {
-      cognitoUserPools: [userPool],
+      cognitoUserPools: [userPool]
     });
     const apiCertificate = certificatemanager.Certificate.fromCertificateArn(this, "Certificate", props.parameters.RegionalCertificateArn);
     const api = new apigateway.RestApi(this, "Api", {
@@ -141,12 +141,12 @@ export class ApiStack extends cdk.Stack {
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
         maxAge: cdk.Duration.days(10)
-      },
+      }
     });
     const apiFunctionIntegration = new apigateway.LambdaIntegration(apiFunction);
     const apiResourceAuthorized = api.root.addResource("{proxy+}");
     apiResourceAuthorized.addMethod("ANY", apiFunctionIntegration, {
-      authorizer: auth,
+      authorizer: auth
     });
 
     new wafv2.CfnWebACLAssociation(this, "ApiWebACLAssociation", {

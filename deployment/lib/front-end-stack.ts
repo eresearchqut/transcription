@@ -14,7 +14,7 @@ export interface FrontendStackProps extends cdk.StackProps {
     readonly HostedZoneName: string;
     readonly GlobalWafArn: string;
     readonly GlobalCertificateArn: string;
-  }
+  };
 }
 
 export class FrontEndStack extends cdk.Stack {
@@ -47,7 +47,7 @@ export class FrontEndStack extends cdk.Stack {
       domainNames: [parameters.FrontEndDomainName],
       certificate: certificatemanager.Certificate.fromCertificateArn(this, "distribution-certificate", parameters.GlobalCertificateArn),
       defaultBehavior: {
-        origin: new origins.S3Origin(distributionBucket, {originAccessIdentity}),
+        origin: new origins.S3Origin(distributionBucket, { originAccessIdentity }),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         edgeLambdas: [{
           functionVersion: edgeLambda.currentVersion,
@@ -61,13 +61,13 @@ export class FrontEndStack extends cdk.Stack {
     new route53.ARecord(this, "distribution-alias-record", {
       recordName: parameters.FrontEndDomainName,
       zone: distributionHostedZone,
-      target: route53.RecordTarget.fromAlias(cloudFrontTarget),
+      target: route53.RecordTarget.fromAlias(cloudFrontTarget)
     });
 
     new s3deployment.BucketDeployment(this, "distribution-deployment", {
       sources: [s3deployment.Source.asset("../frontend/out")],
       destinationBucket: distributionBucket,
-      distribution,
+      distribution
     });
   }
 }

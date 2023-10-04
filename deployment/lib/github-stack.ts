@@ -27,17 +27,17 @@ const appResourcePolicies = (tagKey: string, tagValue: string, stacks: string[])
       "ec2:DeleteSecurityGroup",
       "ec2:CreateTags",
       "ec2:DeleteTags",
-      "ec2:RevokeSecurityGroupIngress",
-      "ec2:RevokeSecurityGroupEgress",
       "ec2:AuthorizeSecurityGroupIngress",
       "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupEgress",
       "iam:*",
       "events:*",
       "route53:*",
       "wafv2:*"
     ],
-    resources: ["*"],
-  }),
+    resources: ["*"]
+  })
 ]);
 
 export class GitHubStack extends cdk.Stack {
@@ -74,10 +74,10 @@ export class GitHubStack extends cdk.Stack {
         "ec2:DescribeRouteTables",
         "ec2:DescribeVpcs",
         "ec2:DescribeVpnGateways",
-        "ec2:DescribeSubnets",
+        "ec2:DescribeSubnets"
       ],
-      resources: ["*"],
-    })
+      resources: ["*"]
+    });
 
     // To manage the stacks
     const cloudformationPolicy = new iam.PolicyStatement({
@@ -123,7 +123,6 @@ export class GitHubStack extends cdk.Stack {
       },
       maxSessionDuration: cdk.Duration.hours(1)
     });
-
 
     assetBucket.grantReadWrite(deployRole);
 

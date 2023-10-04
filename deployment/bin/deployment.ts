@@ -59,7 +59,6 @@ new SSMClient().send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/en
       env: { account: env.account, region: "us-east-1" }
     });
 
-
     const apiStack = new ApiStack(app, "TranscriptionStack", {
       stackName: apiStackName,
       synthesizer: new cdk.CliCredentialsStackSynthesizer({
