@@ -45,7 +45,7 @@ jobs:
           output-credentials: true
       - name: Deploy base stack
         working-directory: deployment
-        run: cdk deploy --verbose TranscriptionStack
+        run: cdk deploy TranscriptionStack
       - name: Save FrontEndEnvironment to file
         working-directory: frontend
         run: aws cloudformation describe-stacks --stack-name ${{ env.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
