@@ -41,7 +41,7 @@ jobs:
         with:
           aws-region: ap-southeast-2
           role-to-assume: ${{ secrets.API_ROLE_ARN }}
-          role-duration-seconds: 900
+          role-duration-seconds: 1800
           output-credentials: true
       - name: Deploy base stack
         working-directory: deployment
@@ -65,7 +65,7 @@ jobs:
         with:
           aws-region: ap-southeast-2
           role-to-assume: ${{ secrets.FRONTEND_ROLE_ARN }}
-          role-duration-seconds: 900
+          role-duration-seconds: 1800
           output-credentials: true
       - name: Deploy frontend stack
         working-directory: deployment
