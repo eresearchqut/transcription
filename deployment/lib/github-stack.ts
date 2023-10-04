@@ -25,6 +25,7 @@ const appResourcePolicies = (tagKey: string, tagValue: string, stacks: string[])
       "ec2:CreateSecurityGroup",
       "ec2:DescribeSecurityGroups",
       "ec2:DeleteSecurityGroup",
+      "ec2:CreateTags",
       "iam:*",
       "events:*",
       "route53:*",
@@ -53,12 +54,27 @@ export class GitHubStack extends cdk.Stack {
       autoDeleteObjects: true
     });
 
+    // To read the account id
     const readAccountPolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ["sts:GetCallerIdentity"],
       resources: ["*"]
     });
 
+    // To create the cdk.context.json file
+    const cdkPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        "ec2:DescribeAvailabilityZones",
+        "ec2:DescribeRouteTables",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeVpnGateways",
+        "ec2:DescribeSubnets",
+      ],
+      resources: ["*"],
+    })
+
+    // To manage the stacks
     const cloudformationPolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [
@@ -79,6 +95,7 @@ export class GitHubStack extends cdk.Stack {
       resources: props.stacks.map(stack => `arn:aws:cloudformation:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:stack/${stack}/*`)
     });
 
+    // To read the config
     const ssmPolicy = new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: ["ssm:GetParameter"],
@@ -93,6 +110,7 @@ export class GitHubStack extends cdk.Stack {
           statements: [
             readAccountPolicy,
             cloudformationPolicy,
+            cdkPolicy,
             ssmPolicy,
             ...appResourcePolicies("EresCdkApp", "transcription", props.stacks)
           ]
