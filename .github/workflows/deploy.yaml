@@ -48,7 +48,7 @@ jobs:
         run: cdk deploy TranscriptionStack
       - name: Save FrontEndEnvironment to file
         working-directory: frontend
-        run: aws cloudformation describe-stacks --stack-name ${{ env.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
+        run: aws cloudformation describe-stacks --stack-name ${{ vars.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
       - name: Setup frontend
         uses: actions/setup-node@v3
         with:
