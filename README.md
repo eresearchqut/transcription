@@ -107,3 +107,12 @@ yarn build
 ```
 cdk deploy FrontEndStack
 ```
+
+## Local frontend development
+
+```
+cd frontend
+export STACK_NAME=dev-transcription
+aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.local
+yarn dev
+```
