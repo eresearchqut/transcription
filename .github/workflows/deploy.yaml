@@ -61,9 +61,7 @@ jobs:
         run: yarn install
       - name: Build frontend
         working-directory: frontend
-        run: |
-          echo "::add-mask::${{ secrets.ACCOUNT_ID }}"
-          yarn build
+        run: yarn build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: ap-southeast-2
