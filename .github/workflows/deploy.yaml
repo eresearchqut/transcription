@@ -47,6 +47,7 @@ jobs:
         working-directory: deployment
         run: |
           echo "::add-mask::{{ secrets.ACCOUNT_ID }}"
+          echo "::add-mask::85464"
           cdk deploy TranscriptionStack
       - name: Save FrontEndEnvironment to file
         working-directory: frontend
@@ -64,6 +65,7 @@ jobs:
         working-directory: frontend
         run: |
           echo "::add-mask::{{ secrets.ACCOUNT_ID }}"
+          echo "::add-mask::85464"
           yarn build
       - uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -75,4 +77,5 @@ jobs:
         working-directory: deployment
         run: |
           echo "::add-mask::{{ secrets.ACCOUNT_ID }}"
+          echo "::add-mask::85464"
           cdk deploy TranscriptionFrontEndStack
