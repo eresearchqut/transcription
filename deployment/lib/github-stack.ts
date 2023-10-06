@@ -108,7 +108,7 @@ export class GitHubStack extends cdk.Stack {
     });
 
     const deployRole = new iam.Role(this, "deploy-role", {
-      assumedBy: new iam.CompositePrincipal(principal, new iam.AccountPrincipal(cdk.Aws.ACCOUNT_ID)),
+      assumedBy: new iam.CompositePrincipal(principal, new iam.ArnPrincipal(`arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/Admin`)),
       description: "This role is used via GitHub Actions to deploy with AWS CDK on the target AWS account",
       inlinePolicies: {
         "read-account": new iam.PolicyDocument({
