@@ -43,11 +43,10 @@ jobs:
           role-to-assume: ${{ secrets.API_ROLE_ARN }}
           role-duration-seconds: 1800
           output-credentials: true
+          mask-aws-account-id: true
       - name: Deploy base stack
         working-directory: deployment
-        run: |
-          echo "::add-mask::${{ secrets.ACCOUNT_ID }}"
-          cdk deploy TranscriptionStack
+        run: cdk deploy TranscriptionStack
       - name: Save FrontEndEnvironment to file
         working-directory: frontend
         run: aws cloudformation describe-stacks --stack-name ${{ vars.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
@@ -71,8 +70,7 @@ jobs:
           role-to-assume: ${{ secrets.FRONTEND_ROLE_ARN }}
           role-duration-seconds: 1800
           output-credentials: true
+          mask-aws-account-id: true
       - name: Deploy frontend stack
         working-directory: deployment
-        run: |
-          echo "::add-mask::${{ secrets.ACCOUNT_ID }}"
-          cdk deploy TranscriptionFrontEndStack
+        run: cdk deploy TranscriptionFrontEndStack
