@@ -50,6 +50,7 @@ npm install
 ### *Optional: Create GitHub deployment stack*
 
 ```
+export GITHUB_FILTERS="dev"
 cdk deploy TranscriptionGitHubStack
 cdk deploy TranscriptionFrontEndGitHubStack
 ```

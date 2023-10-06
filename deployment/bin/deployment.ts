@@ -34,6 +34,7 @@ interface EnvironmentConfig {
 const owner = "eresearchqut";
 const repo = "transcription";
 
+const githubFilters = process.env.GITHUB_FILTERS ? process.env.GITHUB_FILTERS.split(",") : undefined;
 const envName = (process.env.GITHUB_REF_NAME ?? "dev") as Environment;
 
 const apiStackName = `${envName}-${repo}`;
@@ -49,6 +50,7 @@ new SSMClient().send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/en
       owner,
       repo,
       stacks: [apiStackName],
+      filters: githubFilters,
       env: { account: env.account, region: env.region }
     });
     const frontEndGitHubStack = new GitHubStack(app, "TranscriptionFrontEndGitHubStack", {
@@ -56,6 +58,7 @@ new SSMClient().send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/en
       owner,
       repo,
       stacks: [frontendStackName],
+      filters: githubFilters,
       env: { account: env.account, region: "us-east-1" }
     });
 
