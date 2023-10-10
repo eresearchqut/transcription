@@ -8,6 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
     if: github.ref == 'refs/heads/dev'
     steps:
       - name: Setup api
