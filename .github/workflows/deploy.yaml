@@ -14,6 +14,7 @@ jobs:
       id-token: write
     if: github.ref == 'refs/heads/dev'
     steps:
+      - uses: actions/checkout@v4
       - name: Setup api
         uses: actions/setup-node@v3
         with:
