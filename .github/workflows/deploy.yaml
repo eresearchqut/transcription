@@ -6,6 +6,27 @@ on:
       - qa
       - prod
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    if: github.ref == 'refs/heads/dev'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup api
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: api
+      - name: Install api dependencies
+        working-directory: api
+        run: npm install
+      - name: Run tests
+        working-directory: api
+        run: npm run test
   deploy:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}

@@ -25,6 +25,7 @@ const envFormat = (vars: { [key: string]: string | number }): string =>
 
 export interface ApiStackProps extends cdk.StackProps {
   parameters: {
+    ApiAliasRecordName?: string;
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
@@ -162,7 +163,7 @@ export class ApiStack extends cdk.Stack {
     const apiTarget = new route53targets.ApiGateway(api);
 
     new route53.ARecord(this, "ApiAliasRecord", {
-      recordName: props.parameters.ApiDomainName,
+      recordName: props.parameters.ApiAliasRecordName ?? props.parameters.ApiDomainName,
       zone: apiHostedZone,
       target: route53.RecordTarget.fromAlias(apiTarget)
     });
