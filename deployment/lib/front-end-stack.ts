@@ -10,6 +10,7 @@ import * as s3deployment from "aws-cdk-lib/aws-s3-deployment";
 
 export interface FrontendStackProps extends cdk.StackProps {
   parameters: {
+    readonly FrontEndAliasRecordName?: string;
     readonly FrontEndDomainName: string;
     readonly HostedZoneName: string;
     readonly GlobalWafArn: string;
@@ -59,7 +60,7 @@ export class FrontEndStack extends cdk.Stack {
 
     const cloudFrontTarget = new route53targets.CloudFrontTarget(distribution);
     new route53.ARecord(this, "distribution-alias-record", {
-      recordName: parameters.FrontEndDomainName,
+      recordName: parameters.FrontEndAliasRecordName ?? parameters.FrontEndDomainName,
       zone: distributionHostedZone,
       target: route53.RecordTarget.fromAlias(cloudFrontTarget)
     });
