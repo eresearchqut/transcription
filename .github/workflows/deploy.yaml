@@ -1,0 +1,74 @@
+name: Deploy CDK Stack
+on:
+  push:
+    branches:
+      - dev
+      - qa
+      - prod
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create frontend output dir
+        run: mkdir -p frontend/out
+      - name: Setup api
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: api
+      - name: Install api dependencies
+        working-directory: api
+        run: npm install
+      - name: Setup deployment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: deployment
+      - name: Install CDK
+        run: npm install -g aws-cdk
+      - name: Install deployment dependencies
+        working-directory: deployment
+        run: npm install
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: ${{ secrets.API_ROLE_ARN }}
+          role-duration-seconds: 1800
+          output-credentials: true
+          mask-aws-account-id: true
+      - name: Deploy base stack
+        working-directory: deployment
+        run: cdk deploy TranscriptionStack
+      - name: Save FrontEndEnvironment to file
+        working-directory: frontend
+        run: aws cloudformation describe-stacks --stack-name ${{ vars.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
+      - name: Setup frontend
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install
+      - name: Build frontend
+        working-directory: frontend
+        run: yarn build
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-southeast-2
+          role-to-assume: ${{ secrets.FRONTEND_ROLE_ARN }}
+          role-duration-seconds: 1800
+          output-credentials: true
+          mask-aws-account-id: true
+      - name: Deploy frontend stack
+        working-directory: deployment
+        run: cdk deploy TranscriptionFrontEndStack

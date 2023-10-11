@@ -50,10 +50,10 @@ describe("transcription service test", () =>
         languagecode: "en-AU",
         filename: "Welcome.wav",
         filetype: "userUploadedFile",
-      }
+      },
     );
     expect(
-      await getTranscriptions("76c65a59-1c57-489b-be96-020ceaa9675a")
+      await getTranscriptions("76c65a59-1c57-489b-be96-020ceaa9675a"),
     ).toEqual([
       expect.objectContaining({
         outputKey:

@@ -19,14 +19,14 @@ export const getResource = (pk: string, sk: string) =>
       new GetItemCommand({
         TableName: tableName,
         Key: marshall({ pk, sk }),
-      })
+      }),
     )
     .then((result) => result.Item && unmarshall(result.Item));
 
 export const putResource = (
   pk: string,
   sk: string,
-  attributes: Record<string, unknown>
+  attributes: Record<string, unknown>,
 ) =>
   dynamoDBClient.send(
     new PutItemCommand({
@@ -39,16 +39,16 @@ export const putResource = (
           date: new Date().toISOString(),
           ttl: Math.floor(+new Date() / 1000) + TTL_DELTA,
         },
-        { removeUndefinedValues: true }
+        { removeUndefinedValues: true },
       ),
-    })
+    }),
   );
 
 export const updateResource = (
   pk: string,
   sk: string,
   attributeName: string,
-  attributeValue: string
+  attributeValue: string,
 ) =>
   dynamoDBClient.send(
     new UpdateItemCommand({
@@ -68,9 +68,9 @@ export const updateResource = (
           ":date": new Date().toISOString(),
           ":ttl": Math.floor(+new Date() / 1000) + TTL_DELTA,
         },
-        { removeUndefinedValues: true }
+        { removeUndefinedValues: true },
       ),
-    })
+    }),
   );
 
 export const deleteResource = (pk: string, sk: string) =>
@@ -78,12 +78,12 @@ export const deleteResource = (pk: string, sk: string) =>
     new DeleteItemCommand({
       TableName: tableName,
       Key: marshall({ pk, sk }),
-    })
+    }),
   );
 
 export const getResources = async (
   pk: string,
-  exclusiveStartKey?: Record<string, AttributeValue>
+  exclusiveStartKey?: Record<string, AttributeValue>,
 ) => {
   const items: Record<string, any> = [];
   let lastEvaluatedKey;
@@ -99,7 +99,7 @@ export const getResources = async (
         ExpressionAttributeValues: marshall({
           ":pk": pk,
         }),
-      })
+      }),
     );
     (Items ?? [])
       .map((item) => unmarshall(item))

@@ -12,7 +12,7 @@ export const jobStarted = (
   outputKey: string,
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
 ) =>
   putResource(identityId, jobId, {
     outputKey,
@@ -24,19 +24,19 @@ export const jobStarted = (
 export const jobStatusUpdated = (
   identityId: string,
   jobId: string,
-  jobStatusUpdated: Record<string, unknown>
+  jobStatusUpdated: Record<string, unknown>,
 ) =>
   updateResource(
     identityId,
     jobId,
     "jobStatusUpdated",
-    JSON.parse(JSON.stringify(jobStatusUpdated))
+    JSON.parse(JSON.stringify(jobStatusUpdated)),
   );
 
 export const downloadKey = (
   identityId: string,
   jobId: string,
-  downloadKey: string
+  downloadKey: string,
 ) => updateResource(identityId, jobId, "downloadKey", downloadKey);
 
 export const getTranscriptions = (identityId: string) =>

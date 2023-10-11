@@ -5,7 +5,12 @@ describe("repository", () => {
     await repository.putResource("pk", "sk", { foo: "bar", value: "none" });
 
     expect(await repository.getResource("pk", "sk")).toEqual(
-      expect.objectContaining({ foo: "bar", pk: "pk", sk: "sk", value: "none" })
+      expect.objectContaining({
+        foo: "bar",
+        pk: "pk",
+        sk: "sk",
+        value: "none",
+      }),
     );
 
     await repository.updateResource("pk", "sk", "foo", { bar: "nar" });
@@ -18,7 +23,7 @@ describe("repository", () => {
         pk: "pk",
         sk: "sk",
         value: "none",
-      })
+      }),
     );
 
     await repository.updateResource("pk", "sk", "wa", "far");
@@ -32,7 +37,7 @@ describe("repository", () => {
         pk: "pk",
         sk: "sk",
         value: "none",
-      })
+      }),
     );
   });
 });

@@ -34,7 +34,7 @@ export const handler = async (event: S3Event) => {
           new HeadObjectCommand({
             Bucket: record["s3"]["bucket"]["name"],
             Key: objectKey,
-          })
+          }),
         );
 
         if (headResponse.Metadata === undefined) {
@@ -64,7 +64,7 @@ export const handler = async (event: S3Event) => {
             },
           };
           const transcriptionResponse = await transcribeClient.send(
-            new StartTranscriptionJobCommand(params)
+            new StartTranscriptionJobCommand(params),
           );
           try {
             await jobStarted(
@@ -73,7 +73,7 @@ export const handler = async (event: S3Event) => {
               outputKey,
               record["s3"],
               transcriptionResponse,
-              headResponse.Metadata
+              headResponse.Metadata,
             );
           } catch (error) {
             console.error("Failed to save job details", error);
@@ -81,7 +81,7 @@ export const handler = async (event: S3Event) => {
         } else {
           console.error(
             "Missing language code in metadata.",
-            headResponse.Metadata
+            headResponse.Metadata,
           );
         }
       } else {

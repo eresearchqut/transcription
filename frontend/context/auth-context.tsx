@@ -139,7 +139,7 @@ function useLogin() {
         setIsLoggingIn(true);
         localStorage.removeItem(TEMP_PWD_LOCALSTORAGE_KEY);
         try {
-            const user = await Auth.federatedSignIn();
+            const user = await Auth.federatedSignIn({ customProvider: "QUT" });
             initializeUser().then(() => console.log("User initialised post login"));
             router.push("/").then(() => console.log("Routing to home post login"));
             return user;

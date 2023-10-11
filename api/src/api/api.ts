@@ -16,7 +16,7 @@ const errorHandler: ErrorRequestHandler = (error, request, response, next) => {
 const api = express().use(
   bodyParser.json(),
   cors(),
-  xray.express.openSegment("transcription")
+  xray.express.openSegment("transcription"),
 );
 
 api.use("/transcription", transcriptionRoutes);
