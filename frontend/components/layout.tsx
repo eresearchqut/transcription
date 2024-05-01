@@ -82,8 +82,7 @@ export const Layout = ({children}: any) => {
                 <DarkMode>
                     <Stack direction='row' p={1} pl={4} pr={4} alignItems={'center'} maxWidth={'1576px'} m={'auto'}>
                         <Text color={'white'} as={'b'} fontSize={"sm"} noOfLines={1}>Developed by the Office of
-                            eResearch
-                            QUT</Text>
+                            eResearch, QUT</Text>
                     </Stack>
                 </DarkMode>
             </Box>
