@@ -71,6 +71,7 @@ const SUPPORTED_MIME_TYPES = [
   "audio/mp4",
   "video/mp4",
   "audio/m4a",
+  "audio/x-m4a",
   "application/ogg",
   "audio/ogg",
   "video/ogg",
