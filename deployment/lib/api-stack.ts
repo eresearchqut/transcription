@@ -101,7 +101,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       description: "Serve the HTTP API",
       timeout: cdk.Duration.seconds(15),
       memorySize: 1024,
@@ -169,7 +169,7 @@ export class ApiStack extends cdk.Stack {
     });
 
     const jobStartFunction = new NodejsFunction(this, "TranscriptionJobStartFunction", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       description: "Starts transcription jobs when triggered by S3 events",
       timeout: cdk.Duration.seconds(15),
       memorySize: 1024,
@@ -204,7 +204,7 @@ export class ApiStack extends cdk.Stack {
     );
 
     const jobStateChangeFunction = new NodejsFunction(this, "TranscriptionJobStateChangeFunction", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       description: "Updates transcription job state when triggered by S3 events",
       timeout: cdk.Duration.seconds(15),
       memorySize: 1024,
@@ -248,7 +248,7 @@ export class ApiStack extends cdk.Stack {
     dataTable.grantReadWriteData(jobStateChangeFunction);
 
     const copyOutputFunction = new NodejsFunction(this, "CopyOutputFunction", {
-      runtime: lambda.Runtime.NODEJS_18_X,
+      runtime: lambda.Runtime.NODEJS_20_X,
       description: "Copies transcription job output to user's private folder",
       timeout: cdk.Duration.seconds(15),
       memorySize: 1024,

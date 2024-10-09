@@ -16,9 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup api
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: api
       - name: Install api dependencies
@@ -39,18 +39,18 @@ jobs:
       - name: Create frontend output dir
         run: mkdir -p frontend/out
       - name: Setup api
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: api
       - name: Install api dependencies
         working-directory: api
         run: npm install
       - name: Setup deployment
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: deployment
       - name: Install CDK
@@ -72,9 +72,9 @@ jobs:
         working-directory: frontend
         run: aws cloudformation describe-stacks --stack-name ${{ vars.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
       - name: Setup frontend
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend
       - name: Install frontend dependencies
