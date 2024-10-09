@@ -111,10 +111,17 @@ cdk deploy FrontEndStack
 ```
 
 ## Local frontend development
-
+1. Copy the dev environment variables into your local `.env.local`
 ```
 cd frontend
 export STACK_NAME=dev-transcription
 aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.local
+```
+2. Modify `.env.local` to redirect to the local app after login:
+```
+NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
+```
+3. Start the app
+```
 yarn dev
 ```
