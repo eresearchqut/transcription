@@ -88,7 +88,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
       }));
       onFilesPicked(acceptedFiles);
     },
-    [],
+    [onFilesPicked],
   );
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,

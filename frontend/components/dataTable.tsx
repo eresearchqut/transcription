@@ -26,7 +26,7 @@ import {
   Tooltip,
   Tr,
   Wrap,
-  WrapItem
+  WrapItem,
 } from "@chakra-ui/react";
 import {
   ArrowLeftIcon,
@@ -34,7 +34,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   TriangleDownIcon,
-  TriangleUpIcon
+  TriangleUpIcon,
 } from "@chakra-ui/icons";
 import {
   ColumnDef,
@@ -44,7 +44,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
-  useReactTable
+  useReactTable,
 } from "@tanstack/react-table";
 import { useState } from "react";
 import { InitialTableState } from "@tanstack/table-core";
@@ -76,17 +76,19 @@ export const DataTable = (props: DataTableProps) => {
     tableProps = {},
     iconButtonProps = {},
     textProps = {},
-    inputProps = {}
+    inputProps = {},
   } = props;
 
-  const [sorting, setSorting] = useState<SortingState>(initialState?.sorting || []);
+  const [sorting, setSorting] = useState<SortingState>(
+    initialState?.sorting || [],
+  );
   const { variant: inputVariant } = inputProps;
 
   const table = useReactTable({
     data,
     columns,
     state: {
-      sorting
+      sorting,
     },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -95,7 +97,7 @@ export const DataTable = (props: DataTableProps) => {
     getPaginationRowModel: paginate ? getPaginationRowModel() : undefined,
     initialState,
     autoResetPageIndex: false,
-    debugTable: false
+    debugTable: false,
   });
 
   return (
@@ -112,25 +114,34 @@ export const DataTable = (props: DataTableProps) => {
                   colSpan={header.colSpan}
                   cursor={header.column.getCanSort() ? "pointer" : "none"}
                   onClick={header.column.getToggleSortingHandler()}
-                  {...(header.column.columnDef as Column).tableColumnHeaderProps}
+                  {...(header.column.columnDef as Column)
+                    .tableColumnHeaderProps}
                 >
                   {!header.isPlaceholder && header.column.getCanSort() && (
                     <Flex>
                       <chakra.span>
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                       </chakra.span>
                       <Spacer />
                       <chakra.span>
                         {{
                           asc: <TriangleUpIcon aria-label="sorted ascending" />,
-                          desc: <TriangleDownIcon aria-label="sorted descending" />
+                          desc: (
+                            <TriangleDownIcon aria-label="sorted descending" />
+                          ),
                         }[header.column.getIsSorted() as string] ?? null}
                       </chakra.span>
                     </Flex>
                   )}
                   {!header.isPlaceholder &&
                     !header.column.getCanSort() &&
-                    flexRender(header.column.columnDef.header, header.getContext())}
+                    flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                 </Th>
               ))}
             </Tr>
@@ -142,9 +153,15 @@ export const DataTable = (props: DataTableProps) => {
               <Tr key={row.id}>
                 {row.getVisibleCells().map((cell, index) => {
                   return (
-                    <Td pl={0}
-                        key={cell.id} {...(cell.column.columnDef as Column).tableCellProps}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    <Td
+                      pl={0}
+                      key={cell.id}
+                      {...(cell.column.columnDef as Column).tableCellProps}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </Td>
                   );
                 })}
@@ -155,7 +172,7 @@ export const DataTable = (props: DataTableProps) => {
       </Table>
 
       {paginate && (
-        <Wrap justify={'space-between'} width={'100%'}>
+        <Wrap justify={"space-between"} width={"100%"}>
           <WrapItem>
             <Flex>
               <Tooltip label="First Page">
@@ -182,7 +199,8 @@ export const DataTable = (props: DataTableProps) => {
           <WrapItem>
             <Flex alignItems="center">
               <Text flexShrink="0" mr={8} {...textProps}>
-                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+                Page {table.getState().pagination.pageIndex + 1} of{" "}
+                {table.getPageCount()}
               </Text>
               <Text flexShrink="0" {...textProps}>
                 Go to page:
