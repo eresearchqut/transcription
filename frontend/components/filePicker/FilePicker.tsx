@@ -15,6 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { LuUpload } from "react-icons/lu";
 import { TbFile, TbFileAlert } from "react-icons/tb";
+import { Input } from "@chakra-ui/input";
 
 export interface FilePickerProps
   extends Pick<
@@ -79,11 +80,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
         rejected: rejectedFiles.map(({ file, errors }) => ({
           name: file.name,
           size: bytesToSize(file.size),
-          errors: errors.map(
-            (fileError) =>
-              // t(fileError.code, fileError.message),
-              "TODO", //TODO
-          ),
+          errors: errors.map((fileError) => fileError.message),
         })),
       }));
       onFilesPicked(acceptedFiles);
@@ -92,16 +89,27 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   );
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
+    noClick: true,
     ...props,
   });
+  const { size: nativeSize, ...chakraInputProps } = getInputProps();
+
   const acceptedFileExtensions = accept
     ? Object.values(accept).flat(1).join(", ")
     : undefined;
 
+  const supportedFileFormats = accept
+    ? Array.from(
+        new Set(
+          Object.keys(accept).map((mimeType) => mimeType.split(/[/.-]/).at(-1)),
+        ).values(),
+      )
+    : [];
+
   return (
     <Stack spacing={[2, 4]}>
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
-        <input {...getInputProps()} />
+        <Input {...chakraInputProps} />
         <VStack spacing={8}>
           <Icon as={LuUpload} boxSize={[10, 20]} />
           <Heading>Drag and drop files here or select files to upload</Heading>
@@ -111,9 +119,14 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
                 You can upload {acceptedFileExtensions} files.
               </chakra.span>
             )}
+            {supportedFileFormats && (
+              <chakra.span>
+                You can upload {supportedFileFormats.join(", ")} files.
+              </chakra.span>
+            )}
             {maxSize && (
               <chakra.span>
-                Files can&apos;t be larger than {maxSize}.
+                Files can&apos;t be larger than {bytesToSize(maxSize)}.
               </chakra.span>
             )}
             {maxFiles && (
