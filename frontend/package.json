@@ -24,6 +24,7 @@
     "aws-amplify": "^5.3.24",
     "aws-transcription-to-srt": "^1.0.6",
     "axios": "^1.7.7",
+    "chakra-react-select": "^4.10.1",
     "docx": "^8.2.2",
     "framer-motion": "^10",
     "lodash": "^4.17.21",

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import FilePicker, { FilePickerState } from "./FilePicker";
+import { FilePicker } from "./";
 
 const meta = {
   title: "Component/FilePicker",

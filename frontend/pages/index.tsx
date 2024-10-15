@@ -63,6 +63,7 @@ import toWebVTT from "srt-webvtt";
 import { FiHelpCircle } from "react-icons/fi";
 import document, { TranscriptJob } from "../components/document";
 import { Packer } from "docx";
+import { MediaUpload, TranscribeProps } from "../forms/mediaUpload";
 
 const SUPPORTED_MIME_TYPES = [
   "audio/flac",
@@ -598,9 +599,57 @@ const Transcription: NextPage = () => {
       .catch((e) => handleLogout());
   };
 
+  const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
+    const uploadFile = (
+      file: File,
+      {
+        languages,
+        hasMultipleLanguages,
+        hasIdentifiedAllLanguages,
+        enablePiiRedaction,
+      }: TranscribeProps,
+    ) => {
+      const id = uuid();
+      const key = `${user?.id}/${id}.upload`;
+      const metadata = {
+        filename: encodeURIComponent(file.name),
+        mimetype: file.type,
+        filetype: "userUploadedFile",
+        languages: languages.join(","),
+        hasIdentifiedAllLanguages: JSON.stringify(hasIdentifiedAllLanguages),
+        enablePiiRedaction: JSON.stringify(enablePiiRedaction),
+        hasMultipleLanguages: JSON.stringify(hasMultipleLanguages),
+      };
+
+      Auth.currentSession()
+        .then(() =>
+          Storage.put(key, file, {
+            level: "private",
+            metadata,
+            progressCallback: (progress) => {
+              setUploadProgress((current) => {
+                const update = new Map(current);
+                const progressPercent = progress.loaded / progress.total;
+                if (progressPercent >= 1) {
+                  update.delete(file.name);
+                } else {
+                  update.set(file.name, progressPercent);
+                }
+                return update;
+              });
+            },
+          }).then(() => setExpectedCount((current) => current + 1)),
+        )
+        .catch((e) => handleLogout());
+    };
+
+    files.forEach((file) => uploadFile(file, transcribeProps));
+  };
+
   return (
     <>
       <VStack spacing={4} align="stretch">
+        <MediaUpload onSubmit={uploadFiles} />
         <Flex minWidth="max-content" alignItems="center" gap="2">
           <Box>
             <Heading size={"md"}>My Transcriptions</Heading>

@@ -1,1 +1,1 @@
-export { default as MediaUpload } from "./MediaUpload";
+export { default as MediaUpload, type TranscribeProps } from "./MediaUpload";

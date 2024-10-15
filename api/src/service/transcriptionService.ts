@@ -6,6 +6,9 @@ import {
   updateResource,
 } from "../repository/repository";
 
+const normaliseJobId = (jobId: string): string =>
+  jobId.split("redacted-").at(-1) ?? jobId;
+
 export const jobStarted = (
   identityId: string,
   jobId: string,
@@ -28,7 +31,7 @@ export const jobStatusUpdated = (
 ) =>
   updateResource(
     identityId,
-    jobId,
+    normaliseJobId(jobId),
     "jobStatusUpdated",
     JSON.parse(JSON.stringify(jobStatusUpdated)),
   );
@@ -37,7 +40,8 @@ export const downloadKey = (
   identityId: string,
   jobId: string,
   downloadKey: string,
-) => updateResource(identityId, jobId, "downloadKey", downloadKey);
+) =>
+  updateResource(identityId, normaliseJobId(jobId), "downloadKey", downloadKey);
 
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);

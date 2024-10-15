@@ -1,10 +1,10 @@
-import { MediaUpload } from "../mediaUpload";
 import { Meta, StoryObj } from "@storybook/react";
+import { YesNoInput } from "./yesNoInput";
 
 const meta = {
-  title: "Forms/MediaUpload",
-  component: MediaUpload,
-} satisfies Meta<typeof MediaUpload>;
+  title: "Components/YesNoInput",
+  component: YesNoInput,
+} satisfies Meta<typeof YesNoInput>;
 
 export default meta;
 
