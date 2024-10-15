@@ -1,10 +1,14 @@
 name: Deploy CDK Stack
 on:
-  push:
+  workflow_run:
+    workflows:
+      - build
     branches:
       - dev
       - qa
       - prod
+    types:
+      - completed
 jobs:
   test:
     runs-on: ubuntu-latest

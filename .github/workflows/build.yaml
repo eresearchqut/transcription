@@ -1,0 +1,36 @@
+name: Build
+on:
+  push:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+      - name: Install api dependencies
+        working-directory: api
+        run: npm install
+      - name: Build api package
+        working-directory: api
+        run: npm run build
+      - name: Run api tests
+        working-directory: api
+        run: npm run test
+      - name: Install deployment dependencies
+        working-directory: deployment
+        run: npm install
+      - name: Build deployment package
+        working-directory: deployment
+        run: npm run build
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install
+      - name: Build frontend package
+        working-directory: frontend
+        run: yarn build
+      - name: Install serve dependencies
+        working-directory: serve
+        run: npm install
