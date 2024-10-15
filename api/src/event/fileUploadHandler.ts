@@ -1,5 +1,6 @@
 import { HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import {
+  LanguageCode,
   StartTranscriptionJobCommand,
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
@@ -50,7 +51,7 @@ export const handler = async (event: S3Event) => {
           const outputKey = `transcription/${cognitoGuid}/${identityId}/${jobId}.json`;
           const params = {
             TranscriptionJobName: `${identityId}_${jobId}`,
-            LanguageCode: languageCode,
+            LanguageCode: languageCode as LanguageCode,
             Media: {
               MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
             },
