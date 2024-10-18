@@ -1,0 +1,51 @@
+{
+  "ADDRESS": {
+    "label": "Address",
+    "description":"A physical address, such as 100 Main Street, Anytown, USA or Suite #12, Building 123. An address can include a street, building, location, city, state, country, county, zip, precinct, neighborhood, and more."
+  },
+  "ALL": {
+    "label": "All",
+    "displayed": false,
+    "description": "Redact or identify all PII types listed in this table."
+  },
+  "BANK_ACCOUNT_NUMBER": {
+    "label": "Bank Account Number",
+    "description": "A US bank account number. These are typically between 10 - 12 digits long, but Amazon Transcribe also recognizes bank account numbers when only the last 4 digits are present."
+  },
+  "BANK_ROUTING": {
+    "label": "Bank Routing Number",
+    "description": "A US bank account routing number. These are typically 9 digits long, but Amazon Transcribe also recognizes routing numbers when only the last 4 digits are present."
+  },
+  "CREDIT_DEBIT_CVV": {
+    "label": "Credit Verification Code (CVV)",
+    "description": "A 3-digit card verification code (CVV) that is present on VISA, MasterCard, and Discover credit and debit cards. In American Express credit or debit cards, it is a 4-digit numeric code."
+  },
+  "CREDIT_DEBIT_EXPIRY": {
+    "label": "Credit/Debit Card Expiration Date",
+    "description": "The expiration date for a credit or debit card. This number is usually 4 digits long and formatted as month/year or MM/YY. For example, Amazon Transcribe can recognize expiration dates such as 01/21, 01/2021, and Jan 2021."
+  },
+  "CREDIT_DEBIT_NUMBER": {
+    "label": "Credit/Debit Card Number",
+    "description": "The number for a credit or debit card. These numbers can vary from 13 to 16 digits in length, but Amazon Transcribe also recognizes credit or debit card numbers when only the last 4 digits are present."
+  },
+  "EMAIL": {
+    "label": "Email",
+    "description": "An email address, such as efua.owusu@email.com."
+  },
+  "NAME": {
+    "label": "Person's Name",
+    "description": "An individual's name. This entity type does not include titles, such as Mr., Mrs., Miss, or Dr. Amazon Transcribe does not apply this entity type to names that are part of organizations or addresses. For example, Amazon Transcribe recognizes the John Doe Organization as an organization, and Jane Doe Street as an address."
+  },
+  "PHONE": {
+    "label": "Phone Number",
+    "description": "A phone number. This entity type also includes fax and pager numbers."
+  },
+  "PIN": {
+    "label": "Personal Identification Number (PIN)",
+    "description": "A 4-digit personal identification number (PIN) that allows someone to access their bank account information."
+  },
+  "SSN": {
+    "label": "Social Security Number",
+    "description": "A Social Security Number (SSN) is a 9-digit number that is issued to US citizens, permanent residents, and temporary working residents. Amazon Transcribe also recognizes Social Security Numbers when only the last 4 digits are present."
+  }
+}
