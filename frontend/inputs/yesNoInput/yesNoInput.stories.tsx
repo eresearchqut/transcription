@@ -2,7 +2,7 @@ import { Meta, StoryObj } from "@storybook/react";
 import { YesNoInput } from "./yesNoInput";
 
 const meta = {
-  title: "Components/YesNoInput",
+  title: "Inputs/YesNoInput",
   component: YesNoInput,
 } satisfies Meta<typeof YesNoInput>;
 

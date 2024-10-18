@@ -1,40 +1,73 @@
-import { Box, Stack, Text } from "@chakra-ui/layout";
-import React from "react";
+import { Box, Stack } from "@chakra-ui/layout";
+import React, { FunctionComponent, PropsWithChildren } from "react";
 import {
   Button,
+  Card,
+  CardBody,
+  CardHeader,
+  chakra,
   DarkMode,
   Divider,
+  Grid,
+  GridItem,
   Heading,
   IconButton,
   Image,
-  LightMode,
-  Link,
-  SimpleGrid,
+  SkipNavLink,
   Spacer,
   useColorMode,
+  useColorModeValue,
+  useMultiStyleConfig,
 } from "@chakra-ui/react";
 
 import { withAnonymous, withAuthentication } from "../context/with-auth";
 import { useAuth, useLogin, useLogout } from "../context/auth-context";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
+import { Navigation } from "./navigation";
+import { Footer } from "./footer";
 
-export const Layout = ({ children }: any) => {
+export interface PageProps {
+  pageTitle?: string;
+}
+
+export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
+  children,
+  pageTitle,
+  ...props
+}: any) => {
+  console.log(props);
   const { colorMode, toggleColorMode } = useColorMode();
+  const navigationItems = {
+    "Upload Media": "/transcription/upload",
+    "My Transcriptions": "/transcription",
+  };
   const { handleLogin } = useLogin();
-
   const { handleLogout } = useLogout();
+
+  const pageColor = useColorModeValue("gray.100", "gray.800");
+  const cardColor = useColorModeValue("white", "gray.700");
+  const cardBorderColor = useColorModeValue("gray.300", "gray.600");
+
+  const templateAreas = `"header" "navigation" "main" "footer"`;
+  const gridTemplateRows = "auto auto 1fr auto";
+  const styles = useMultiStyleConfig("Page", props);
 
   const {
     state: { isAuthenticated },
   } = useAuth();
 
+  console.log(styles.footer);
+
   return (
-    <SimpleGrid
-      columns={1}
-      height={"100vh"}
-      width={"100%"}
-      gridTemplateRows={"70px 1fr 30px 30px"}
+    <Grid
+      templateAreas={templateAreas}
+      gridTemplateRows={gridTemplateRows}
+      transition="width .4s ease-in-out"
+      minH={"100vh"}
+      bgColor={pageColor}
     >
+      <SkipNavLink id="main">Skip to content</SkipNavLink>
+
       <Box bg={"blue.900"} color={"white"} width={"100%"}>
         <DarkMode>
           <Stack
@@ -46,7 +79,7 @@ export const Layout = ({ children }: any) => {
           >
             <Image
               alt="QUT logo"
-              src="logo.png"
+              src={"/logo.png"}
               width={"40px"}
               height={"40px"}
             />
@@ -74,56 +107,56 @@ export const Layout = ({ children }: any) => {
           </Stack>
         </DarkMode>
       </Box>
+      <Box bg={"gray.800"} color={"white"} width={"100%"}>
+        <Stack
+          direction="row"
+          alignItems={"center"}
+          maxWidth={"1576px"}
+          m={"auto"}
+          p={4}
+        >
+          <Navigation items={navigationItems} />
+        </Stack>
+      </Box>
 
-      <Box width={"100%"}>
-        <Box maxWidth={"1576px"} m={"auto"} p={4}>
-          {children}
+      <Box __css={styles.main}>
+        <chakra.main __css={styles.mainContainer}>
+          <Card
+            rounded={1}
+            mb={0}
+            bgColor={cardColor}
+            borderWidth={1}
+            borderColor={cardBorderColor}
+          >
+            <CardHeader pl={6} pr={6} pb={0}>
+              {pageTitle && (
+                <Heading as={"h1"} size={"lg"}>
+                  {pageTitle}
+                </Heading>
+              )}
+            </CardHeader>
+            <CardBody pl={6} pr={6}>
+              {children}
+            </CardBody>
+          </Card>
+        </chakra.main>
+      </Box>
+
+      <GridItem area={"footer"}>
+        <Box __css={styles.footer}>
+          <chakra.footer __css={styles.footerContainer}>
+            <Footer />
+          </chakra.footer>
         </Box>
-      </Box>
-
-      <Box bg={"blue.900"} color={"white"} width={"100%"}>
-        <DarkMode>
-          <Stack
-            direction="row"
-            p={1}
-            pl={4}
-            pr={4}
-            alignItems={"center"}
-            maxWidth={"1576px"}
-            m={"auto"}
-          >
-            <Text color={"white"} as={"b"} fontSize={"sm"} noOfLines={1}>
-              Developed by the Office of eResearch, QUT
-            </Text>
-          </Stack>
-        </DarkMode>
-      </Box>
-
-      <Box bg={"white"} color={"blue.900"} width={"100%"}>
-        <LightMode>
-          <Stack
-            direction="row"
-            p={1}
-            pl={4}
-            pr={4}
-            alignItems={"center"}
-            maxWidth={"1576px"}
-            m={"auto"}
-          >
-            <Link
-              href={"https://www.qut.edu.au/about/indigenous"}
-              isExternal
-              fontSize={"sm"}
-            >
-              QUT acknowledges the Traditional Owners of the lands where QUT now
-              stands.
-            </Link>
-          </Stack>
-        </LightMode>
-      </Box>
-    </SimpleGrid>
+      </GridItem>
+    </Grid>
   );
 };
 
-export default withAuthentication(Layout);
+const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
+  const AuthenticatedLayout = withAuthentication(Layout);
+  return <AuthenticatedLayout {...props} />;
+};
+
+export default mapLayoutPropsToLayoutTree;
 export const LoginLayout = withAnonymous(Layout);

@@ -45,37 +45,28 @@ export const handler = async (event: S3Event) => {
           continue;
         }
 
-        const languageCode = headResponse.Metadata["languagecode"];
-
-        console.log("headResponse.Metadata");
-        console.log(headResponse.Metadata);
 
         const languages: string[] =
           headResponse.Metadata["languages"].split(/,\s?/);
-        const hasIdentifiedAllLanguages: boolean = JSON.parse(
-          headResponse.Metadata["hasIdentifiedAllLanguages".toLowerCase()],
-        );
-        const hasMultipleLanguages: boolean = JSON.parse(
-          headResponse.Metadata["hasMultipleLanguages".toLowerCase()],
-        );
         const enablePiiRedaction: boolean = JSON.parse(
           headResponse.Metadata["enablePiiRedaction".toLowerCase()],
         );
 
         const languageParams = {
-          ...(hasMultipleLanguages
+          ...(enablePiiRedaction
+            ? {
+                LanguageCode: LanguageCode.EN_US,
+              }
+            : languages.length > 1
             ? {
                 IdentifyMultipleLanguages: true,
-                LanguageOptions: hasIdentifiedAllLanguages
-                  ? languages.map((language) => language as LanguageCode)
-                  : undefined,
+                LanguageOptions: languages.map(
+                  (language) => language as LanguageCode,
+                ),
               }
-            : hasIdentifiedAllLanguages
+            : languages.length > 0
             ? {
-                LanguageCode:
-                  languages.length > 0
-                    ? (languages.at(0) as LanguageCode)
-                    : LanguageCode.EN_AU,
+                LanguageCode: languages.at(0) as LanguageCode,
               }
             : {
                 IdentifyLanguage: true,

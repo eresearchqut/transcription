@@ -1,4 +1,5 @@
 import { extendTheme, type ThemeConfig } from "@chakra-ui/react";
+import { Page } from "./components";
 
 const config: ThemeConfig = {
   initialColorMode: "light",
@@ -11,5 +12,11 @@ const colors = {
   },
 };
 
-export const theme = extendTheme({ config, colors });
+const overrides: Record<string, any> = {
+  components: {
+    Page,
+  },
+};
+
+export const theme = extendTheme({ config, colors }, overrides);
 export default theme;

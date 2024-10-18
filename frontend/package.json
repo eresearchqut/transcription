@@ -25,6 +25,7 @@
     "aws-transcription-to-srt": "^1.0.6",
     "axios": "^1.7.7",
     "chakra-react-select": "^4.10.1",
+    "date-fns": "^4.1.0",
     "docx": "^8.2.2",
     "framer-motion": "^10",
     "lodash": "^4.17.21",

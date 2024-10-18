@@ -1,16 +1,22 @@
-import { FunctionComponent, useState } from "react";
+import { ChangeEvent, FunctionComponent, useState } from "react";
 import { Stack } from "@chakra-ui/layout";
-import { FilePicker } from "../../components/filePicker";
+import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import { Accept } from "react-dropzone";
-import { Flex, FormControl, FormErrorMessage, FormLabel, Spacer } from "@chakra-ui/react";
-import { LanguageInput } from "../../components/languageInput";
-import { YesNoInput } from "../../components/yesNoInput/yesNoInput";
+import {
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Heading,
+  HStack,
+  Switch,
+  VStack,
+} from "@chakra-ui/react";
+import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
 
 export interface TranscribeProps {
   languages: string[];
-  hasMultipleLanguages: boolean;
-  hasIdentifiedAllLanguages: boolean;
   enablePiiRedaction: boolean;
 }
 
@@ -46,114 +52,82 @@ SUPPORTED_MIME_TYPES.forEach((mimeType) => {
 export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   onSubmit,
 }) => {
-  const [transcribeProps, setTranscribeProps] = useState<TranscribeProps>({
-    languages: ["en-AU"],
-    hasMultipleLanguages: false,
-    hasIdentifiedAllLanguages: true,
-    enablePiiRedaction: false,
-  });
+  const [languages, setLanguages] = useState<string[]>(["en-AU"]);
+  const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
 
-  const onLanguageChange = (selectedLanguages: any) => {
-    // TODO fix typing
-    console.log("Selected languages:", selectedLanguages);
-    setTranscribeProps((prevProps: any) => ({
-      ...prevProps,
-      languages: isArray(selectedLanguages)
-        ? selectedLanguages
-        : [selectedLanguages],
-    }));
+  const onLanguageChange = (selectedLanguages: string | string[]) => {
+    setLanguages(
+      isArray(selectedLanguages) ? selectedLanguages : [selectedLanguages],
+    );
   };
 
-  const onHasIdentifiedAllLanguagesChange = (newValue: boolean | undefined) => {
-    setTranscribeProps((prevProps: any) => ({
-      ...prevProps,
-      hasIdentifiedAllLanguages: newValue,
-    }));
-  };
-
-  const onHasMultipleLanguagesChange = (newValue: boolean | undefined) => {
-    setTranscribeProps((prevProps: any) => ({
-      ...prevProps,
-      hasMultipleLanguages: newValue,
-    }));
-  };
-
-  const onEnablePiiRedactionChange = (newValue: boolean | undefined) => {
-    setTranscribeProps((prevProps: any) => ({
-      ...prevProps,
-      enablePiiRedaction: newValue,
-    }));
+  const onEnablePiiRedactionChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const isChecked = event.target.checked;
+    setEnablePiiRedaction(isChecked);
   };
 
   const onFilesPicked = (files: File[]) => {
-    onSubmit(transcribeProps, files);
+    onSubmit({ languages, enablePiiRedaction }, files);
   };
 
-  const filePickerProps = {
+  const filePickerProps: FilePickerProps = {
     accept,
     maxSize: 2 * 1024 * 1024 * 1024, // 2GB
+    maxDuration: { hours: 4 },
+    storageDuration: { days: 12 },
     onFilesPicked,
   };
 
-  const maxLanguageLimit = transcribeProps.hasMultipleLanguages ? 5 : 1;
-  const languageSizeLimitReached =
-    transcribeProps.languages.length > maxLanguageLimit;
+  const MAX_LANGUAGE_LIMIT = 5;
+  const languageSizeLimitReached = languages.length > MAX_LANGUAGE_LIMIT;
 
   return (
     <Stack align={"stretch"} spacing={[0, 4]}>
-      <FormControl isRequired>
-        <Flex>
-          <FormLabel mt={2}>
-            Are there multiple languages spoken in your media?
-          </FormLabel>
-          <Spacer />
-          <YesNoInput
-            value={transcribeProps.hasMultipleLanguages}
-            onChange={onHasMultipleLanguagesChange}
-          />
-        </Flex>
-      </FormControl>
-      <FormControl isRequired isInvalid={languageSizeLimitReached}>
-        <FormLabel>Known language(s) spoken in media:</FormLabel>
-        <LanguageInput
-          isMulti={maxLanguageLimit > 1}
-          defaultValue={transcribeProps.languages}
-          onChange={onLanguageChange}
-        />
-        {languageSizeLimitReached && (
-          <FormErrorMessage>
-            Max {maxLanguageLimit} language(s) allowed
-          </FormErrorMessage>
-        )}
-      </FormControl>
-      <FormControl isRequired>
-        <Flex>
-          <FormLabel mt={2}>
-            Have all the spoken languages been identified?
-          </FormLabel>
-          <Spacer />
-          <YesNoInput
-            value={transcribeProps.hasIdentifiedAllLanguages}
-            onChange={onHasIdentifiedAllLanguagesChange}
-          />
-        </Flex>
-      </FormControl>
-      <FormControl isRequired>
-        <Flex>
-          <FormLabel mt={2}>
-            Enable Personally Identifiable Information (PII) redaction
-          </FormLabel>
-          <Spacer />
-          <YesNoInput
-            value={transcribeProps.enablePiiRedaction}
-            onChange={onEnablePiiRedactionChange}
-          />
-        </Flex>
-      </FormControl>
-      <FormControl isRequired>
-        <FormLabel>Media files:</FormLabel>
-        <FilePicker {...filePickerProps} />
-      </FormControl>
+      <Flex alignItems={"center"} gap={4}>
+        <Heading size={"sm"} as={"h2"}>
+          Options:
+        </Heading>
+        <HStack spacing={8}>
+          <FormControl display={"flex"} minWidth={"max-content"} gap={2}>
+            <FormLabel m={0}>
+              Redact{" "}
+              <abbr title={"Personally Identifiable Information"}>PII</abbr>
+            </FormLabel>
+            <Switch
+              isChecked={enablePiiRedaction}
+              onChange={onEnablePiiRedactionChange}
+            />
+          </FormControl>
+          <FormControl
+            display={"flex"}
+            alignItems={"center"}
+            minWidth={"80em"}
+            gap={2}
+            isInvalid={languageSizeLimitReached}
+          >
+            <FormLabel
+              m={0}
+              as={enablePiiRedaction ? "h3" : undefined}
+              htmlFor={!enablePiiRedaction ? "languages" : undefined}
+            >
+              Languages
+            </FormLabel>
+            <VStack alignItems={"start"}>
+              <LanguageInput
+                inputId={"languages"}
+                isMulti={true}
+                value={languages}
+                isDisabled={enablePiiRedaction}
+                onChange={onLanguageChange}
+              />
+              <FormErrorMessage>
+                Maximum {MAX_LANGUAGE_LIMIT} allowed.
+              </FormErrorMessage>
+            </VStack>
+          </FormControl>
+        </HStack>
+      </Flex>
+      <FilePicker {...filePickerProps} />
     </Stack>
   );
 };

@@ -1,7 +1,7 @@
 import { FunctionComponent, PropsWithChildren, Suspense, useEffect } from "react";
 import type { Preview } from "@storybook/react";
 import { ChakraProvider, useColorMode } from "@chakra-ui/react";
-import theme from "../components/theme";
+import { theme } from "../theme";
 
 
 interface ColorModeProps {

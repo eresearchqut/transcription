@@ -1,8 +1,8 @@
 import { Meta, StoryObj } from "@storybook/react";
-import { LanguageInput } from "./";
+import { LanguageInput } from "./index";
 
 const meta = {
-  title: "Components/LanguageInput",
+  title: "Inputs/LanguageInput",
   component: LanguageInput,
 } satisfies Meta<typeof LanguageInput>;
 

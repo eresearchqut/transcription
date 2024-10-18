@@ -121,8 +121,8 @@ export const RadioButton: FunctionComponent<RadioButtonProps> = ({
 
 export interface YesNoInputProps {
   isClearable?: boolean;
-  value: boolean;
-  onChange: (value: boolean | undefined) => void;
+  value?: boolean;
+  onChange?: (value: boolean | undefined) => void;
 }
 
 export const YesNoInput: FunctionComponent<YesNoInputProps> = ({

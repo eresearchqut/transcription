@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { FilePicker } from "./";
+import { FilePicker } from "./index";
 
 const meta = {
-  title: "Component/FilePicker",
+  title: "Inputs/FilePicker",
   component: FilePicker,
 } satisfies Meta<typeof FilePicker>;
 
