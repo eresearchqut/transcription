@@ -9,18 +9,23 @@ import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";
-import { MediaUploadProgress } from "../../components/mediaUploadProgress/mediaUploadProgress";
+import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress/fileTranscriptionProgress";
+
+interface UploadProps {
+  filename: string;
+  uploadProgressPercent: number;
+  transcriptionProgressPercent: number;
+}
 
 const Upload: NextPage = () => {
   const {
     state: { user, isAuthenticated },
   } = useAuth();
 
-  const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(
+  const [uploadData, setUploadData] = useState<Map<string, UploadProps>>(
     new Map(),
   );
 
-  const [expectedCount, setExpectedCount] = useState<number>(0);
   const { handleLogout } = useLogout();
 
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
@@ -39,42 +44,48 @@ const Upload: NextPage = () => {
       };
 
       Auth.currentSession()
-        .then(() =>
-          Storage.put(key, file, {
+        .then(() => {
+          uploadData.set(key, {
+            filename: file.name,
+            uploadProgressPercent: 0,
+            transcriptionProgressPercent: 0,
+          });
+          return Storage.put(key, file, {
             level: "private",
             metadata,
             progressCallback: (progress) => {
-              setUploadProgress((current) => {
-                const update = new Map(current);
-                const progressPercent = progress.loaded / progress.total;
-                if (progressPercent >= 1) {
-                  update.delete(file.name);
-                } else {
-                  update.set(file.name, progressPercent);
-                }
-                return update;
+              const progressPercent = (progress.loaded / progress.total) * 100;
+              setUploadData((current) => {
+                const updatedData = new Map(current);
+                updatedData.set(key, {
+                  filename: file.name,
+                  uploadProgressPercent: progressPercent,
+                  transcriptionProgressPercent: 0,
+                });
+                return updatedData;
               });
             },
-          }).then(() => setExpectedCount((current) => current + 1)),
-        )
+          });
+        })
         .catch((e) => handleLogout());
     };
 
-    // files.forEach((file) => console.log(`upload file ${file}`));
-    // files.forEach((file) =>
-    //   setUploadProgress((current) => {
-    //     const update = new Map(current);
-    //     update.set(file.name, 27);
-    //     return update;
-    //   }),
-    // );
     files.forEach((file) => uploadFile(file, transcribeProps));
   };
 
   return (
     <VStack spacing={4} align="stretch">
       <MediaUpload onSubmit={uploadFiles} />
-      <MediaUploadProgress uploadProgress={uploadProgress} />
+      {Array.from(uploadData.entries()).map(
+        ([key, { filename, uploadProgressPercent }]) => (
+          <FileTranscriptionProgress
+            key={key}
+            filename={filename}
+            uploadProgress={uploadProgressPercent}
+            transcriptionProgress={0}
+          />
+        ),
+      )}
     </VStack>
   );
 };
