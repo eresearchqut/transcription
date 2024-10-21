@@ -2,16 +2,18 @@ import { NextPage } from "next";
 import { withLayout } from "@moxy/next-layout";
 import Layout from "../../components/layout";
 import * as React from "react";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
 import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";
-import { TranscriptionsContext } from "../../context/transcriptions-context";
 import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress";
-import { TranscriptionJobStatusE } from "../../components/fileTranscriptionProgress/fileTranscriptionProgress";
+import {
+  TranscriptionJobStatus,
+  useTranscriptions,
+} from "../../hooks/useTranscriptions";
 
 interface UploadProps {
   filename: string;
@@ -24,9 +26,11 @@ const Upload: NextPage = () => {
     state: { user, isAuthenticated },
   } = useAuth();
 
-  const { transcriptions, subscribeToTranscriptionJob, getStatus } = useContext(
-    TranscriptionsContext,
-  );
+  const { transcriptions, getStatus, subscribeToTranscriptionJob } =
+    useTranscriptions({ pollMode: "SUBSCRIBE" });
+  // const { transcriptions, subscribeToTranscriptionJob, getStatus } = useContext(
+  //   TranscriptionsContext,
+  // );
 
   const [uploadData, setUploadData] = useState<Map<string, UploadProps>>(
     new Map(),
@@ -38,7 +42,7 @@ const Upload: NextPage = () => {
     const transcription = transcriptions.find((job) => job.sk === jobId);
     return {
       status: transcription
-        ? (getStatus(transcription) as TranscriptionJobStatusE)
+        ? (getStatus(transcription) as TranscriptionJobStatus)
         : undefined,
     };
   };

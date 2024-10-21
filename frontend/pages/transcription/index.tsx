@@ -14,8 +14,6 @@ import {
   DrawerContent,
   DrawerFooter,
   DrawerOverlay,
-  Grid,
-  GridItem,
   Heading,
   Hide,
   HStack,
@@ -32,7 +30,7 @@ import {
   VStack,
   Wrap,
 } from "@chakra-ui/react";
-import { useAuth, useLogout } from "../../context/auth-context";
+import { useLogout } from "../../context/auth-context";
 
 import { Storage } from "aws-amplify";
 import { ColumnDef, SortingState } from "@tanstack/react-table";
@@ -50,78 +48,10 @@ import { Player } from "../../components/player";
 import toWebVTT from "srt-webvtt";
 import document, { TranscriptJob } from "../../components/document";
 import { Packer } from "docx";
-
-const SUPPORTED_MIME_TYPES = [
-  "audio/flac",
-  "audio/mpeg",
-  "audio/mp4",
-  "video/mp4",
-  "audio/m4a",
-  "audio/x-m4a",
-  "application/ogg",
-  "audio/ogg",
-  "video/ogg",
-  "video/webm",
-  "audio/webm",
-  "audio/amr",
-  "audio/x-wav",
-  "audio/vnd.wave",
-  "audio/wav",
-  "audio/wave",
-  "audio/x-pn-wav",
-];
-
-export interface Transcription {
-  pk: string;
-  sk: string;
-  metadata: {
-    filetype: string;
-    languagecode: string;
-    mimetype: string;
-    filename: string;
-  };
-  date: string;
-  downloadKey?: string;
-  ttl: number;
-  jobStatusUpdated?: {
-    detail: {
-      TranscriptionJobStatus: string;
-      FailureReason?: string;
-    };
-  };
-  transcriptionResponse?: {
-    TranscriptionJob?: {
-      TranscriptionJobStatus: string;
-    };
-  };
-  uploadEvent: {
-    object: {
-      size: number;
-      key: string;
-    };
-  };
-}
-
-const API_ENDPOINT =
-  process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
-type Delay = number | null;
-type TimerHandler = (...args: any[]) => void;
-
-const useInterval = (callback: TimerHandler, delay: Delay) => {
-  const savedCallbackRef = useRef<TimerHandler>();
-
-  useEffect(() => {
-    savedCallbackRef.current = callback;
-  }, [callback]);
-
-  useEffect(() => {
-    const handler = (...args: any[]) => savedCallbackRef.current!(...args);
-    if (delay !== null) {
-      const intervalId = setInterval(handler, delay);
-      return () => clearInterval(intervalId);
-    }
-  }, [delay]);
-};
+import {
+  Transcription,
+  useTranscriptions,
+} from "../../hooks/useTranscriptions";
 
 export interface DownloadProps {
   objectKey?: string;
@@ -254,16 +184,14 @@ interface PlayProps {
   transcriptUrl: string;
 }
 
-const Transcription: NextPage = () => {
+const TranscriptionPage: NextPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { transcriptions, getStatus } = useTranscriptions({
+    pollMode: "AUTO",
+  });
   const finalRef = React.useRef(null);
 
-  const [transcriptions, setTranscriptions] = useState<
-    Transcription[] | undefined
-  >();
   const [play, setPlay] = useState<PlayProps | undefined>(undefined);
-  const [expectedCount, setExpectedCount] = useState<number>(0);
-  const [pollDelay, setPollDelay] = useState<number | null>(100);
   const { handleLogout } = useLogout();
 
   const mediaKey = (transcription: Transcription): string =>
@@ -290,13 +218,6 @@ const Transcription: NextPage = () => {
     }
   };
 
-  const {
-    state: { user },
-  } = useAuth();
-  const [uploadProgress, setUploadProgress] = useState<Map<string, number>>(
-    new Map(),
-  );
-
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -308,14 +229,8 @@ const Transcription: NextPage = () => {
 
   const formatFilename = (filename: string) => decodeURIComponent(filename);
 
-  const status = (transcription: Transcription) =>
-    transcription.jobStatusUpdated?.detail.TranscriptionJobStatus ||
-    transcription.transcriptionResponse?.TranscriptionJob
-      ?.TranscriptionJobStatus ||
-    "";
-
   const formatStatus = (transcription: Transcription) =>
-    startCase(status(transcription).toLowerCase());
+    startCase(getStatus(transcription)?.toLowerCase());
 
   const mediaProps = (transcription: Transcription): DownloadProps => ({
     objectKey: mediaKey(transcription),
@@ -375,11 +290,11 @@ const Transcription: NextPage = () => {
 
     {
       header: "Transcription Status",
-      accessorFn: (transcription) => status(transcription),
+      accessorFn: (transcription) => getStatus(transcription),
       cell: (props) => (
         <HStack spacing={2}>
           <Text>{formatStatus(props.row.original)}</Text>
-          {status(props.row.original) === "IN_PROGRESS" && (
+          {getStatus(props.row.original) === "IN_PROGRESS" && (
             <Spinner size={"sm"} />
           )}
         </HStack>
@@ -507,75 +422,9 @@ const Transcription: NextPage = () => {
     sorting: [{ id: "dateUploaded", desc: true }] as SortingState,
   };
 
-  useInterval(() => {
-    Auth.currentSession()
-      .then((currentSession) => currentSession.getIdToken().getJwtToken())
-      .then(
-        (idToken) =>
-          ({
-            Authorization: `Bearer ${idToken}`,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          }) as HeadersInit,
-      )
-      .then((headers) =>
-        fetch(`${API_ENDPOINT}/transcription`, {
-          headers,
-        })
-          .then((res) => res.json())
-          .then((loaded: Transcription[]) => {
-            setExpectedCount((current) =>
-              current === 0 ? loaded.length : current,
-            );
-            setTranscriptions(() => loaded);
-          }),
-      );
-  }, pollDelay);
-
-  useEffect(() => {
-    if (transcriptions) {
-      const inProgress =
-        transcriptions.length < expectedCount ||
-        transcriptions.find(
-          (transcription) =>
-            ["QUEUED", "IN_PROGRESS"].find(
-              (queuedOrInProgressStatus) =>
-                queuedOrInProgressStatus === status(transcription),
-            ) ||
-            ("COMPLETED" === status(transcription) &&
-              !transcription.downloadKey),
-        );
-      if (inProgress) {
-        setPollDelay(5000);
-      } else {
-        setPollDelay(null);
-      }
-    }
-  }, [transcriptions, expectedCount]);
-
   return (
     <>
       <VStack spacing={4} align="stretch">
-        {uploadProgress.size > 0 && (
-          <>
-            <Alert status="info">
-              <AlertIcon />
-              Please wait while your media uploads. You can select more files
-              while you wait.
-            </Alert>
-            {Array.from(uploadProgress.entries()).map(
-              ([fileName, progress], index) => (
-                <Grid gridTemplateColumns={"25% 1fr"} gap={4} key={index}>
-                  <GridItem>Uploading {fileName}: </GridItem>
-                  <GridItem>
-                    <Progress hasStripe value={progress * 100} />
-                  </GridItem>
-                </Grid>
-              ),
-            )}
-          </>
-        )}
-
         {!transcriptions && <Progress isIndeterminate />}
 
         {transcriptions && transcriptions.length === 0 && (
@@ -614,18 +463,6 @@ const Transcription: NextPage = () => {
               />
             </Hide>
           </>
-        )}
-
-        {transcriptions && transcriptions.length < expectedCount && (
-          <Alert status="info">
-            <AlertIcon />
-            <Box>
-              <AlertDescription>
-                Your media files are being queued for processing. The table
-                above will update shortly.
-              </AlertDescription>
-            </Box>
-          </Alert>
         )}
       </VStack>
 
@@ -667,5 +504,5 @@ const Transcription: NextPage = () => {
 };
 
 export default withLayout(<Layout pageTitle={"My Transcriptions"} />)(
-  Transcription,
+  TranscriptionPage,
 );

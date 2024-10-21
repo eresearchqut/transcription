@@ -1,8 +1,6 @@
-import {
-  FileTranscriptionProgress,
-  TranscriptionJobStatusE,
-} from "./fileTranscriptionProgress";
+import { FileTranscriptionProgress } from "./fileTranscriptionProgress";
 import { Meta, StoryObj } from "@storybook/react";
+import { TranscriptionJobStatus } from "../../hooks/useTranscriptions";
 
 const meta = {
   title: "Components/FileTranscriptionProgress",
@@ -41,7 +39,7 @@ export const FileTranscriptionQueued: Story = {
   args: {
     ...Primary.args,
     uploadProgress: 100,
-    transcriptionProgress: { status: TranscriptionJobStatusE.QUEUED },
+    transcriptionProgress: { status: TranscriptionJobStatus.QUEUED },
   },
 };
 
@@ -49,7 +47,7 @@ export const FileTranscriptionInProgress: Story = {
   args: {
     ...Primary.args,
     uploadProgress: 100,
-    transcriptionProgress: { status: TranscriptionJobStatusE.IN_PROGRESS },
+    transcriptionProgress: { status: TranscriptionJobStatus.IN_PROGRESS },
   },
 };
 
@@ -57,7 +55,7 @@ export const TranscriptionCompleted: Story = {
   args: {
     ...Primary.args,
     uploadProgress: 100,
-    transcriptionProgress: { status: TranscriptionJobStatusE.COMPLETED },
+    transcriptionProgress: { status: TranscriptionJobStatus.COMPLETED },
   },
 };
 
@@ -65,6 +63,6 @@ export const TranscriptionFailed: Story = {
   args: {
     ...Primary.args,
     uploadProgress: 100,
-    transcriptionProgress: { status: TranscriptionJobStatusE.FAILED },
+    transcriptionProgress: { status: TranscriptionJobStatus.FAILED },
   },
 };

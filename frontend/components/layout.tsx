@@ -156,11 +156,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
 
 const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
   const AuthenticatedLayout = withAuthentication(Layout);
-  return (
-    <TranscriptionsContextProvider>
-      <AuthenticatedLayout {...props} />
-    </TranscriptionsContextProvider>
-  );
+  return <AuthenticatedLayout {...props} />;
 };
 
 export default mapLayoutPropsToLayoutTree;

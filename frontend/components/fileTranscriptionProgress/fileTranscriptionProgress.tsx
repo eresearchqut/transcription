@@ -16,7 +16,6 @@ import {
   Spinner,
   Text,
 } from "@chakra-ui/react";
-import { TbFile } from "react-icons/tb";
 import { Box, Stack } from "@chakra-ui/layout";
 import {
   CheckCircleIcon,
@@ -26,19 +25,8 @@ import {
 } from "@chakra-ui/icons";
 import { AiOutlinePlaySquare } from "react-icons/ai";
 import { lowerCase } from "lodash";
-
-export type TranscriptionJobStatus =
-  | "QUEUED"
-  | "IN_PROGRESS"
-  | "FAILED"
-  | "COMPLETED";
-
-export enum TranscriptionJobStatusE {
-  QUEUED = "QUEUED",
-  IN_PROGRESS = "IN_PROGRESS",
-  FAILED = "FAILED",
-  COMPLETED = "COMPLETED",
-}
+import { TranscriptionJobStatus } from "../../hooks/useTranscriptions";
+import { TbFile, TbFileAlert, TbFileCheck } from "react-icons/tb";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
@@ -78,20 +66,19 @@ const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
   const iconProps = { mr: 2, mb: 1 };
   return (
     <Text>
-      {status === TranscriptionJobStatusE.IN_PROGRESS ? (
+      {status === TranscriptionJobStatus.IN_PROGRESS ? (
         <Spinner mr={2} size={"sm"} />
-      ) : status === TranscriptionJobStatusE.COMPLETED ? (
+      ) : status === TranscriptionJobStatus.COMPLETED ? (
         <CheckCircleIcon {...iconProps} color={"green.600"} />
-      ) : status === TranscriptionJobStatusE.FAILED ? (
+      ) : status === TranscriptionJobStatus.FAILED ? (
         <WarningIcon {...iconProps} color={"red.600"} />
       ) : (
         <TimeIcon {...iconProps} color={"yellow.600"} />
       )}
       {`Transcription ${lowerCase((status ?? "PENDING")?.split("_").join(" "))}`}
-      {![
-        TranscriptionJobStatusE.COMPLETED,
-        TranscriptionJobStatusE.FAILED,
-      ].find((s) => s === status) && "..."}
+      {![TranscriptionJobStatus.COMPLETED, TranscriptionJobStatus.FAILED].find(
+        (s) => s === status,
+      ) && "..."}
     </Text>
   );
 };
@@ -102,8 +89,27 @@ export const FileTranscriptionProgress: FunctionComponent<
   const { status } = transcriptionProgress ?? {};
 
   return (
-    <Alert key={filename} status={"info"} variant="left-accent">
-      <AlertIcon as={TbFile} boxSize={[10, 12]} />
+    <Alert
+      key={filename}
+      status={
+        status === TranscriptionJobStatus.COMPLETED
+          ? "success"
+          : status === TranscriptionJobStatus.FAILED
+            ? "error"
+            : "info"
+      }
+      variant="left-accent"
+    >
+      <AlertIcon
+        as={
+          status === TranscriptionJobStatus.COMPLETED
+            ? TbFileCheck
+            : status === TranscriptionJobStatus.FAILED
+              ? TbFileAlert
+              : TbFile
+        }
+        boxSize={[10, 12]}
+      />
       <Box width={"95%"}>
         <AlertTitle>{filename}</AlertTitle>
         <AlertDescription>
@@ -117,7 +123,7 @@ export const FileTranscriptionProgress: FunctionComponent<
           )}
         </AlertDescription>
       </Box>
-      {status === TranscriptionJobStatusE.COMPLETED && (
+      {status === TranscriptionJobStatus.COMPLETED && (
         <Fragment>
           <Spacer />
           <Stack spacing={4} direction={"row"} align={"center"}>
@@ -135,9 +141,7 @@ export const FileTranscriptionProgress: FunctionComponent<
                 </MenuList>
               </Portal>
             </Menu>
-            <Button variant={"outline"} leftIcon={<AiOutlinePlaySquare />}>
-              Play
-            </Button>
+            <Button leftIcon={<AiOutlinePlaySquare />}>Play</Button>
           </Stack>
         </Fragment>
       )}
