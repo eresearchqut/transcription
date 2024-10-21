@@ -13,22 +13,46 @@ import {
   Portal,
   Progress,
   Spacer,
+  Spinner,
   Text,
 } from "@chakra-ui/react";
 import { TbFile } from "react-icons/tb";
 import { Box, Stack } from "@chakra-ui/layout";
-import { CheckCircleIcon, ChevronDownIcon } from "@chakra-ui/icons";
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  TimeIcon,
+  WarningIcon,
+} from "@chakra-ui/icons";
 import { AiOutlinePlaySquare } from "react-icons/ai";
+import { lowerCase } from "lodash";
+
+export type TranscriptionJobStatus =
+  | "QUEUED"
+  | "IN_PROGRESS"
+  | "FAILED"
+  | "COMPLETED";
+
+export enum TranscriptionJobStatusE {
+  QUEUED = "QUEUED",
+  IN_PROGRESS = "IN_PROGRESS",
+  FAILED = "FAILED",
+  COMPLETED = "COMPLETED",
+}
+
+export interface TranscriptionJobProgress {
+  status?: TranscriptionJobStatus;
+}
 
 export interface FileTranscriptionProgressProps {
   filename: string;
   uploadProgress: number;
-  transcriptionProgress: number;
+  transcriptionProgress: TranscriptionJobProgress | undefined;
 }
 
 const isCompleted = (progress: number) => progress === 100;
 
-const ProgressStatus = ({
+const UploadProgressStatus = ({
   progress,
   processingText,
   completedText,
@@ -50,30 +74,50 @@ const ProgressStatus = ({
   );
 };
 
+const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
+  const iconProps = { mr: 2, mb: 1 };
+  return (
+    <Text>
+      {status === TranscriptionJobStatusE.IN_PROGRESS ? (
+        <Spinner mr={2} size={"sm"} />
+      ) : status === TranscriptionJobStatusE.COMPLETED ? (
+        <CheckCircleIcon {...iconProps} color={"green.600"} />
+      ) : status === TranscriptionJobStatusE.FAILED ? (
+        <WarningIcon {...iconProps} color={"red.600"} />
+      ) : (
+        <TimeIcon {...iconProps} color={"yellow.600"} />
+      )}
+      {`Transcription ${lowerCase((status ?? "PENDING")?.split("_").join(" "))}`}
+      {![
+        TranscriptionJobStatusE.COMPLETED,
+        TranscriptionJobStatusE.FAILED,
+      ].find((s) => s === status) && "..."}
+    </Text>
+  );
+};
+
 export const FileTranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
 > = ({ filename, uploadProgress, transcriptionProgress }) => {
+  const { status } = transcriptionProgress ?? {};
+
   return (
     <Alert key={filename} status={"info"} variant="left-accent">
       <AlertIcon as={TbFile} boxSize={[10, 12]} />
       <Box width={"95%"}>
         <AlertTitle>{filename}</AlertTitle>
         <AlertDescription>
-          <ProgressStatus
+          <UploadProgressStatus
             progress={uploadProgress}
             processingText={"Uploading..."}
             completedText={"Upload successful"}
           />
           {isCompleted(uploadProgress) && (
-            <ProgressStatus
-              progress={transcriptionProgress}
-              processingText={"Transcribing..."}
-              completedText={"Transcription completed"}
-            />
+            <TranscriptionProgressStatus status={status} />
           )}
         </AlertDescription>
       </Box>
-      {isCompleted(transcriptionProgress) && (
+      {status === TranscriptionJobStatusE.COMPLETED && (
         <Fragment>
           <Spacer />
           <Stack spacing={4} direction={"row"} align={"center"}>
@@ -100,3 +144,5 @@ export const FileTranscriptionProgress: FunctionComponent<
     </Alert>
   );
 };
+
+export default FileTranscriptionProgress;

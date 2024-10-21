@@ -41,19 +41,12 @@ export const LanguageInput: FunctionComponent<LanguageInputProps> = ({
     onChangeProp?.(normalizedValue);
   };
 
-  if (isDisabled) {
-    return (
-      <Text as={"em"} color={"gray.600"}>
-        Unavailable when PII redaction is enabled
-      </Text>
-    );
-  }
-
   return (
     <Select
       options={languageOptions}
       value={selectedLanguageOptions}
       onChange={onChange}
+      isDisabled={isDisabled}
       {...props}
     />
   );

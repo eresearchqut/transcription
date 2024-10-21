@@ -6,6 +6,7 @@ import {
   Flex,
   FormControl,
   FormErrorMessage,
+  FormHelperText,
   FormLabel,
   Heading,
   HStack,
@@ -63,6 +64,9 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
   const onEnablePiiRedactionChange = (event: ChangeEvent<HTMLInputElement>) => {
     const isChecked = event.target.checked;
+    if (isChecked) {
+      setLanguages(["en-US"]);
+    }
     setEnablePiiRedaction(isChecked);
   };
 
@@ -112,7 +116,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             >
               Languages
             </FormLabel>
-            <VStack alignItems={"start"}>
+            <HStack alignItems={"start"}>
               <LanguageInput
                 inputId={"languages"}
                 isMulti={true}
@@ -120,10 +124,13 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
                 isDisabled={enablePiiRedaction}
                 onChange={onLanguageChange}
               />
+              <FormHelperText hidden={!enablePiiRedaction}>
+                PII Redaction only available for English, US.
+              </FormHelperText>
               <FormErrorMessage>
                 Maximum {MAX_LANGUAGE_LIMIT} allowed.
               </FormErrorMessage>
-            </VStack>
+            </HStack>
           </FormControl>
         </HStack>
       </Flex>

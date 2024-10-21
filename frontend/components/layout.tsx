@@ -25,6 +25,7 @@ import { useAuth, useLogin, useLogout } from "../context/auth-context";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { Navigation } from "./navigation";
 import { Footer } from "./footer";
+import { TranscriptionsContextProvider } from "../context/transcriptions-context";
 
 export interface PageProps {
   pageTitle?: string;
@@ -155,7 +156,11 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
 
 const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
   const AuthenticatedLayout = withAuthentication(Layout);
-  return <AuthenticatedLayout {...props} />;
+  return (
+    <TranscriptionsContextProvider>
+      <AuthenticatedLayout {...props} />
+    </TranscriptionsContextProvider>
+  );
 };
 
 export default mapLayoutPropsToLayoutTree;

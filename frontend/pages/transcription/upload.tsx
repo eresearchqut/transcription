@@ -2,19 +2,21 @@ import { NextPage } from "next";
 import { withLayout } from "@moxy/next-layout";
 import Layout from "../../components/layout";
 import * as React from "react";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
 import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";
-import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress/fileTranscriptionProgress";
+import { TranscriptionsContext } from "../../context/transcriptions-context";
+import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress";
+import { TranscriptionJobStatusE } from "../../components/fileTranscriptionProgress/fileTranscriptionProgress";
 
 interface UploadProps {
   filename: string;
   uploadProgressPercent: number;
-  transcriptionProgressPercent: number;
+  transcriptionProgress: any;
 }
 
 const Upload: NextPage = () => {
@@ -22,11 +24,24 @@ const Upload: NextPage = () => {
     state: { user, isAuthenticated },
   } = useAuth();
 
+  const { transcriptions, subscribeToTranscriptionJob, getStatus } = useContext(
+    TranscriptionsContext,
+  );
+
   const [uploadData, setUploadData] = useState<Map<string, UploadProps>>(
     new Map(),
   );
 
   const { handleLogout } = useLogout();
+
+  const getTranscriptionProgress = (jobId: string) => {
+    const transcription = transcriptions.find((job) => job.sk === jobId);
+    return {
+      status: transcription
+        ? (getStatus(transcription) as TranscriptionJobStatusE)
+        : undefined,
+    };
+  };
 
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
     const uploadFile = (
@@ -45,10 +60,10 @@ const Upload: NextPage = () => {
 
       Auth.currentSession()
         .then(() => {
-          uploadData.set(key, {
+          uploadData.set(id, {
             filename: file.name,
             uploadProgressPercent: 0,
-            transcriptionProgressPercent: 0,
+            transcriptionProgress: undefined,
           });
           return Storage.put(key, file, {
             level: "private",
@@ -57,13 +72,16 @@ const Upload: NextPage = () => {
               const progressPercent = (progress.loaded / progress.total) * 100;
               setUploadData((current) => {
                 const updatedData = new Map(current);
-                updatedData.set(key, {
+                updatedData.set(id, {
                   filename: file.name,
                   uploadProgressPercent: progressPercent,
-                  transcriptionProgressPercent: 0,
+                  transcriptionProgress: undefined,
                 });
                 return updatedData;
               });
+              if (progressPercent >= 100) {
+                subscribeToTranscriptionJob(id);
+              }
             },
           });
         })
@@ -82,7 +100,7 @@ const Upload: NextPage = () => {
             key={key}
             filename={filename}
             uploadProgress={uploadProgressPercent}
-            transcriptionProgress={0}
+            transcriptionProgress={getTranscriptionProgress(key)}
           />
         ),
       )}
