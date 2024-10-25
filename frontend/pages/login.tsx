@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
 import * as React from "react";
 import { withLayout } from "@moxy/next-layout";
-import { LoginLayout } from "../components/layout";
+import { LoginLayout } from "../layout/layout";
 import Quotas from "../components/quotas";
 import {
   Button,

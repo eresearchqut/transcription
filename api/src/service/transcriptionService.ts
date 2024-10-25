@@ -1,6 +1,7 @@
 import { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
 import {
+  getResource,
   getResources,
   putResource,
   updateResource,
@@ -45,3 +46,6 @@ export const downloadKey = (
 
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);
+
+export const getTranscription = (identityId: string, jobId: string) =>
+  getResource(identityId, jobId);

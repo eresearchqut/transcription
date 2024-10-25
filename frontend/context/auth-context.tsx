@@ -128,7 +128,7 @@ function useLogout() {
     } finally {
       localStorage.clear();
       setIsLoggingOut(false);
-      await router.push("/auth/login");
+      await router.push("/login");
     }
   }
 

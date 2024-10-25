@@ -7,7 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import { Spinner } from "@chakra-ui/react";
-import { PageProps } from "../components/layout";
+import { PageProps } from "../layout/layout";
 
 export const withAuthentication = (
   WrapperComponent: FunctionComponent<PropsWithChildren<PageProps>>,

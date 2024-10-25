@@ -1,5 +1,5 @@
 import { Box, Stack } from "@chakra-ui/layout";
-import React, { FunctionComponent, PropsWithChildren } from "react";
+import React, { FunctionComponent, PropsWithChildren, useEffect } from "react";
 import {
   Button,
   Card,
@@ -23,9 +23,9 @@ import {
 import { withAnonymous, withAuthentication } from "../context/with-auth";
 import { useAuth, useLogin, useLogout } from "../context/auth-context";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
-import { Navigation } from "./navigation";
-import { Footer } from "./footer";
-import { TranscriptionsContextProvider } from "../context/transcriptions-context";
+import { Navigation } from "../components/navigation";
+import { Footer } from "../components/footer";
+import { useRouter } from "next/router";
 
 export interface PageProps {
   pageTitle?: string;
@@ -36,7 +36,6 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   pageTitle,
   ...props
 }: any) => {
-  console.log(props);
   const { colorMode, toggleColorMode } = useColorMode();
   const navigationItems = {
     "Upload Media": "/transcription/upload",
@@ -53,11 +52,17 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   const gridTemplateRows = "auto auto 1fr auto";
   const styles = useMultiStyleConfig("Page", props);
 
+  const router = useRouter();
+
   const {
     state: { isAuthenticated },
   } = useAuth();
 
-  console.log(styles.footer);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated]);
 
   return (
     <Grid
@@ -116,7 +121,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
           m={"auto"}
           p={4}
         >
-          <Navigation items={navigationItems} />
+          {isAuthenticated && <Navigation items={navigationItems} />}
         </Stack>
       </Box>
 

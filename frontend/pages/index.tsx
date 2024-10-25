@@ -1,3 +1,3 @@
-import Transcription from "@/pages/transcription";
+import Upload from "@/pages/transcription";
 
-export default Transcription;
+export default Upload;

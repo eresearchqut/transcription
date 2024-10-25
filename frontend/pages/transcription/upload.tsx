@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { withLayout } from "@moxy/next-layout";
-import Layout from "../../components/layout";
+import Layout from "../../layout/layout";
 import * as React from "react";
 import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
@@ -8,12 +8,10 @@ import { v4 as uuid } from "uuid";
 import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
-import { VStack } from "@chakra-ui/react";
+import { useDisclosure, VStack } from "@chakra-ui/react";
 import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress";
-import {
-  TranscriptionJobStatus,
-  useTranscriptions,
-} from "../../hooks/useTranscriptions";
+import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
+import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
 
 interface UploadProps {
   filename: string;
@@ -23,29 +21,26 @@ interface UploadProps {
 
 const Upload: NextPage = () => {
   const {
-    state: { user, isAuthenticated },
+    state: { user },
   } = useAuth();
 
-  const { transcriptions, getStatus, subscribeToTranscriptionJob } =
-    useTranscriptions({ pollMode: "SUBSCRIBE" });
-  // const { transcriptions, subscribeToTranscriptionJob, getStatus } = useContext(
-  //   TranscriptionsContext,
-  // );
+  const [play, setPlay] = useState<
+    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
+  >({} as MediaPlayerDrawerProps);
+  const { isOpen, onClose, onOpen } = useDisclosure();
+  const onPlayClick = (mediaUrl: string, transcriptUrl: string) => {
+    setPlay({
+      mediaUrl,
+      transcriptUrl,
+    });
+    onOpen();
+  };
 
   const [uploadData, setUploadData] = useState<Map<string, UploadProps>>(
     new Map(),
   );
 
   const { handleLogout } = useLogout();
-
-  const getTranscriptionProgress = (jobId: string) => {
-    const transcription = transcriptions.find((job) => job.sk === jobId);
-    return {
-      status: transcription
-        ? (getStatus(transcription) as TranscriptionJobStatus)
-        : undefined,
-    };
-  };
 
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
     const uploadFile = (
@@ -83,9 +78,6 @@ const Upload: NextPage = () => {
                 });
                 return updatedData;
               });
-              if (progressPercent >= 100) {
-                subscribeToTranscriptionJob(id);
-              }
             },
           });
         })
@@ -96,19 +88,28 @@ const Upload: NextPage = () => {
   };
 
   return (
-    <VStack spacing={4} align="stretch">
-      <MediaUpload onSubmit={uploadFiles} />
-      {Array.from(uploadData.entries()).map(
-        ([key, { filename, uploadProgressPercent }]) => (
-          <FileTranscriptionProgress
-            key={key}
-            filename={filename}
-            uploadProgress={uploadProgressPercent}
-            transcriptionProgress={getTranscriptionProgress(key)}
-          />
-        ),
-      )}
-    </VStack>
+    <>
+      <VStack spacing={4} align="stretch">
+        <MediaUpload onSubmit={uploadFiles} />
+        {Array.from(uploadData.entries()).map(
+          ([key, { filename, uploadProgressPercent }]) => (
+            <FileTranscriptionProgress
+              key={key}
+              jobId={key}
+              filename={filename}
+              uploadProgress={uploadProgressPercent}
+              onPlayClick={onPlayClick}
+            />
+          ),
+        )}
+      </VStack>
+      <MediaPlayerDrawer
+        mediaUrl={play?.mediaUrl}
+        transcriptUrl={play?.transcriptUrl}
+        isOpen={isOpen}
+        onClose={onClose}
+      />
+    </>
   );
 };
 

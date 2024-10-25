@@ -168,7 +168,7 @@ export const heading = (text: string, pageBreakBefore: boolean = false) =>
     pageBreakBefore,
   });
 
-const document = (job: TranscriptJob) =>
+const transcriptDocument = (job: TranscriptJob) =>
   new Document({
     sections: [
       {
@@ -191,4 +191,4 @@ const document = (job: TranscriptJob) =>
     ],
   });
 
-export default document;
+export default transcriptDocument;

@@ -5,6 +5,7 @@ import { ChakraProvider } from "@chakra-ui/react";
 import { LayoutTree } from "@moxy/next-layout";
 import { AuthProvider } from "../context/auth-context";
 import { Amplify } from "aws-amplify";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const data = {
   NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID:
@@ -52,12 +53,16 @@ Amplify.configure({
   },
 });
 
+const queryClient = new QueryClient();
+
 function App({ Component, pageProps }: AppProps) {
   return (
     <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <LayoutTree Component={Component} pageProps={pageProps} />
-      </AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <LayoutTree Component={Component} pageProps={pageProps} />
+        </AuthProvider>
+      </QueryClientProvider>
     </ChakraProvider>
   );
 }

@@ -5,37 +5,28 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
-  Button,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Portal,
   Progress,
   Spacer,
   Spinner,
   Text,
 } from "@chakra-ui/react";
 import { Box, Stack } from "@chakra-ui/layout";
-import {
-  CheckCircleIcon,
-  ChevronDownIcon,
-  TimeIcon,
-  WarningIcon,
-} from "@chakra-ui/icons";
-import { AiOutlinePlaySquare } from "react-icons/ai";
+import { CheckCircleIcon, TimeIcon, WarningIcon } from "@chakra-ui/icons";
 import { lowerCase } from "lodash";
-import { TranscriptionJobStatus } from "../../hooks/useTranscriptions";
 import { TbFile, TbFileAlert, TbFileCheck } from "react-icons/tb";
+import { Download } from "../download/download";
+import { transcriptionJobStatus, TranscriptionJobStatus } from "../../model";
+import { useTranscription } from "../../hooks/useTranscription";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
 }
 
 export interface FileTranscriptionProgressProps {
+  jobId: string;
   filename: string;
   uploadProgress: number;
-  transcriptionProgress: TranscriptionJobProgress | undefined;
+  onPlayClick: (mediaUrl: string, transcriptUrl: string) => void;
 }
 
 const isCompleted = (progress: number) => progress === 100;
@@ -50,7 +41,7 @@ const UploadProgressStatus = ({
   completedText: string;
 }) => {
   return progress < 100 ? (
-    <Text>
+    <Text as={"div"}>
       {processingText}
       <Progress hasStripe value={progress} />
     </Text>
@@ -85,16 +76,19 @@ const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
 
 export const FileTranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
-> = ({ filename, uploadProgress, transcriptionProgress }) => {
-  const { status } = transcriptionProgress ?? {};
+> = ({ jobId, filename, uploadProgress, onPlayClick }) => {
+  const { transcription } = useTranscription({ jobId });
+  const transcriptionStatus: TranscriptionJobStatus | undefined =
+    transcription &&
+    (transcriptionJobStatus(transcription) as TranscriptionJobStatus);
 
   return (
     <Alert
       key={filename}
       status={
-        status === TranscriptionJobStatus.COMPLETED
+        transcriptionStatus === TranscriptionJobStatus.COMPLETED
           ? "success"
-          : status === TranscriptionJobStatus.FAILED
+          : transcriptionStatus === TranscriptionJobStatus.FAILED
             ? "error"
             : "info"
       }
@@ -102,9 +96,9 @@ export const FileTranscriptionProgress: FunctionComponent<
     >
       <AlertIcon
         as={
-          status === TranscriptionJobStatus.COMPLETED
+          transcriptionStatus === TranscriptionJobStatus.COMPLETED
             ? TbFileCheck
-            : status === TranscriptionJobStatus.FAILED
+            : transcriptionStatus === TranscriptionJobStatus.FAILED
               ? TbFileAlert
               : TbFile
         }
@@ -119,32 +113,22 @@ export const FileTranscriptionProgress: FunctionComponent<
             completedText={"Upload successful"}
           />
           {isCompleted(uploadProgress) && (
-            <TranscriptionProgressStatus status={status} />
+            <TranscriptionProgressStatus status={transcriptionStatus} />
           )}
         </AlertDescription>
       </Box>
-      {status === TranscriptionJobStatus.COMPLETED && (
-        <Fragment>
-          <Spacer />
-          <Stack spacing={4} direction={"row"} align={"center"}>
-            <Menu>
-              <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
-                Download
-              </MenuButton>
-              <Portal>
-                <MenuList>
-                  <MenuItem>Media</MenuItem>
-                  <MenuItem>JSON</MenuItem>
-                  <MenuItem>SRT</MenuItem>
-                  <MenuItem>VTT</MenuItem>
-                  <MenuItem>DOCX</MenuItem>
-                </MenuList>
-              </Portal>
-            </Menu>
-            <Button leftIcon={<AiOutlinePlaySquare />}>Play</Button>
-          </Stack>
-        </Fragment>
-      )}
+      {transcriptionStatus === TranscriptionJobStatus.COMPLETED &&
+        transcription && (
+          <Fragment>
+            <Spacer />
+            <Stack spacing={4} direction={"row"} align={"center"}>
+              <Download
+                transcription={transcription}
+                onPlayClick={onPlayClick}
+              />
+            </Stack>
+          </Fragment>
+        )}
     </Alert>
   );
 };
