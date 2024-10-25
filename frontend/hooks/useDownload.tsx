@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useLogout } from "../../context/auth-context";
+import { useLogout } from "../context/auth-context";
 import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import transcriptDocument, {
   TranscriptJob,
-} from "../../components/transcriptDocument";
+} from "../components/transcriptDocument";
 import { Packer } from "docx";
 import srtConvert from "aws-transcription-to-srt";
 import toWebVTT from "srt-webvtt";

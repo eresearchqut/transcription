@@ -10,10 +10,7 @@ import {
   Portal,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-import {
-  TranscriptFormat,
-  useDownload,
-} from "../../hooks/useDownload/useDownload";
+import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
 import { MdMovie, MdOutlineSubtitles } from "react-icons/md";
 import { VscJson } from "react-icons/vsc";
 import { Transcription } from "../../model";

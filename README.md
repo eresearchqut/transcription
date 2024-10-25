@@ -2,8 +2,9 @@
 
 [eResearch QUT](https://www.qut.edu.au/research/office-of-eresearch) Transcription Service
 
-![homepage](images/homepage.png)
-![transcription](images/transcription.png)
+![upload](images/upload.png)
+![transcriptions](images/transcriptions.png)
+![player](images/player.png)
 
 ## Linting and Formatting
 
