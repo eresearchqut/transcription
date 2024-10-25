@@ -78,7 +78,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     accept,
     maxSize: 2 * 1024 * 1024 * 1024, // 2GB
     maxDuration: { hours: 4 },
-    storageDuration: { days: 12 },
+    storageDuration: { days: 14 },
     onFilesPicked,
   };
 
