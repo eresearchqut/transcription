@@ -5,8 +5,10 @@ import {
   HStack,
   Menu,
   MenuButton,
+  MenuGroup,
   MenuItem,
   MenuList,
+  MenuOptionGroup,
   Portal,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -67,24 +69,31 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
   return (
     <HStack>
       <Menu>
-        <MenuButton as={Button} rightIcon={<ChevronDownIcon />}>
+        <MenuButton
+          variant={"outline"}
+          colorScheme={"blue"}
+          as={Button}
+          rightIcon={<ChevronDownIcon />}
+        >
           Download
         </MenuButton>
         <Portal>
           <MenuList>
-            <MenuItem
-              icon={<MdMovie />}
-              onClick={() =>
-                downloadFile({
-                  objectKey: mediaKey(transcription),
-                  filename: transcription.metadata.filename,
-                })
-              }
-            >
-              Media
-            </MenuItem>
+            <MenuGroup>
+              <MenuItem
+                icon={<MdMovie />}
+                onClick={() =>
+                  downloadFile({
+                    objectKey: mediaKey(transcription),
+                    filename: transcription.metadata.filename,
+                  })
+                }
+              >
+                Media file
+              </MenuItem>
+            </MenuGroup>
             {transcription.downloadKey && (
-              <>
+              <MenuGroup title={"Transcription formats"}>
                 <MenuItem
                   icon={<VscJson />}
                   onClick={() =>
@@ -126,7 +135,7 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
                 >
                   DOCX
                 </MenuItem>
-              </>
+              </MenuGroup>
             )}
           </MenuList>
         </Portal>
@@ -136,6 +145,7 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
           onClick={() => loadPlayer()}
           variant={"solid"}
           leftIcon={<AiOutlinePlaySquare />}
+          colorScheme={"blue"}
         >
           Play
         </Button>

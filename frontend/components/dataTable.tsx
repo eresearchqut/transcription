@@ -1,4 +1,5 @@
 import {
+  ButtonProps,
   chakra,
   Flex,
   IconButton,
@@ -100,6 +101,11 @@ export const DataTable = (props: DataTableProps) => {
     debugTable: false,
   });
 
+  const paginateButtonsProps: ButtonProps = {
+    colorScheme: "blue",
+    variant: "outline",
+  };
+
   return (
     <>
       <Table {...tableProps}>
@@ -183,6 +189,7 @@ export const DataTable = (props: DataTableProps) => {
                   isDisabled={!table.getCanPreviousPage()}
                   icon={<ArrowLeftIcon h={3} w={3} />}
                   mr={2}
+                  {...paginateButtonsProps}
                 />
               </Tooltip>
               <Tooltip label="Previous Page">
@@ -192,6 +199,7 @@ export const DataTable = (props: DataTableProps) => {
                   onClick={() => table.previousPage()}
                   isDisabled={!table.getCanPreviousPage()}
                   icon={<ChevronLeftIcon h={6} w={6} />}
+                  {...paginateButtonsProps}
                 />
               </Tooltip>
             </Flex>
@@ -251,6 +259,7 @@ export const DataTable = (props: DataTableProps) => {
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                   icon={<ChevronRightIcon h={6} w={6} />}
+                  {...paginateButtonsProps}
                 />
               </Tooltip>
               <Tooltip label="Last Page">
@@ -261,6 +270,7 @@ export const DataTable = (props: DataTableProps) => {
                   disabled={!table.getCanNextPage()}
                   icon={<ArrowRightIcon h={3} w={3} />}
                   ml={2}
+                  {...paginateButtonsProps}
                 />
               </Tooltip>
             </Flex>
