@@ -1,29 +1,41 @@
-import { FunctionComponent } from "react";
-import { Button, Wrap, WrapItem } from "@chakra-ui/react";
+import { FunctionComponent, ReactElement } from "react";
+import { Button, Stack } from "@chakra-ui/react";
 import NextLink from "next/link";
 
+interface NavigationItemProps {
+  url: string;
+  icon: ReactElement;
+}
+
 export interface NavigationProps {
-  items: Record<string, string>;
+  items: Record<string, NavigationItemProps>;
 }
 
 export const Navigation: FunctionComponent<NavigationProps> = ({
   items,
 }: NavigationProps) => {
   return (
-    <Wrap spacing={[2, 3]}>
-      {Object.keys(items).map((title) => (
-        <WrapItem key={title}>
+    <Stack
+      spacing={4}
+      direction={{ base: "column", sm: "row" }}
+      align={"start"}
+    >
+      {Object.keys(items).map((title) => {
+        const { icon, url } = items[title];
+        return (
           <Button
+            key={title}
             as={NextLink}
-            href={items[title]}
+            leftIcon={icon}
+            href={url}
             variant={"link"}
             color={"white"}
           >
             {title}
           </Button>
-        </WrapItem>
-      ))}
-    </Wrap>
+        );
+      })}
+    </Stack>
   );
 };
 

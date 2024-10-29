@@ -27,21 +27,20 @@ const baseStyle = definePartsStyle(() => {
     mainContainer: {
       ...defaultContainer,
       p: 3,
+      pt: 30,
     },
     footerContainer: defaultContainer,
     header: {
-      bgColor: "brand.900",
-      color: "brand.100",
-    },
-    navigation: {
-      bgColor: "navigation.900",
-      color: "navigation.50",
-    },
-    footer: {
       bgColor: "blue.900",
       color: "white",
-      borderTopColor: "blue.100",
-      borderTopWidth: 1,
+    },
+    navigation: {
+      bgColor: "#333333",
+      color: "#012A4C",
+    },
+    footer: {
+      bgColor: "#124C7B",
+      color: "white",
     },
     main: {},
   };

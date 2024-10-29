@@ -27,8 +27,8 @@ const Login: NextPage = () => {
   const { handleLogin } = useLogin();
 
   return (
-    <Stack align={"start"} gap={{ base: 4, lg: 10 }} p={25}>
-      <Card>
+    <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
+      <Card width={{ base: "100%", lg: "unset" }}>
         <CardHeader>
           <Heading as={"h2"}>QUT audio transcription service</Heading>
         </CardHeader>

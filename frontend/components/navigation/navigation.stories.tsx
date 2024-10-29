@@ -1,5 +1,7 @@
 import Navigation from "./navigation";
 import { Meta, StoryObj } from "@storybook/react";
+import { LuUpload } from "react-icons/lu";
+import { RiPlayList2Fill } from "react-icons/ri";
 
 const meta = {
   title: "Components/Navigation",
@@ -12,6 +14,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
   args: {
-    items: { "Upload Media": "/", "My Transcriptions": "/" },
+    items: {
+      "Upload Media": { icon: <LuUpload />, url: "/" },
+      "My Transcriptions": { icon: <RiPlayList2Fill />, url: "/" },
+    },
   },
 };

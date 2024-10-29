@@ -16,7 +16,7 @@ const TeqsaLink: FunctionComponent = () => (
 
 export const Footer: FunctionComponent = () => {
   return (
-    <Flex direction={["column", "column", "row"]}>
+    <Flex direction={["column", "column", "row"]} alignItems="center">
       <VStack alignItems={"start"} spacing={0}>
         <Text noOfLines={1}>Developed by the Office of eResearch, QUT</Text>
         <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal>

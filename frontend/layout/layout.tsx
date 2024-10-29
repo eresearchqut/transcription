@@ -7,14 +7,15 @@ import {
   CardHeader,
   chakra,
   DarkMode,
-  Divider,
   Grid,
   GridItem,
   Heading,
+  HStack,
   IconButton,
   Image,
   SkipNavLink,
   Spacer,
+  StackDivider,
   useColorMode,
   useColorModeValue,
   useMultiStyleConfig,
@@ -25,9 +26,10 @@ import { useAuth, useLogin, useLogout } from "../context/auth-context";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { Navigation } from "../components/navigation";
 import { Footer } from "../components/footer";
-import { useRouter } from "next/router";
 import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 import loginImage from "@/public/login.jpg";
+import { LuUpload } from "react-icons/lu";
+import { RiPlayList2Fill } from "react-icons/ri";
 
 export interface PageProps {
   pageTitle?: string;
@@ -42,8 +44,8 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
 }: any) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const navigationItems = {
-    "Upload Media": "/transcription/upload",
-    "My Transcriptions": "/transcription",
+    "Upload Media": { icon: <LuUpload />, url: "/transcription/upload" },
+    "My Transcriptions": { icon: <RiPlayList2Fill />, url: "/transcription" },
   };
   const { handleLogin } = useLogin();
   const { handleLogout } = useLogout();
@@ -55,8 +57,6 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   const templateAreas = `"header" "navigation" "main" "footer"`;
   const gridTemplateRows = "auto auto 1fr auto";
   const styles = useMultiStyleConfig("Page", props);
-
-  const router = useRouter();
 
   const {
     state: { isAuthenticated, error },
@@ -87,7 +87,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
     >
       <SkipNavLink id="main">Skip to content</SkipNavLink>
 
-      <Box bg={"blue.900"} color={"white"} width={"100%"}>
+      <chakra.header __css={styles.header}>
         <DarkMode>
           <Stack
             direction="row"
@@ -96,14 +96,18 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             m={"auto"}
             p={4}
           >
-            <Image
-              alt="QUT logo"
-              src={"/logo.png"}
-              width={"40px"}
-              height={"40px"}
-            />
-            <Divider orientation="vertical" />
-            <Heading size={"lg"}>Transcribe</Heading>
+            <HStack
+              divider={<StackDivider borderColor={"white"} />}
+              spacing={3}
+            >
+              <Image
+                alt="QUT logo"
+                src={"/logo.png"}
+                width={"40px"}
+                height={"40px"}
+              />
+              <Heading size={"lg"}>Transcribe</Heading>
+            </HStack>
             <Spacer />
 
             {!isAuthenticated && (
@@ -133,9 +137,9 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             />
           </Stack>
         </DarkMode>
-      </Box>
+      </chakra.header>
       {isAuthenticated && (
-        <Box bg={"gray.800"} color={"white"} width={"100%"}>
+        <Box width={"100%"} __css={styles.navigation}>
           <Stack
             direction="row"
             alignItems={"center"}
@@ -149,10 +153,10 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
       )}
 
       <Box __css={styles.main} id={"main"}>
-        {isLanding ? (
-          children
-        ) : (
-          <chakra.main __css={styles.mainContainer}>
+        <chakra.main __css={styles.mainContainer}>
+          {isLanding ? (
+            children
+          ) : (
             <Card
               rounded={1}
               mb={0}
@@ -171,8 +175,8 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
                 {children}
               </CardBody>
             </Card>
-          </chakra.main>
-        )}
+          )}
+        </chakra.main>
       </Box>
 
       <GridItem area={"footer"}>
