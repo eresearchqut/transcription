@@ -1,1 +1,5 @@
-export { default as FilePicker, type FilePickerProps } from "./filePicker";
+export {
+  default as FilePicker,
+  type FilePickerProps,
+  bytesToSize,
+} from "./filePicker";

@@ -26,14 +26,17 @@ import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { Navigation } from "../components/navigation";
 import { Footer } from "../components/footer";
 import { useRouter } from "next/router";
+import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 
 export interface PageProps {
   pageTitle?: string;
+  isLanding?: boolean;
 }
 
 export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   children,
   pageTitle,
+  isLanding,
   ...props
 }: any) => {
   const { colorMode, toggleColorMode } = useColorMode();
@@ -59,10 +62,10 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
+    if (!isAuthenticated && !isLanding) {
+      router.push("/login").then((r) => r);
     }
-  }, [isAuthenticated]);
+  }, [router, isAuthenticated, isLanding]);
 
   return (
     <Grid
@@ -94,12 +97,20 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             <Spacer />
 
             {!isAuthenticated && (
-              <Button onClick={handleLogin} variant="outline">
+              <Button
+                onClick={handleLogin}
+                variant="outline"
+                leftIcon={<IoEnterOutline />}
+              >
                 Login
               </Button>
             )}
             {isAuthenticated && (
-              <Button onClick={handleLogout} variant="outline">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                leftIcon={<IoExitOutline />}
+              >
                 Logout
               </Button>
             )}
@@ -113,39 +124,45 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
           </Stack>
         </DarkMode>
       </Box>
-      <Box bg={"gray.800"} color={"white"} width={"100%"}>
-        <Stack
-          direction="row"
-          alignItems={"center"}
-          maxWidth={"1576px"}
-          m={"auto"}
-          p={4}
-        >
-          {isAuthenticated && <Navigation items={navigationItems} />}
-        </Stack>
-      </Box>
-
-      <Box __css={styles.main}>
-        <chakra.main __css={styles.mainContainer}>
-          <Card
-            rounded={1}
-            mb={0}
-            bgColor={cardColor}
-            borderWidth={1}
-            borderColor={cardBorderColor}
+      {isAuthenticated && (
+        <Box bg={"gray.800"} color={"white"} width={"100%"}>
+          <Stack
+            direction="row"
+            alignItems={"center"}
+            maxWidth={"1576px"}
+            m={"auto"}
+            p={4}
           >
-            <CardHeader pl={6} pr={6} pb={0}>
-              {pageTitle && (
-                <Heading as={"h1"} size={"lg"}>
-                  {pageTitle}
-                </Heading>
-              )}
-            </CardHeader>
-            <CardBody pl={6} pr={6}>
-              {children}
-            </CardBody>
-          </Card>
-        </chakra.main>
+            <Navigation items={navigationItems} />
+          </Stack>
+        </Box>
+      )}
+
+      <Box __css={styles.main} id={"main"}>
+        {isLanding ? (
+          children
+        ) : (
+          <chakra.main __css={styles.mainContainer}>
+            <Card
+              rounded={1}
+              mb={0}
+              bgColor={cardColor}
+              borderWidth={1}
+              borderColor={cardBorderColor}
+            >
+              <CardHeader pl={6} pr={6} pb={0}>
+                {pageTitle && (
+                  <Heading as={"h1"} size={"lg"}>
+                    {pageTitle}
+                  </Heading>
+                )}
+              </CardHeader>
+              <CardBody pl={6} pr={6}>
+                {children}
+              </CardBody>
+            </Card>
+          </chakra.main>
+        )}
       </Box>
 
       <GridItem area={"footer"}>
@@ -165,4 +182,12 @@ const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
 };
 
 export default mapLayoutPropsToLayoutTree;
-export const LoginLayout = withAnonymous(Layout);
+
+const mapAnonLayoutPropsToLayoutTree = (
+  props: PropsWithChildren<PageProps>,
+) => {
+  const AuthenticatedLayout = withAnonymous(Layout);
+  return <AuthenticatedLayout {...props} />;
+};
+
+export const LoginLayout = mapAnonLayoutPropsToLayoutTree;
