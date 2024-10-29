@@ -1,7 +1,6 @@
 import { ChangeEvent, FunctionComponent, useState } from "react";
 import { Stack } from "@chakra-ui/layout";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
-import { Accept } from "react-dropzone";
 import {
   Flex,
   FormControl,
@@ -11,10 +10,10 @@ import {
   Heading,
   HStack,
   Switch,
-  VStack,
 } from "@chakra-ui/react";
 import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
+import { TRANSCRIBE_PROPS } from "../../model";
 
 export interface TranscribeProps {
   languages: string[];
@@ -24,31 +23,6 @@ export interface TranscribeProps {
 export interface MediaUploadProps {
   onSubmit: (transcribeProps: TranscribeProps, files: File[]) => void;
 }
-
-const SUPPORTED_MIME_TYPES = [
-  "audio/flac",
-  "audio/mpeg",
-  "audio/mp4",
-  "video/mp4",
-  "audio/m4a",
-  "audio/x-m4a",
-  "application/ogg",
-  "audio/ogg",
-  "video/ogg",
-  "video/webm",
-  "audio/webm",
-  "audio/amr",
-  "audio/x-wav",
-  "audio/vnd.wave",
-  "audio/wav",
-  "audio/wave",
-  "audio/x-pn-wav",
-];
-
-const accept: Accept = {}; // specify the type of accept
-SUPPORTED_MIME_TYPES.forEach((mimeType) => {
-  accept[mimeType] = [];
-});
 
 export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   onSubmit,
@@ -74,11 +48,12 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onSubmit({ languages, enablePiiRedaction }, files);
   };
 
+  const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_PROPS;
+
   const filePickerProps: FilePickerProps = {
     accept,
-    maxSize: 2 * 1024 * 1024 * 1024, // 2GB
-    maxDuration: { hours: 4 },
-    storageDuration: { days: 14 },
+    maxFiles: maximumFilesCount,
+    maxSize: maximumFileSizeBytes,
     onFilesPicked,
   };
 

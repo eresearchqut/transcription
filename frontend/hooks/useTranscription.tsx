@@ -29,6 +29,7 @@ export const useTranscription = ({
 
   const jobFinished =
     transcription &&
+    transcription.downloadKey &&
     [TranscriptionJobStatus.FAILED, TranscriptionJobStatus.COMPLETED].includes(
       transcriptionJobStatus(transcription) as TranscriptionJobStatus,
     );

@@ -27,6 +27,7 @@ import { Navigation } from "../components/navigation";
 import { Footer } from "../components/footer";
 import { useRouter } from "next/router";
 import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
+import loginImage from "@/public/login.jpg";
 
 export interface PageProps {
   pageTitle?: string;
@@ -58,14 +59,22 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   const router = useRouter();
 
   const {
-    state: { isAuthenticated },
+    state: { isAuthenticated, error },
+    initializeUser,
   } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated && !isLanding) {
-      router.push("/login").then((r) => r);
+      initializeUser().then();
     }
-  }, [router, isAuthenticated, isLanding]);
+  }, [isAuthenticated, isLanding, initializeUser]);
+
+  const landingBackgroundProps = {
+    backgroundImage: { base: undefined, sm: `url(${loginImage.src})` },
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+  };
 
   return (
     <Grid
@@ -74,6 +83,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
       transition="width .4s ease-in-out"
       minH={"100vh"}
       bgColor={pageColor}
+      {...(isLanding && landingBackgroundProps)}
     >
       <SkipNavLink id="main">Skip to content</SkipNavLink>
 
@@ -183,11 +193,7 @@ const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
 
 export default mapLayoutPropsToLayoutTree;
 
-const mapAnonLayoutPropsToLayoutTree = (
-  props: PropsWithChildren<PageProps>,
-) => {
+export const LoginLayout = (props: PropsWithChildren<PageProps>) => {
   const AuthenticatedLayout = withAnonymous(Layout);
   return <AuthenticatedLayout {...props} />;
 };
-
-export const LoginLayout = mapAnonLayoutPropsToLayoutTree;

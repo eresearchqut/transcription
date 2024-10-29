@@ -19,136 +19,118 @@ import {
 } from "@chakra-ui/react";
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { useLogin } from "../context/auth-context";
-import { Box } from "@chakra-ui/layout";
-import loginImage from "@/public/login.jpg";
-import { Quotas, QuotasProps } from "../components/quotas";
-
-const quotaProps: QuotasProps = {
-  minimumDuration: { seconds: 5 },
-  maximumDuration: { hours: 4 },
-  maximumFileSizeBytes: 1024 * 1024 * 2,
-  storageDuration: { days: 14 },
-  supportedFileFormats: [
-    "wav",
-    "flac",
-    "amr",
-    "3ga",
-    "mp3",
-    "mp4",
-    "m4a",
-    "oga",
-    "ogg",
-    "opus",
-  ],
-};
+import { Quotas } from "../components/quotas";
+import { TRANSCRIBE_PROPS } from "../model";
+import { formatDuration } from "date-fns";
 
 const Login: NextPage = () => {
   const { handleLogin } = useLogin();
 
   return (
-    <Box
-      backgroundImage={{ base: undefined, sm: `url(${loginImage.src})` }}
-      backgroundPosition={"center"}
-      backgroundRepeat={"no-repeat"}
-      backgroundSize={"cover"}
-      minH={"82vh"}
-      p={25}
-    >
-      <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
+    <Stack align={"start"} gap={{ base: 4, lg: 10 }} p={25}>
+      <Card>
+        <CardHeader>
+          <Heading as={"h2"}>QUT audio transcription service</Heading>
+        </CardHeader>
+        <CardBody>
+          <Text>Please log in to access this service.</Text>
+        </CardBody>
+        <CardFooter>
+          <Button variant={"solid"} colorScheme={"blue"} onClick={handleLogin}>
+            Login
+          </Button>
+        </CardFooter>
+      </Card>
+      <Grid
+        templateColumns={{ base: undefined, lg: "repeat(3, 1fr)" }}
+        gap={4}
+        pb={20}
+      >
         <Card>
           <CardHeader>
-            <Heading as={"h2"}>QUT audio transcription service</Heading>
+            <Heading as={"h2"}>About QUT Transcribe</Heading>
           </CardHeader>
           <CardBody>
-            <Text>Please log in to access this service.</Text>
+            <Text>
+              This service is powered by{" "}
+              <Link
+                href={"https://aws.amazon.com/transcribe/"}
+                isExternal
+                mt={4}
+              >
+                Amazon Transcribe <ExternalLinkIcon />
+              </Link>
+              .
+            </Text>
+            <Text>
+              Amazon transcribe uses a deep learning process called automatic
+              speech recognition (ASR) to convert speech to text quickly and
+              accurately. It can be used to transcribe audio and video files,
+              with speaker identification. Amazon Transcribe is powered by a
+              next-generation, multi-billion parameter speech foundation model
+              that delivers high accuracy transcriptions for streaming and
+              recorded speech.
+            </Text>
           </CardBody>
-          <CardFooter>
-            <Button
-              variant={"solid"}
-              colorScheme={"blue"}
-              onClick={handleLogin}
-            >
-              Login
-            </Button>
-          </CardFooter>
         </Card>
-        <Grid
-          templateColumns={{ base: undefined, lg: "repeat(3, 1fr)" }}
-          gap={4}
-          pb={20}
-        >
-          <Card>
-            <CardHeader>
-              <Heading as={"h2"}>About QUT Transcribe</Heading>
-            </CardHeader>
-            <CardBody>
-              <Text>
-                This service is powered by{" "}
+        <Card>
+          <CardHeader>
+            <Heading as={"h2"}>Storage and security</Heading>
+          </CardHeader>
+          <CardBody>
+            <Text>Uploaded media and generated transcriptions are:</Text>
+            <UnorderedList>
+              <ListItem>
+                Stored in the Amazon Web Services (AWS) Sydney region
+              </ListItem>
+              <ListItem>
+                Kept for {formatDuration(TRANSCRIBE_PROPS.storageDuration)} and
+                then automatically deleted
+              </ListItem>
+              <ListItem>
+                Encrypted in transit and at rest Media and transcriptions are
+                accessible only by the uploader
+              </ListItem>
+              <ListItem>
+                For more information refer to the:{" "}
                 <Link
-                  href={"https://aws.amazon.com/transcribe/"}
+                  href={
+                    "https://docs.aws.amazon.com/transcribe/latest/dg/security.html"
+                  }
                   isExternal
                   mt={4}
                 >
-                  Amazon Transcribe <ExternalLinkIcon />
+                  Amazon Transcribe Security Documentation <ExternalLinkIcon />
                 </Link>
                 .
-              </Text>
-              <Text>
-                Amazon transcribe uses a deep learning process called automatic
-                speech recognition (ASR) to convert speech to text quickly and
-                accurately. It can be used to transcribe audio and video files,
-                with speaker identification. Amazon Transcribe is powered by a
-                next-generation, multi-billion parameter speech foundation model
-                that delivers high accuracy transcriptions for streaming and
-                recorded speech.
-              </Text>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Heading as={"h2"}>Storage and security</Heading>
-            </CardHeader>
-            <CardBody>
-              <Text>Uploaded media and generated transcriptions are:</Text>
-              <UnorderedList>
-                <ListItem>
-                  Stored in the Amazon Web Services (AWS) Sydney region
-                </ListItem>
-                <ListItem>
-                  Kept for 14 days and then automatically deleted
-                </ListItem>
-                <ListItem>
-                  Encrypted in transit and at rest Media and transcriptions are
-                  accessible only by the uploader
-                </ListItem>
-                <ListItem>
-                  For more information refer to the:{" "}
-                  <Link
-                    href={
-                      "https://docs.aws.amazon.com/transcribe/latest/dg/security.html"
-                    }
-                    isExternal
-                    mt={4}
-                  >
-                    Amazon Transcribe Security Documentation{" "}
-                    <ExternalLinkIcon />
-                  </Link>
-                  .
-                </ListItem>
-              </UnorderedList>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardHeader>
-              <Heading as={"h2"}>Quotas and limits</Heading>
-            </CardHeader>
-            <CardBody>
-              <Quotas {...quotaProps} />
-            </CardBody>
-          </Card>
-        </Grid>
-      </Stack>
-    </Box>
+              </ListItem>
+            </UnorderedList>
+          </CardBody>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Heading as={"h2"}>Quotas and limits</Heading>
+          </CardHeader>
+          <CardBody>
+            <Quotas
+              {...TRANSCRIBE_PROPS}
+              supportedFileFormats={[
+                "wav",
+                "flac",
+                "amr",
+                "3ga",
+                "mp3",
+                "mp4",
+                "m4a",
+                "oga",
+                "ogg",
+                "opus",
+              ]}
+            />
+          </CardBody>
+        </Card>
+      </Grid>
+    </Stack>
   );
 };
 

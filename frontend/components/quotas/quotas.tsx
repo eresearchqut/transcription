@@ -1,17 +1,12 @@
 import { FunctionComponent } from "react";
-import { Duration, formatDuration } from "date-fns";
+import { formatDuration } from "date-fns";
 import { Heading, Stack, StackDivider, Text } from "@chakra-ui/react";
 import { bytesToSize } from "../../inputs/filePicker";
 import { isEmpty, lowerFirst, upperFirst } from "lodash";
+import { TranscribeQuotaProps } from "../../model";
 
-export interface QuotasProps {
+export interface QuotasProps extends Omit<TranscribeQuotaProps, "accept"> {
   asTextOnly?: boolean;
-  minimumDuration?: Duration;
-  maximumDuration?: Duration;
-  maximumFileSizeBytes?: number;
-  maximumFilesCount?: number;
-  storageDuration?: Duration;
-  supportedFileFormats?: string[];
 }
 
 const QuotasAsText: FunctionComponent<Omit<QuotasProps, "asTextOnly">> = ({

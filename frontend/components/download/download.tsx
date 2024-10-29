@@ -8,7 +8,6 @@ import {
   MenuGroup,
   MenuItem,
   MenuList,
-  MenuOptionGroup,
   Portal,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";

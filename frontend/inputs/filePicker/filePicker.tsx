@@ -16,18 +16,14 @@ import { LuUpload } from "react-icons/lu";
 import { TbFileAlert } from "react-icons/tb";
 import { Input } from "@chakra-ui/input";
 import { AddIcon } from "@chakra-ui/icons";
-import { Duration } from "date-fns";
 import { Quotas } from "../../components/quotas";
-import { isEmpty } from "lodash";
+import { TRANSCRIBE_PROPS } from "../../model";
 
 export interface FilePickerProps
   extends Pick<
     DropzoneOptions,
     "accept" | "maxFiles" | "maxSize" | "validator"
   > {
-  minDuration?: Duration;
-  maxDuration?: Duration;
-  storageDuration?: Duration;
   onFilesPicked(files: File[]): void;
 }
 
@@ -64,15 +60,7 @@ interface UploadStatus {
 }
 
 export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
-  const {
-    accept,
-    maxFiles,
-    maxSize,
-    maxDuration,
-    minDuration,
-    storageDuration,
-    onFilesPicked,
-  } = props;
+  const { onFilesPicked } = props;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
     accepted: [],
@@ -103,23 +91,6 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   });
   const { size: nativeSize, ...chakraInputProps } = getInputProps();
 
-  const acceptedFileExtensions = accept
-    ? Object.values(accept).flat(1)
-    : undefined;
-
-  const supportedFileFormats =
-    acceptedFileExtensions && !isEmpty(acceptedFileExtensions)
-      ? acceptedFileExtensions
-      : accept
-        ? Array.from(
-            new Set(
-              Object.keys(accept).map(
-                (mimeType) => mimeType.split(/[/.-]/).at(-1) ?? "",
-              ),
-            ).values(),
-          )
-        : [];
-
   return (
     <Stack spacing={[2, 4]}>
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
@@ -128,15 +99,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           <Icon as={LuUpload} boxSize={[10, 20]} />
           <Heading>Drag and drop files here or select files to upload</Heading>
           <Stack spacing={0} alignItems={"center"}>
-            <Quotas
-              asTextOnly={true}
-              maximumFilesCount={maxFiles}
-              minimumDuration={minDuration}
-              maximumDuration={maxDuration}
-              storageDuration={storageDuration}
-              maximumFileSizeBytes={maxSize}
-              supportedFileFormats={supportedFileFormats}
-            />
+            <Quotas asTextOnly={true} {...TRANSCRIBE_PROPS} />
           </Stack>
           <Button
             onClick={open}
