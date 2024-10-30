@@ -79,8 +79,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
           </FormControl>
           <FormControl
             display={"flex"}
+            minWidth={"max-content"}
             alignItems={"center"}
-            minWidth={"80em"}
             gap={2}
             isInvalid={languageSizeLimitReached}
           >

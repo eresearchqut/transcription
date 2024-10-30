@@ -15,6 +15,7 @@ import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Duration } from "aws-cdk-lib";
 
 /**
  * Format environment variables for use in a shell script
@@ -93,6 +94,10 @@ export class ApiStack extends cdk.Stack {
       ]
     });
     (dataBucket.node.defaultChild! as s3.CfnBucket).overrideLogicalId("TranscriptionBucket");
+    dataBucket.addLifecycleRule({
+      enabled: true,
+      expiration: Duration.days(14)
+    })
 
     const vpc = ec2.Vpc.fromLookup(this, "Vpc", { vpcId: props.parameters.VpcId });
     const apiSecurityGroup = new ec2.SecurityGroup(this, "ApiSecurityGroup", {
