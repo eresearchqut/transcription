@@ -7,14 +7,15 @@ import {
   CardHeader,
   chakra,
   DarkMode,
-  Divider,
   Grid,
   GridItem,
   Heading,
+  HStack,
   IconButton,
   Image,
   SkipNavLink,
   Spacer,
+  StackDivider,
   useColorMode,
   useColorModeValue,
   useMultiStyleConfig,
@@ -25,21 +26,26 @@ import { useAuth, useLogin, useLogout } from "../context/auth-context";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { Navigation } from "../components/navigation";
 import { Footer } from "../components/footer";
-import { useRouter } from "next/router";
+import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
+import loginImage from "@/public/login.jpg";
+import { LuUpload } from "react-icons/lu";
+import { RiPlayList2Fill } from "react-icons/ri";
 
 export interface PageProps {
   pageTitle?: string;
+  isLanding?: boolean;
 }
 
 export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   children,
   pageTitle,
+  isLanding,
   ...props
 }: any) => {
   const { colorMode, toggleColorMode } = useColorMode();
   const navigationItems = {
-    "Upload Media": "/transcription/upload",
-    "My Transcriptions": "/transcription",
+    "Upload Media": { icon: <LuUpload />, url: "/transcription/upload" },
+    "My Transcriptions": { icon: <RiPlayList2Fill />, url: "/transcription" },
   };
   const { handleLogin } = useLogin();
   const { handleLogout } = useLogout();
@@ -52,17 +58,23 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   const gridTemplateRows = "auto auto 1fr auto";
   const styles = useMultiStyleConfig("Page", props);
 
-  const router = useRouter();
-
   const {
-    state: { isAuthenticated },
+    state: { isAuthenticated, error },
+    initializeUser,
   } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
+    if (!isAuthenticated && !isLanding) {
+      initializeUser().then();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLanding, initializeUser]);
+
+  const landingBackgroundProps = {
+    backgroundImage: { base: undefined, sm: `url(${loginImage.src})` },
+    backgroundSize: "cover",
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+  };
 
   return (
     <Grid
@@ -71,10 +83,11 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
       transition="width .4s ease-in-out"
       minH={"100vh"}
       bgColor={pageColor}
+      {...(isLanding && landingBackgroundProps)}
     >
       <SkipNavLink id="main">Skip to content</SkipNavLink>
 
-      <Box bg={"blue.900"} color={"white"} width={"100%"}>
+      <chakra.header __css={styles.header}>
         <DarkMode>
           <Stack
             direction="row"
@@ -83,23 +96,35 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             m={"auto"}
             p={4}
           >
-            <Image
-              alt="QUT logo"
-              src={"/logo.png"}
-              width={"40px"}
-              height={"40px"}
-            />
-            <Divider orientation="vertical" />
-            <Heading size={"lg"}>Transcribe</Heading>
+            <HStack
+              divider={<StackDivider borderColor={"white"} />}
+              spacing={3}
+            >
+              <Image
+                alt="QUT logo"
+                src={"/logo.png"}
+                width={"40px"}
+                height={"40px"}
+              />
+              <Heading size={"lg"}>Transcribe</Heading>
+            </HStack>
             <Spacer />
 
             {!isAuthenticated && (
-              <Button onClick={handleLogin} variant="outline">
+              <Button
+                onClick={handleLogin}
+                variant="outline"
+                leftIcon={<IoEnterOutline />}
+              >
                 Login
               </Button>
             )}
             {isAuthenticated && (
-              <Button onClick={handleLogout} variant="outline">
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                leftIcon={<IoExitOutline />}
+              >
                 Logout
               </Button>
             )}
@@ -112,39 +137,45 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             />
           </Stack>
         </DarkMode>
-      </Box>
-      <Box bg={"gray.800"} color={"white"} width={"100%"}>
-        <Stack
-          direction="row"
-          alignItems={"center"}
-          maxWidth={"1576px"}
-          m={"auto"}
-          p={4}
-        >
-          {isAuthenticated && <Navigation items={navigationItems} />}
-        </Stack>
-      </Box>
-
-      <Box __css={styles.main}>
-        <chakra.main __css={styles.mainContainer}>
-          <Card
-            rounded={1}
-            mb={0}
-            bgColor={cardColor}
-            borderWidth={1}
-            borderColor={cardBorderColor}
+      </chakra.header>
+      {isAuthenticated && (
+        <Box width={"100%"} __css={styles.navigation}>
+          <Stack
+            direction="row"
+            alignItems={"center"}
+            maxWidth={"1576px"}
+            m={"auto"}
+            p={4}
           >
-            <CardHeader pl={6} pr={6} pb={0}>
-              {pageTitle && (
-                <Heading as={"h1"} size={"lg"}>
-                  {pageTitle}
-                </Heading>
-              )}
-            </CardHeader>
-            <CardBody pl={6} pr={6}>
-              {children}
-            </CardBody>
-          </Card>
+            <Navigation items={navigationItems} />
+          </Stack>
+        </Box>
+      )}
+
+      <Box __css={styles.main} id={"main"}>
+        <chakra.main __css={styles.mainContainer}>
+          {isLanding ? (
+            children
+          ) : (
+            <Card
+              rounded={1}
+              mb={0}
+              bgColor={cardColor}
+              borderWidth={1}
+              borderColor={cardBorderColor}
+            >
+              <CardHeader pl={6} pr={6} pb={0}>
+                {pageTitle && (
+                  <Heading as={"h1"} size={"lg"}>
+                    {pageTitle}
+                  </Heading>
+                )}
+              </CardHeader>
+              <CardBody pl={6} pr={6}>
+                {children}
+              </CardBody>
+            </Card>
+          )}
         </chakra.main>
       </Box>
 
@@ -165,4 +196,8 @@ const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
 };
 
 export default mapLayoutPropsToLayoutTree;
-export const LoginLayout = withAnonymous(Layout);
+
+export const LoginLayout = (props: PropsWithChildren<PageProps>) => {
+  const AuthenticatedLayout = withAnonymous(Layout);
+  return <AuthenticatedLayout {...props} />;
+};

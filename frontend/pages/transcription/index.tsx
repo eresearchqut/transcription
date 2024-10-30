@@ -9,6 +9,7 @@ import {
   AlertTitle,
   Heading,
   Hide,
+  Link,
   Progress,
   Table,
   Tbody,
@@ -21,7 +22,6 @@ import {
 import { ColumnDef, SortingState } from "@tanstack/react-table";
 import DataTable from "../../components/dataTable";
 import { Box } from "@chakra-ui/layout";
-import Quotas from "../../components/quotas";
 import { Download } from "../../components/download";
 import TranscriptionsListingPageLayout from "../../layout/transcriptionsListingPageLayout";
 import { TranscriptionsContext } from "../../context/transcriptions-context";
@@ -29,6 +29,7 @@ import { Transcription } from "../../model";
 import { JobStatus } from "../../components/jobStatus";
 import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
 import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
+import NextLink from "next/link";
 
 interface PlayProps {
   mediaUrl: string;
@@ -221,13 +222,13 @@ const TranscriptionPage: NextPage = () => {
                 <Box>
                   <AlertTitle>Getting Started</AlertTitle>
                   <AlertDescription>
-                    Click the Upload Files button to start the transcription
-                    process. Please refer to the following table for guidance on
-                    supported file formats, size and duration.
+                    <Link as={NextLink} href={"/transcription/upload"}>
+                      Upload Media
+                    </Link>{" "}
+                    to start the transcription process.
                   </AlertDescription>
                 </Box>
               </Alert>
-              <Quotas />
             </>
           )}
         {!transcriptionsLoading &&

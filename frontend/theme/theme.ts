@@ -14,6 +14,24 @@ const colors = {
 
 const overrides: Record<string, any> = {
   components: {
+    Button: {
+      baseStyle: {
+        borderRadius: 2,
+      },
+    },
+    Card: {
+      baseStyle: {
+        header: {
+          pb: 0,
+        },
+        container: {
+          borderRadius: 2,
+        },
+        footer: {
+          pt: 0,
+        },
+      },
+    },
     Page,
   },
 };

@@ -10,33 +10,24 @@ import {
   Heading,
   Icon,
   Stack,
-  Text,
   VStack,
 } from "@chakra-ui/react";
 import { LuUpload } from "react-icons/lu";
 import { TbFileAlert } from "react-icons/tb";
 import { Input } from "@chakra-ui/input";
 import { AddIcon } from "@chakra-ui/icons";
-import { Duration, formatDuration } from "date-fns";
-import { lowerFirst, upperFirst } from "lodash";
+import { Quotas } from "../../components/quotas";
+import { TRANSCRIBE_QUOTAS } from "../../model";
 
 export interface FilePickerProps
   extends Pick<
     DropzoneOptions,
     "accept" | "maxFiles" | "maxSize" | "validator"
   > {
-  minDuration?: Duration;
-  maxDuration?: Duration;
-  storageDuration?: Duration;
   onFilesPicked(files: File[]): void;
 }
 
-export interface FilePickerState {
-  files: File[];
-  fileNames: string[];
-}
-
-const bytesToSize = (bytes: number, precision = 0): string => {
+export const bytesToSize = (bytes: number, precision = 0): string => {
   const kilobyte = 1024;
   const megabyte = kilobyte * 1024;
   const gigabyte = megabyte * 1024;
@@ -69,15 +60,7 @@ interface UploadStatus {
 }
 
 export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
-  const {
-    accept,
-    maxFiles,
-    maxSize,
-    maxDuration,
-    minDuration,
-    storageDuration,
-    onFilesPicked,
-  } = props;
+  const { onFilesPicked } = props;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
     accepted: [],
@@ -108,42 +91,6 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   });
   const { size: nativeSize, ...chakraInputProps } = getInputProps();
 
-  const acceptedFileExtensions = accept
-    ? Object.values(accept).flat(1).join(", ")
-    : undefined;
-
-  const supportedFileFormats = accept
-    ? Array.from(
-        new Set(
-          Object.keys(accept).map(
-            (mimeType) => mimeType.split(/[/.-]/).at(-1) ?? "",
-          ),
-        ).values(),
-      )
-    : [];
-
-  const allowedFiles = acceptedFileExtensions
-    ? `You can upload ${acceptedFileExtensions} files.`
-    : supportedFileFormats
-      ? `You can upload ${supportedFileFormats.join(", ")} files.`
-      : undefined;
-
-  const quotas = [
-    maxSize && `Files can't be larger than ${bytesToSize(maxSize)}`,
-    maxFiles && `You can upload up to ${maxFiles} files`,
-    minDuration && `Minimum audio duration is ${formatDuration(minDuration)}`,
-    maxDuration && `Maximum audio duration is ${formatDuration(maxDuration)}`,
-  ]
-    .filter((i) => i)
-    .map((i) => i && lowerFirst(i));
-
-  const quotaMessage = upperFirst(
-    (quotas.length > 1
-      ? [quotas.slice(0, -1).join(", "), ` and ${quotas.at(-1)}`]
-      : quotas
-    ).join(""),
-  );
-
   return (
     <Stack spacing={[2, 4]}>
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
@@ -152,14 +99,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           <Icon as={LuUpload} boxSize={[10, 20]} />
           <Heading>Drag and drop files here or select files to upload</Heading>
           <Stack spacing={0} alignItems={"center"}>
-            {allowedFiles && <Text>{allowedFiles}</Text>}
-            {quotaMessage && <Text>{quotaMessage}</Text>}
-            {storageDuration && (
-              <Text>
-                Transcriptions will be retained for{" "}
-                {formatDuration(storageDuration)}.
-              </Text>
-            )}
+            <Quotas asTextOnly={true} {...TRANSCRIBE_QUOTAS} />
           </Stack>
           <Button
             onClick={open}

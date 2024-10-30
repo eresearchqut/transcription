@@ -1,3 +1,3 @@
-import Upload from "@/pages/transcription";
+import Upload from "@/pages/transcription/upload";
 
 export default Upload;

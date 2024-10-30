@@ -1,11 +1,22 @@
-import React, { FunctionComponent } from "react";
-import { Button, Flex, Link, Spacer, VStack } from "@chakra-ui/react";
+import React, { Fragment, FunctionComponent } from "react";
+import { Button, Flex, Link, Show, Spacer, VStack } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/layout";
 import { EmailIcon, ExternalLinkIcon } from "@chakra-ui/icons";
 
+const TeqsaLink: FunctionComponent = () => (
+  <Link
+    href={
+      "https://www.teqsa.gov.au/national-register/provider/queensland-university-technology"
+    }
+    isExternal
+  >
+    PRV12079 <ExternalLinkIcon mb={1} />
+  </Link>
+);
+
 export const Footer: FunctionComponent = () => {
   return (
-    <Flex>
+    <Flex direction={["column", "column", "row"]} alignItems="center">
       <VStack alignItems={"start"} spacing={0}>
         <Text noOfLines={1}>Developed by the Office of eResearch, QUT</Text>
         <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal>
@@ -13,17 +24,19 @@ export const Footer: FunctionComponent = () => {
           stands.
           <ExternalLinkIcon mb={1} />
         </Link>
-        <Text noOfLines={1}>
-          TEQSA Provider ID{" "}
-          <Link
-            href={
-              "https://www.teqsa.gov.au/national-register/provider/queensland-university-technology"
-            }
-          >
-            PRV12079 <ExternalLinkIcon mb={1} />
-          </Link>{" "}
-          Australian University | CRICOS No. 00213J
-        </Text>
+        <Fragment>
+          <Show below={"md"}>
+            <Text>
+              TEQSA <TeqsaLink /> | CRICOS No. 00213J
+            </Text>
+          </Show>
+          <Show above={"md"}>
+            <Text>
+              TEQSA Provider ID <TeqsaLink />
+              Australian University | CRICOS No. 00213J
+            </Text>
+          </Show>
+        </Fragment>
       </VStack>
       <Spacer />
       <Link href={"mailto:eresearch@qut.edu.au"} isExternal>
