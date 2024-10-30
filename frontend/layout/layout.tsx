@@ -132,7 +132,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             <IconButton
               variant="outline"
               onClick={toggleColorMode}
-              icon={colorMode === "light" ? <SunIcon /> : <MoonIcon />}
+              icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
               aria-label={`Toggle ${colorMode === "light" ? "Dark" : "Light"} Mode`}
             />
           </Stack>
