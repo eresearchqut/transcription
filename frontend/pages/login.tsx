@@ -20,7 +20,7 @@ import {
 import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { useLogin } from "../context/auth-context";
 import { Quotas } from "../components/quotas";
-import { TRANSCRIBE_PROPS } from "../model";
+import { TRANSCRIBE_QUOTAS } from "../model";
 import { formatDuration } from "date-fns";
 
 const Login: NextPage = () => {
@@ -84,7 +84,7 @@ const Login: NextPage = () => {
                 Stored in the Amazon Web Services (AWS) Sydney region
               </ListItem>
               <ListItem>
-                Kept for {formatDuration(TRANSCRIBE_PROPS.storageDuration)} and
+                Kept for {formatDuration(TRANSCRIBE_QUOTAS.storageDuration)} and
                 then automatically deleted
               </ListItem>
               <ListItem>
@@ -113,7 +113,7 @@ const Login: NextPage = () => {
           </CardHeader>
           <CardBody>
             <Quotas
-              {...TRANSCRIBE_PROPS}
+              {...TRANSCRIBE_QUOTAS}
               supportedFileFormats={[
                 "wav",
                 "flac",

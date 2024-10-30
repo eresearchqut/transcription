@@ -17,7 +17,7 @@ import { TbFileAlert } from "react-icons/tb";
 import { Input } from "@chakra-ui/input";
 import { AddIcon } from "@chakra-ui/icons";
 import { Quotas } from "../../components/quotas";
-import { TRANSCRIBE_PROPS } from "../../model";
+import { TRANSCRIBE_QUOTAS } from "../../model";
 
 export interface FilePickerProps
   extends Pick<
@@ -99,7 +99,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           <Icon as={LuUpload} boxSize={[10, 20]} />
           <Heading>Drag and drop files here or select files to upload</Heading>
           <Stack spacing={0} alignItems={"center"}>
-            <Quotas asTextOnly={true} {...TRANSCRIBE_PROPS} />
+            <Quotas asTextOnly={true} {...TRANSCRIBE_QUOTAS} />
           </Stack>
           <Button
             onClick={open}

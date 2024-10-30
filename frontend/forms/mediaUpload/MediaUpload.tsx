@@ -13,7 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
-import { TRANSCRIBE_PROPS } from "../../model";
+import { TRANSCRIBE_QUOTAS } from "../../model";
 
 export interface TranscribeProps {
   languages: string[];
@@ -48,7 +48,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onSubmit({ languages, enablePiiRedaction }, files);
   };
 
-  const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_PROPS;
+  const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_QUOTAS;
 
   const filePickerProps: FilePickerProps = {
     accept,

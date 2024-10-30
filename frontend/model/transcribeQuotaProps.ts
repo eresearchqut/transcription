@@ -31,7 +31,7 @@ const ACCEPTED_FILE_TYPES: Accept = {
   "audio/x-pn-wav": [],
 };
 
-export const TRANSCRIBE_PROPS: TranscribeQuotaProps = {
+export const TRANSCRIBE_QUOTAS: TranscribeQuotaProps = {
   accept: ACCEPTED_FILE_TYPES,
   minimumDuration: { seconds: 5 },
   maximumDuration: { hours: 4 },
