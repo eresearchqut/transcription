@@ -2,6 +2,9 @@ import {
   ButtonProps,
   chakra,
   Flex,
+  Grid,
+  GridItem,
+  Hide,
   IconButton,
   IconButtonProps,
   NumberDecrementStepper,
@@ -10,6 +13,7 @@ import {
   NumberInputField,
   NumberInputStepper,
   Select,
+  Show,
   Spacer,
   Table,
   TableCellProps,
@@ -44,10 +48,11 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  HeaderContext,
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { InitialTableState } from "@tanstack/table-core";
 
 export type Column = ColumnDef<any> & {
@@ -108,74 +113,119 @@ export const DataTable = (props: DataTableProps) => {
 
   return (
     <>
-      <Table {...tableProps}>
-        <Thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Th
-                  pl={0}
-                  textTransform={"revert"}
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  cursor={header.column.getCanSort() ? "pointer" : "none"}
-                  onClick={header.column.getToggleSortingHandler()}
-                  {...(header.column.columnDef as Column)
-                    .tableColumnHeaderProps}
-                >
-                  {!header.isPlaceholder && header.column.getCanSort() && (
-                    <Flex>
-                      <chakra.span>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </chakra.span>
-                      <Spacer />
-                      <chakra.span>
-                        {{
-                          asc: <TriangleUpIcon aria-label="sorted ascending" />,
-                          desc: (
-                            <TriangleDownIcon aria-label="sorted descending" />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </chakra.span>
-                    </Flex>
+      <Show below={"xl"}>
+        {table.getRowModel().rows.map((row, rowIndex) => (
+          <Grid
+            templateColumns="repeat(2, 1fr)"
+            key={rowIndex}
+            gap={4}
+            borderBottomWidth={1}
+            padding={2}
+            mb={4}
+            pb={4}
+            overflow={"hidden"}
+          >
+            {row.getVisibleCells().map((cell) => {
+              const label = flexRender(
+                cell.column.columnDef.header,
+                cell.getContext() as unknown as HeaderContext<any, any>,
+              );
+              return (
+                <Fragment key={cell.id}>
+                  {label && (
+                    <GridItem>
+                      <Text as={"h3"} letterSpacing={"wider"}>
+                        {" "}
+                        {label}:
+                      </Text>
+                    </GridItem>
                   )}
-                  {!header.isPlaceholder &&
-                    !header.column.getCanSort() &&
-                    flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
-                    )}
-                </Th>
-              ))}
-            </Tr>
-          ))}
-        </Thead>
-        <Tbody>
-          {table.getRowModel().rows.map((row) => {
-            return (
-              <Tr key={row.id}>
-                {row.getVisibleCells().map((cell, index) => {
-                  return (
-                    <Td
-                      pl={0}
-                      key={cell.id}
-                      {...(cell.column.columnDef as Column).tableCellProps}
-                    >
+                  <GridItem>
+                    <Text as={!label && rowIndex === 0 ? "h2" : "span"}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
                       )}
-                    </Td>
-                  );
-                })}
+                    </Text>
+                  </GridItem>
+                </Fragment>
+              );
+            })}
+          </Grid>
+        ))}
+      </Show>
+      <Hide below={"xl"}>
+        <Table {...tableProps}>
+          <Thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <Th
+                    pl={0}
+                    textTransform={"revert"}
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    cursor={header.column.getCanSort() ? "pointer" : "none"}
+                    onClick={header.column.getToggleSortingHandler()}
+                    {...(header.column.columnDef as Column)
+                      .tableColumnHeaderProps}
+                  >
+                    {!header.isPlaceholder && header.column.getCanSort() && (
+                      <Flex>
+                        <chakra.span>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </chakra.span>
+                        <Spacer />
+                        <chakra.span>
+                          {{
+                            asc: (
+                              <TriangleUpIcon aria-label="sorted ascending" />
+                            ),
+                            desc: (
+                              <TriangleDownIcon aria-label="sorted descending" />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </chakra.span>
+                      </Flex>
+                    )}
+                    {!header.isPlaceholder &&
+                      !header.column.getCanSort() &&
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                  </Th>
+                ))}
               </Tr>
-            );
-          })}
-        </Tbody>
-      </Table>
+            ))}
+          </Thead>
+          <Tbody>
+            {table.getRowModel().rows.map((row) => {
+              return (
+                <Tr key={row.id}>
+                  {row.getVisibleCells().map((cell, index) => {
+                    return (
+                      <Td
+                        pl={0}
+                        key={cell.id}
+                        {...(cell.column.columnDef as Column).tableCellProps}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </Td>
+                    );
+                  })}
+                </Tr>
+              );
+            })}
+          </Tbody>
+        </Table>
+      </Hide>
 
       {paginate && (
         <Wrap justify={"space-between"} width={"100%"}>

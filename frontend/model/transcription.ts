@@ -26,6 +26,12 @@ export interface Transcription {
   transcriptionResponse?: {
     TranscriptionJob?: {
       TranscriptionJobStatus: string;
+      ContentRedaction?: {
+        RedactionType: string;
+        RedactionOutput: string;
+      };
+      LanguageCode?: string;
+      LanguageCodes?: [{ LanguageCode: string }];
     };
   };
   uploadEvent: {

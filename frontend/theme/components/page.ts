@@ -39,7 +39,7 @@ const baseStyle = definePartsStyle(() => {
       color: "#012A4C",
     },
     footer: {
-      bgColor: "#124C7B",
+      bgColor: "blue.900",
       color: "white",
     },
     main: {},

@@ -1,5 +1,4 @@
 import type { NextPage } from "next";
-import * as React from "react";
 import { useContext, useState } from "react";
 import { withLayout } from "@moxy/next-layout";
 import {
@@ -7,17 +6,12 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
-  Heading,
-  Hide,
   Link,
   Progress,
-  Table,
-  Tbody,
-  Td,
-  Tr,
+  Text,
+  Tag,
   useDisclosure,
   VStack,
-  Wrap,
 } from "@chakra-ui/react";
 import { ColumnDef, SortingState } from "@tanstack/react-table";
 import DataTable from "../../components/dataTable";
@@ -30,19 +24,15 @@ import { JobStatus } from "../../components/jobStatus";
 import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
 import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
 import NextLink from "next/link";
-
-interface PlayProps {
-  mediaUrl: string;
-  transcriptUrl: string;
-}
+import supportedLanguages from "@/public/supported_languages.json";
+import { get } from "lodash";
+import { isDefined } from "@chakra-ui/utils";
 
 const TranscriptionPage: NextPage = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { transcriptions, transcriptionsLoading } = useContext(
     TranscriptionsContext,
   );
-  const finalRef = React.useRef(null);
-
   const [play, setPlay] = useState<
     Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
   >({} as MediaPlayerDrawerProps);
@@ -54,27 +44,12 @@ const TranscriptionPage: NextPage = () => {
     onOpen();
   };
 
-  const formatBytes = (bytes: number, decimals = 2) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
-  };
-
   const formatFilename = (filename: string) => decodeURIComponent(filename);
-
   const formatDate = (isoDateString: string) => {
-    return new Date(isoDateString).toLocaleString();
+    return new Date(isoDateString).toLocaleString("default");
   };
 
   const columns: ColumnDef<Transcription>[] = [
-    {
-      header: "File Name",
-      accessorFn: (transcription) =>
-        formatFilename(transcription.metadata.filename),
-    },
     {
       id: "dateUploaded",
       header: "Date Uploaded",
@@ -82,22 +57,54 @@ const TranscriptionPage: NextPage = () => {
       cell: (props) => formatDate(props.row.original.date),
     },
     {
-      header: "Type",
-      accessorFn: (transcription) => transcription.metadata.mimetype,
+      header: "File Name",
+      accessorFn: (transcription) => transcription,
+      cell: (props) => {
+        const transcription = props.getValue() as Transcription;
+        const filename = formatFilename(transcription.metadata.filename);
+
+        return <Text>{filename}</Text>;
+      },
     },
     {
-      header: "Size",
-      accessorFn: (transcription) => transcription.uploadEvent.object.size,
-      cell: (props) => formatBytes(props.row.original.uploadEvent.object.size),
+      id: "language",
+      header: "Language",
+      accessorFn: (transcription) => transcription,
+      cell: (props) => {
+        const transcription = props.getValue() as Transcription;
+        const TranscriptionJob =
+          transcription?.transcriptionResponse?.TranscriptionJob;
+        const transcribedLanguages = [
+          TranscriptionJob?.LanguageCode,
+          ...(TranscriptionJob?.LanguageCodes?.map(
+            (lang) => lang.LanguageCode,
+          ) ?? []),
+        ]
+          .filter((lang) => isDefined(lang))
+          .map((lang) => get(supportedLanguages, lang!, lang));
+        return transcribedLanguages?.join(",");
+      },
     },
-
     {
       header: "Transcription Status",
       accessorFn: (transcription) => transcription,
       cell: (props) => {
         const transcription = props.getValue() as Transcription;
+        const piiRedacted =
+          transcription.transcriptionResponse?.TranscriptionJob
+            ?.ContentRedaction?.RedactionType;
         return (
-          <JobStatus jobId={transcription.sk} transcription={transcription} />
+          <>
+            <JobStatus jobId={transcription.sk} transcription={transcription} />
+            {piiRedacted && (
+              <>
+                {" "}
+                <Tag variant={"outline"} colorScheme={"red"}>
+                  PII REDACTED
+                </Tag>
+              </>
+            )}
+          </>
         );
       },
     },
@@ -123,75 +130,6 @@ const TranscriptionPage: NextPage = () => {
 
         return (
           <Download transcription={transcription} onPlayClick={onPlayClick} />
-        );
-      },
-    },
-  ];
-
-  const mobileColumns: ColumnDef<Transcription>[] = [
-    {
-      id: "dateUploaded",
-      header: "Date Uploaded",
-      accessorFn: (transcription) => transcription.date,
-      cell: (props) => {
-        const transcription = props.row.original;
-        return (
-          <Table>
-            <Tbody>
-              <Tr>
-                <Td colSpan={2}>
-                  <Heading as="h4" size={"sm"}>
-                    {formatFilename(transcription.metadata.filename)}
-                  </Heading>
-                </Td>
-              </Tr>
-              <Tr>
-                <Td>Uploaded:</Td>
-                <Td>{formatDate(transcription.date)}</Td>
-              </Tr>
-              <Tr>
-                <Td>Type:</Td>
-                <Td>{transcription.metadata.mimetype}</Td>
-              </Tr>
-              <Tr>
-                <Td>Size:</Td>
-                <Td>{formatBytes(transcription.uploadEvent.object.size)}</Td>
-              </Tr>
-              <Tr>
-                <Td>Status:</Td>
-                <Td>
-                  <JobStatus
-                    jobId={transcription.sk}
-                    transcription={transcription}
-                  />
-                </Td>
-              </Tr>
-              {transcription.jobStatusUpdated?.detail.FailureReason && (
-                <Tr>
-                  <Td colSpan={2}>
-                    <Alert status={"error"}>
-                      <AlertIcon />
-                      <Box>
-                        <AlertDescription>
-                          {transcription.jobStatusUpdated?.detail.FailureReason}
-                        </AlertDescription>
-                      </Box>
-                    </Alert>
-                  </Td>
-                </Tr>
-              )}
-              <Tr>
-                <Td colSpan={2}>
-                  <Wrap>
-                    <Download
-                      transcription={transcription}
-                      onPlayClick={onPlayClick}
-                    />
-                  </Wrap>
-                </Td>
-              </Tr>
-            </Tbody>
-          </Table>
         );
       },
     },
@@ -235,16 +173,7 @@ const TranscriptionPage: NextPage = () => {
           transcriptions &&
           transcriptions.length > 0 && (
             <>
-              <Hide above="md">
-                <DataTable
-                  {...tableProps}
-                  columns={mobileColumns}
-                  tableProps={{ variant: "unstyled" }}
-                />
-              </Hide>
-              <Hide below="md">
-                <DataTable {...tableProps} columns={columns} />
-              </Hide>
+              <DataTable {...tableProps} columns={columns} />
             </>
           )}
       </VStack>
