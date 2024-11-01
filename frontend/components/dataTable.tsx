@@ -230,7 +230,7 @@ export const DataTable = (props: DataTableProps) => {
         </Table>
       </Hide>
 
-      {paginate && (
+      {paginate && table.getPageCount() > 1 && (
         <Wrap justify={"space-between"} width={"100%"}>
           <WrapItem>
             <Flex>
