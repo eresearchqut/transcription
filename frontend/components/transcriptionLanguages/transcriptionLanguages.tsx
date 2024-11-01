@@ -26,13 +26,11 @@ export const languagesFromTranscription = (
 
 export const TranscriptionLanguages: FunctionComponent<
   UseTranscriptionProps
-> = ({ jobId, transcription }) => {
-  const { transcription: transcriptionState, isJobFinished } = useTranscription(
-    {
-      jobId,
-      transcription,
-    },
-  );
+> = ({ jobId, initialTranscription }) => {
+  const { transcription, isJobFinished } = useTranscription({
+    jobId,
+    initialTranscription,
+  });
   const piiRedacted = isDefined(
     transcription?.transcriptionResponse?.TranscriptionJob?.ContentRedaction
       ?.RedactionType,

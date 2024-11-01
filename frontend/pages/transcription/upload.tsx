@@ -81,7 +81,9 @@ const Upload: NextPage = () => {
             },
           });
         })
-        .catch((e) => handleLogout());
+        .catch(() => {
+          handleLogout().then();
+        });
     };
 
     files.forEach((file) => uploadFile(file, transcribeProps));

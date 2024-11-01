@@ -14,7 +14,7 @@ const API_ENDPOINT =
 
 export interface UseTranscriptionProps {
   jobId: string;
-  transcription?: Transcription;
+  initialTranscription?: Transcription;
 }
 
 export interface UseTranscriptionState {
@@ -24,7 +24,7 @@ export interface UseTranscriptionState {
 
 export const useTranscription = ({
   jobId,
-  transcription: initialTranscription,
+  initialTranscription,
 }: UseTranscriptionProps): UseTranscriptionState => {
   const [transcription, setTranscription] = useState<Transcription | undefined>(
     initialTranscription,

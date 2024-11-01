@@ -209,7 +209,7 @@ export const DataTable = (props: DataTableProps) => {
             {table.getRowModel().rows.map((row) => {
               return (
                 <Tr key={row.id}>
-                  {row.getVisibleCells().map((cell, index) => {
+                  {row.getVisibleCells().map((cell) => {
                     return (
                       <Td
                         pl={0}

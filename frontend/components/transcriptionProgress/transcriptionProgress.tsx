@@ -124,7 +124,7 @@ export const TranscriptionProgress: FunctionComponent<
             <Spacer />
             <Stack spacing={4} direction={"row"} align={"center"}>
               <TranscriptionDownloadOptions
-                transcription={transcription}
+                initialTranscription={transcription}
                 onPlayClick={onPlayClick}
               />
             </Stack>

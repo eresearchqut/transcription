@@ -9,7 +9,6 @@ import {
   MenuItem,
   MenuList,
   Portal,
-  Skeleton,
   Tooltip,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
@@ -17,15 +16,18 @@ import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
 import { MdMovie, MdOutlineSubtitles } from "react-icons/md";
 import { VscJson } from "react-icons/vsc";
 import { Transcription } from "../../model";
-import { useTranscription } from "../../hooks/useTranscription";
+import {
+  useTranscription,
+  UseTranscriptionProps,
+} from "../../hooks/useTranscription";
 import { AiOutlinePlaySquare } from "react-icons/ai";
 import { isUndefined } from "lodash";
 
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
 
-export interface DownloadOptionsProps {
-  transcription: Transcription;
+export interface DownloadOptionsProps
+  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
   onPlayClick: (mediaUrl: string, transcriptUrl: string) => void;
 }
 
@@ -43,7 +45,7 @@ const transcriptProps = (
 
 export const TranscriptionDownloadOptions: FunctionComponent<
   DownloadOptionsProps
-> = ({ transcription: initial, onPlayClick }) => {
+> = ({ initialTranscription, onPlayClick }) => {
   const {
     fetchMediaUrl,
     fetchTranscriptUrl,
@@ -51,8 +53,8 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     downloadFile,
   } = useDownload();
   const { transcription } = useTranscription({
-    jobId: initial.sk,
-    transcription: initial,
+    jobId: initialTranscription.sk,
+    initialTranscription,
   });
 
   if (!transcription) return undefined;

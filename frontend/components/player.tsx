@@ -8,13 +8,7 @@ import React, {
 
 import { Input, InputGroup, InputLeftElement } from "@chakra-ui/input";
 import { SearchIcon } from "@chakra-ui/icons";
-import {
-  Grid,
-  GridItem,
-  Highlight,
-  Text,
-  useColorMode,
-} from "@chakra-ui/react";
+import { Grid, GridItem, Highlight, Text } from "@chakra-ui/react";
 
 export interface PlayerProps {
   audio: string;
@@ -133,7 +127,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         controls
         crossOrigin="anonymous"
         preload={`${props.preload}`}
-        onTimeUpdate={(e) => setCurrentTime(audio.current?.currentTime || 0)}
+        onTimeUpdate={() => setCurrentTime(audio.current?.currentTime || 0)}
         ref={audio}
       >
         <source src={props.audio} />

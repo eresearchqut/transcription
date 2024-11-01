@@ -112,7 +112,7 @@ const TranscriptionPage: NextPage = () => {
         return (
           <TranscriptionLanguages
             jobId={transcription.sk}
-            transcription={transcription}
+            initialTranscription={transcription}
           />
         );
       },
@@ -125,7 +125,7 @@ const TranscriptionPage: NextPage = () => {
         return (
           <TranscriptionStatus
             jobId={transcription.sk}
-            transcription={transcription}
+            initialTranscription={transcription}
           />
         );
       },
@@ -152,7 +152,7 @@ const TranscriptionPage: NextPage = () => {
 
         return (
           <TranscriptionDownloadOptions
-            transcription={transcription}
+            initialTranscription={transcription}
             onPlayClick={onPlayClick}
           />
         );

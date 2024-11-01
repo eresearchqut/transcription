@@ -83,11 +83,9 @@ const padTime = (time: string | number, length: number) => {
 
 const formatTime = (time: string) => {
   let seconds: number | string = parseFloat(time);
-  let hours;
-  let minutes;
-  hours = Math.floor(seconds / 3600);
+  const hours = Math.floor(seconds / 3600);
   seconds = seconds - hours * 3600;
-  minutes = Math.floor(seconds / 60);
+  const minutes = Math.floor(seconds / 60);
   seconds = Math.floor(seconds - minutes * 60);
   return (
     padTime(hours, 2) + ":" + padTime(minutes, 2) + ":" + padTime(seconds, 2)

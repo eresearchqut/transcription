@@ -18,11 +18,11 @@ const formatStatus = (status: string) =>
 
 const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
   jobId,
-  transcription: initialTranscription,
+  initialTranscription,
 }) => {
   const { transcription } = useTranscription({
     jobId,
-    transcription: initialTranscription,
+    initialTranscription,
   });
   const [status, setStatus] = useState(
     transcription
