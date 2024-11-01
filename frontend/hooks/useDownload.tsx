@@ -50,37 +50,47 @@ export const useDownload = () => {
       .finally(() => setIsLoading(() => false));
   };
 
-  const fetchMediaUrl = (
+  const fetchMediaUrl = async (
     objectKey: string,
     fileName: string,
   ): Promise<string> =>
-    Auth.currentSession().then(() =>
-      Storage.get(objectKey, {
-        level: "private",
-        contentDisposition: `attachment; filename = ${fileName}`,
-      }),
-    );
+    Auth.currentSession()
+      .then(() =>
+        Storage.get(objectKey, {
+          level: "private",
+          contentDisposition: `attachment; filename = ${fileName}`,
+        }),
+      )
+      .catch((e) => {
+        handleLogout().then();
+        throw e;
+      });
 
-  const fetchTranscriptUrl = (
+  const fetchTranscriptUrl = async (
     objectKey: string,
     format: "srt" | "vtt" | "docx",
   ): Promise<string> => {
-    return Auth.currentSession().then(() =>
-      Storage.get(objectKey, {
-        level: "private",
-        download: true,
-      })
-        .then((output) => (output.Body as Blob).text())
-        .then((text) => JSON.parse(text) as TranscriptJob)
-        .then((transcriptJob) =>
-          format === "docx"
-            ? Packer.toBlob(transcriptDocument(transcriptJob))
-            : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
-        )
-        .then((blob) =>
-          format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
-        ),
-    );
+    return Auth.currentSession()
+      .then(() =>
+        Storage.get(objectKey, {
+          level: "private",
+          download: true,
+        })
+          .then((output) => (output.Body as Blob).text())
+          .then((text) => JSON.parse(text) as TranscriptJob)
+          .then((transcriptJob) =>
+            format === "docx"
+              ? Packer.toBlob(transcriptDocument(transcriptJob))
+              : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
+          )
+          .then((blob) =>
+            format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
+          ),
+      )
+      .catch((e) => {
+        handleLogout().then();
+        throw e;
+      });
   };
 
   const downloadFile = ({ objectKey, filename }: DownloadProps) => {

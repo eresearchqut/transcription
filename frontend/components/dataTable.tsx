@@ -63,6 +63,7 @@ export type Column = ColumnDef<any> & {
 export interface DataTableProps {
   columns: Column[];
   data: any[];
+  globalFilter?: string;
   paginate?: boolean;
   tableProps?: TableProps;
   tableRowProps?: TableRowProps;
@@ -79,6 +80,7 @@ export const DataTable = (props: DataTableProps) => {
     data,
     paginate = true,
     initialState,
+    globalFilter,
     tableProps = {},
     iconButtonProps = {},
     textProps = {},
@@ -95,6 +97,7 @@ export const DataTable = (props: DataTableProps) => {
     columns,
     state: {
       sorting,
+      globalFilter,
     },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
@@ -307,7 +310,7 @@ export const DataTable = (props: DataTableProps) => {
                   {...iconButtonProps}
                   aria-label={"Next Page"}
                   onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
+                  isDisabled={!table.getCanNextPage()}
                   icon={<ChevronRightIcon h={6} w={6} />}
                   {...paginateButtonsProps}
                 />
@@ -317,7 +320,7 @@ export const DataTable = (props: DataTableProps) => {
                   {...iconButtonProps}
                   aria-label={"Last Page"}
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                  disabled={!table.getCanNextPage()}
+                  isDisabled={!table.getCanNextPage()}
                   icon={<ArrowRightIcon h={3} w={3} />}
                   ml={2}
                   {...paginateButtonsProps}

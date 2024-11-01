@@ -14,16 +14,19 @@ import { Box, Stack } from "@chakra-ui/layout";
 import { CheckCircleIcon, TimeIcon, WarningIcon } from "@chakra-ui/icons";
 import { lowerCase } from "lodash";
 import { TbFile, TbFileAlert, TbFileCheck } from "react-icons/tb";
-import { Download } from "../download/download";
-import { transcriptionJobStatus, TranscriptionJobStatus } from "../../model";
-import { useTranscription } from "../../hooks/useTranscription";
+import { TranscriptionDownloadOptions } from "../TranscriptionDownloadOptions/transcriptionDownloadOptions";
+import { mapTranscriptionStatus, TranscriptionJobStatus } from "../../model";
+import {
+  useTranscription,
+  UseTranscriptionProps,
+} from "../../hooks/useTranscription";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
 }
 
-export interface FileTranscriptionProgressProps {
-  jobId: string;
+export interface FileTranscriptionProgressProps
+  extends Pick<UseTranscriptionProps, "jobId"> {
   filename: string;
   uploadProgress: number;
   onPlayClick: (mediaUrl: string, transcriptUrl: string) => void;
@@ -74,13 +77,11 @@ const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
   );
 };
 
-export const FileTranscriptionProgress: FunctionComponent<
+export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
 > = ({ jobId, filename, uploadProgress, onPlayClick }) => {
   const { transcription } = useTranscription({ jobId });
-  const transcriptionStatus: TranscriptionJobStatus | undefined =
-    transcription &&
-    (transcriptionJobStatus(transcription) as TranscriptionJobStatus);
+  const transcriptionStatus = mapTranscriptionStatus(transcription);
 
   return (
     <Alert
@@ -122,7 +123,7 @@ export const FileTranscriptionProgress: FunctionComponent<
           <Fragment>
             <Spacer />
             <Stack spacing={4} direction={"row"} align={"center"}>
-              <Download
+              <TranscriptionDownloadOptions
                 transcription={transcription}
                 onPlayClick={onPlayClick}
               />
@@ -133,4 +134,4 @@ export const FileTranscriptionProgress: FunctionComponent<
   );
 };
 
-export default FileTranscriptionProgress;
+export default TranscriptionProgress;

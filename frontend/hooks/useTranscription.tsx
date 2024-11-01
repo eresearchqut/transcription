@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import {
   Transcription,
-  transcriptionJobStatus,
+  mapTranscriptionStatus,
   TranscriptionJobStatus,
 } from "../model";
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
+import { isDefined } from "@chakra-ui/utils";
+import { isEmpty } from "lodash";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -17,6 +19,7 @@ export interface UseTranscriptionProps {
 
 export interface UseTranscriptionState {
   transcription?: Transcription;
+  isJobFinished: boolean;
 }
 
 export const useTranscription = ({
@@ -27,15 +30,18 @@ export const useTranscription = ({
     initialTranscription,
   );
 
-  const jobFinished =
-    transcription &&
-    transcription.downloadKey &&
-    [TranscriptionJobStatus.FAILED, TranscriptionJobStatus.COMPLETED].includes(
-      transcriptionJobStatus(transcription) as TranscriptionJobStatus,
-    );
+  const currentStatus = mapTranscriptionStatus(transcription);
+  const isJobFinished: boolean = transcription
+    ? !isEmpty(transcription.downloadKey) &&
+      isDefined(currentStatus) &&
+      [
+        TranscriptionJobStatus.FAILED,
+        TranscriptionJobStatus.COMPLETED,
+      ].includes(currentStatus!)
+    : false;
 
   const { data } = useQuery({
-    enabled: !jobFinished,
+    enabled: !isJobFinished,
     queryKey: ["transcription", jobId],
     queryFn: async (): Promise<Transcription> =>
       getter({
@@ -54,5 +60,6 @@ export const useTranscription = ({
 
   return {
     transcription,
+    isJobFinished,
   };
 };

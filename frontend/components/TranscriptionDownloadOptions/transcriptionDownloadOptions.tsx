@@ -9,6 +9,8 @@ import {
   MenuItem,
   MenuList,
   Portal,
+  Skeleton,
+  Tooltip,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
@@ -17,6 +19,7 @@ import { VscJson } from "react-icons/vsc";
 import { Transcription } from "../../model";
 import { useTranscription } from "../../hooks/useTranscription";
 import { AiOutlinePlaySquare } from "react-icons/ai";
+import { isUndefined } from "lodash";
 
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
@@ -38,10 +41,9 @@ const transcriptProps = (
   format,
 });
 
-export const Download: FunctionComponent<DownloadOptionsProps> = ({
-  transcription: initial,
-  onPlayClick,
-}) => {
+export const TranscriptionDownloadOptions: FunctionComponent<
+  DownloadOptionsProps
+> = ({ transcription: initial, onPlayClick }) => {
   const {
     fetchMediaUrl,
     fetchTranscriptUrl,
@@ -139,18 +141,26 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
           </MenuList>
         </Portal>
       </Menu>
-      {transcription?.downloadKey && (
+      <Tooltip
+        label={
+          isUndefined(transcription.downloadKey) &&
+          "This action is available once your transcription job has completed."
+        }
+      >
         <Button
-          onClick={() => loadPlayer()}
+          onClick={() =>
+            transcription?.downloadKey ? loadPlayer() : undefined
+          }
           variant={"solid"}
           leftIcon={<AiOutlinePlaySquare />}
           colorScheme={"blue"}
+          aria-disabled={isUndefined(transcription?.downloadKey)}
         >
           Play
         </Button>
-      )}
+      </Tooltip>
     </HStack>
   );
 };
 
-export default Download;
+export default TranscriptionDownloadOptions;

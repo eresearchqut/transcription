@@ -25,13 +25,14 @@ export interface Transcription {
   };
   transcriptionResponse?: {
     TranscriptionJob?: {
-      TranscriptionJobStatus: string;
+      TranscriptionJobStatus: TranscriptionJobStatus;
       ContentRedaction?: {
         RedactionType: string;
         RedactionOutput: string;
       };
       LanguageCode?: string;
       LanguageCodes?: [{ LanguageCode: string }];
+      LanguageOptions: string[];
     };
   };
   uploadEvent: {
@@ -42,8 +43,9 @@ export interface Transcription {
   };
 }
 
-export const transcriptionJobStatus = (transcription: Transcription) =>
-  (transcription.jobStatusUpdated?.detail.TranscriptionJobStatus ||
-    transcription.transcriptionResponse?.TranscriptionJob
-      ?.TranscriptionJobStatus) ??
-  undefined;
+export const mapTranscriptionStatus = (
+  transcription: Transcription | undefined,
+) =>
+  ((transcription?.jobStatusUpdated?.detail.TranscriptionJobStatus ||
+    transcription?.transcriptionResponse?.TranscriptionJob
+      ?.TranscriptionJobStatus) as TranscriptionJobStatus) ?? undefined;
