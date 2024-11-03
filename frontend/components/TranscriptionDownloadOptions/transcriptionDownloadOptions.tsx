@@ -9,20 +9,25 @@ import {
   MenuItem,
   MenuList,
   Portal,
+  Tooltip,
 } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
 import { MdMovie, MdOutlineSubtitles } from "react-icons/md";
 import { VscJson } from "react-icons/vsc";
 import { Transcription } from "../../model";
-import { useTranscription } from "../../hooks/useTranscription";
+import {
+  useTranscription,
+  UseTranscriptionProps,
+} from "../../hooks/useTranscription";
 import { AiOutlinePlaySquare } from "react-icons/ai";
+import { isUndefined } from "lodash";
 
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
 
-export interface DownloadOptionsProps {
-  transcription: Transcription;
+export interface DownloadOptionsProps
+  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
   onPlayClick: (mediaUrl: string, transcriptUrl: string) => void;
 }
 
@@ -38,10 +43,9 @@ const transcriptProps = (
   format,
 });
 
-export const Download: FunctionComponent<DownloadOptionsProps> = ({
-  transcription: initial,
-  onPlayClick,
-}) => {
+export const TranscriptionDownloadOptions: FunctionComponent<
+  DownloadOptionsProps
+> = ({ initialTranscription, onPlayClick }) => {
   const {
     fetchMediaUrl,
     fetchTranscriptUrl,
@@ -49,8 +53,8 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
     downloadFile,
   } = useDownload();
   const { transcription } = useTranscription({
-    jobId: initial.sk,
-    transcription: initial,
+    jobId: initialTranscription.sk,
+    initialTranscription,
   });
 
   if (!transcription) return undefined;
@@ -139,18 +143,26 @@ export const Download: FunctionComponent<DownloadOptionsProps> = ({
           </MenuList>
         </Portal>
       </Menu>
-      {transcription?.downloadKey && (
+      <Tooltip
+        label={
+          isUndefined(transcription.downloadKey) &&
+          "This action is available once your transcription job has completed."
+        }
+      >
         <Button
-          onClick={() => loadPlayer()}
+          onClick={() =>
+            transcription?.downloadKey ? loadPlayer() : undefined
+          }
           variant={"solid"}
           leftIcon={<AiOutlinePlaySquare />}
           colorScheme={"blue"}
+          aria-disabled={isUndefined(transcription?.downloadKey)}
         >
           Play
         </Button>
-      )}
+      </Tooltip>
     </HStack>
   );
 };
 
-export default Download;
+export default TranscriptionDownloadOptions;

@@ -9,7 +9,7 @@ import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { useDisclosure, VStack } from "@chakra-ui/react";
-import { FileTranscriptionProgress } from "../../components/fileTranscriptionProgress";
+import { TranscriptionProgress } from "../../components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
 import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
 
@@ -81,7 +81,9 @@ const Upload: NextPage = () => {
             },
           });
         })
-        .catch((e) => handleLogout());
+        .catch(() => {
+          handleLogout().then();
+        });
     };
 
     files.forEach((file) => uploadFile(file, transcribeProps));
@@ -93,7 +95,7 @@ const Upload: NextPage = () => {
         <MediaUpload onSubmit={uploadFiles} />
         {Array.from(uploadData.entries()).map(
           ([key, { filename, uploadProgressPercent }]) => (
-            <FileTranscriptionProgress
+            <TranscriptionProgress
               key={key}
               jobId={key}
               filename={filename}

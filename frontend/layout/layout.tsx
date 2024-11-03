@@ -116,7 +116,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
                 variant="outline"
                 leftIcon={<IoEnterOutline />}
               >
-                Login
+                Log in
               </Button>
             )}
             {isAuthenticated && (
@@ -125,7 +125,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
                 variant="outline"
                 leftIcon={<IoExitOutline />}
               >
-                Logout
+                Log out
               </Button>
             )}
 

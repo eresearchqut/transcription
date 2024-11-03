@@ -30,14 +30,16 @@ const Login: NextPage = () => {
     <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
       <Card width={{ base: "100%", lg: "unset" }}>
         <CardHeader>
-          <Heading as={"h2"}>QUT audio transcription service</Heading>
+          <Heading as={"h1"} size={"xl"}>
+            QUT audio transcription service
+          </Heading>
         </CardHeader>
         <CardBody>
           <Text>Please log in to access this service.</Text>
         </CardBody>
         <CardFooter>
           <Button variant={"solid"} colorScheme={"blue"} onClick={handleLogin}>
-            Login
+            Log in
           </Button>
         </CardFooter>
       </Card>
@@ -48,7 +50,9 @@ const Login: NextPage = () => {
       >
         <Card>
           <CardHeader>
-            <Heading as={"h2"}>About QUT Transcribe</Heading>
+            <Heading as={"h2"} size={"md"}>
+              About QUT Transcribe
+            </Heading>
           </CardHeader>
           <CardBody>
             <Text>
@@ -75,7 +79,9 @@ const Login: NextPage = () => {
         </Card>
         <Card>
           <CardHeader>
-            <Heading as={"h2"}>Storage and security</Heading>
+            <Heading as={"h2"} size={"md"}>
+              Storage and security
+            </Heading>
           </CardHeader>
           <CardBody>
             <Text>Uploaded media and generated transcriptions are:</Text>
@@ -109,7 +115,9 @@ const Login: NextPage = () => {
         </Card>
         <Card>
           <CardHeader>
-            <Heading as={"h2"}>Quotas and limits</Heading>
+            <Heading as={"h2"} size={"md"}>
+              Quotas and limits
+            </Heading>
           </CardHeader>
           <CardBody>
             <Quotas
