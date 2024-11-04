@@ -93,6 +93,16 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
   return (
     <Stack spacing={[2, 4]}>
+      {uploadStatus.rejected &&
+        uploadStatus.rejected.map((rejected, index) => (
+          <Alert status={"error"} variant="left-accent" key={index}>
+            <AlertIcon as={TbFileAlert} boxSize={[10, 12]} />
+            <Box>
+              <AlertTitle>{rejected.name}</AlertTitle>
+              <AlertDescription>{rejected.errors?.join(", ")}</AlertDescription>
+            </Box>
+          </Alert>
+        ))}
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
         <Input {...chakraInputProps} />
         <VStack spacing={8}>
@@ -111,16 +121,6 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           </Button>
         </VStack>
       </Box>
-      {uploadStatus.rejected &&
-        uploadStatus.rejected.map((rejected, index) => (
-          <Alert status={"error"} variant="left-accent" key={index}>
-            <AlertIcon as={TbFileAlert} boxSize={[10, 12]} />
-            <Box>
-              <AlertTitle>{rejected.name}</AlertTitle>
-              <AlertDescription>{rejected.errors?.join(", ")}</AlertDescription>
-            </Box>
-          </Alert>
-        ))}
     </Stack>
   );
 };

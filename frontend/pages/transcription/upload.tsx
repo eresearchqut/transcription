@@ -92,7 +92,6 @@ const Upload: NextPage = () => {
   return (
     <>
       <VStack spacing={4} align="stretch">
-        <MediaUpload onSubmit={uploadFiles} />
         {Array.from(uploadData.entries()).map(
           ([key, { filename, uploadProgressPercent }]) => (
             <TranscriptionProgress
@@ -104,6 +103,7 @@ const Upload: NextPage = () => {
             />
           ),
         )}
+        <MediaUpload onSubmit={uploadFiles} />
       </VStack>
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
