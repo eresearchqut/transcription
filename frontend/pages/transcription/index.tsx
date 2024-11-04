@@ -7,7 +7,6 @@ import {
   AlertIcon,
   AlertTitle,
   Flex,
-  InputRightElement,
   Link,
   Progress,
   Text,
@@ -30,7 +29,7 @@ import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/media
 import NextLink from "next/link";
 import { TbClockExclamation } from "react-icons/tb";
 import { add, set } from "date-fns";
-import { Input, InputGroup } from "@chakra-ui/input";
+import { Input, InputGroup, InputLeftElement } from "@chakra-ui/input";
 import { SearchIcon } from "@chakra-ui/icons";
 import {
   languagesFromTranscription,
@@ -200,15 +199,16 @@ const TranscriptionPage: NextPage = () => {
             <>
               <Flex>
                 <InputGroup variant={"flushed"}>
+                  <InputLeftElement>
+                    <SearchIcon />
+                  </InputLeftElement>
                   <Input
                     value={filter}
                     placeholder={searchInputPlaceholder}
                     onChange={(e) => setFilter(() => e.target.value)}
                     aria-label={searchInputPlaceholder}
+                    variant={"outline"}
                   />
-                  <InputRightElement>
-                    <SearchIcon />
-                  </InputRightElement>
                 </InputGroup>
               </Flex>
               <DataTable
