@@ -4,7 +4,9 @@ import { ApiStack } from "../lib/api-stack";
 import { GitHubStack } from "../lib/github-stack";
 import { FrontEndStack } from "../lib/front-end-stack";
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
+import { execSync } from "child_process";
 
+const GIT_CURRENT_BRANCH_COMMAND = 'git rev-parse --abbrev-ref HEAD';
 type Environment = "dev" | "qa" | "prod";
 
 interface EnvironmentConfig {
@@ -35,7 +37,8 @@ const owner = "eresearchqut";
 const repo = "transcription";
 
 const githubFilters = process.env.GITHUB_FILTERS ? process.env.GITHUB_FILTERS.split(",") : undefined;
-const envName = (process.env.GITHUB_REF_NAME ?? "dev") as Environment;
+const currentBranch = execSync(GIT_CURRENT_BRANCH_COMMAND).toString("utf8").trim();
+const envName = (currentBranch ?? "dev") as Environment;
 
 const apiStackName = `${envName}-${repo}`;
 const frontendStackName = `${envName}-${repo}-frontend`;
