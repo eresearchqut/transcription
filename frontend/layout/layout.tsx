@@ -59,7 +59,7 @@ export const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   const styles = useMultiStyleConfig("Page", props);
 
   const {
-    state: { isAuthenticated, error },
+    state: { isAuthenticated },
     initializeUser,
   } = useAuth();
 

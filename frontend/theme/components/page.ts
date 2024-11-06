@@ -31,7 +31,7 @@ const baseStyle = definePartsStyle(() => {
     },
     footerContainer: defaultContainer,
     header: {
-      bgColor: "blue.900",
+      bgColor: "brand.900",
       color: "white",
     },
     navigation: {
@@ -39,7 +39,7 @@ const baseStyle = definePartsStyle(() => {
       color: "#012A4C",
     },
     footer: {
-      bgColor: "blue.900",
+      bgColor: "brand.900",
       color: "white",
     },
     main: {},
