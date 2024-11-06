@@ -7,8 +7,11 @@ const config: ThemeConfig = {
 };
 
 const colors = {
-  blue: {
+  brand: {
     900: "#012A4C",
+    700: "#124C7B",
+    500: "#0066B9",
+    100: "#EFF6FB",
   },
 };
 
@@ -29,6 +32,14 @@ const overrides: Record<string, any> = {
         },
         footer: {
           pt: 0,
+        },
+      },
+    },
+    Heading: {
+      baseStyle: {
+        color: "brand.500",
+        _dark: {
+          color: "white",
         },
       },
     },
