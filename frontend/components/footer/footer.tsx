@@ -39,11 +39,15 @@ export const Footer: FunctionComponent = () => {
         </Fragment>
       </VStack>
       <Spacer />
-      <Link href={"mailto:eresearch@qut.edu.au"} isExternal>
+      <Link
+        href={
+          "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage/supercomputing"
+        }
+        isExternal
+      >
         <Button
           colorScheme={"blue"}
           variant={"solid"}
-          leftIcon={<EmailIcon />}
           rightIcon={<ExternalLinkIcon />}
         >
           Contact eResearch
