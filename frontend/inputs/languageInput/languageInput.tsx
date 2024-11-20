@@ -5,6 +5,7 @@ import { isArray } from "lodash";
 
 export interface LanguageInputProps
   extends Omit<SelectProps, "options" | "onChange"> {
+  maxSize?: number;
   onChange?: (newValue: string | string[]) => void;
 }
 
@@ -12,6 +13,7 @@ export const LanguageInput: FunctionComponent<LanguageInputProps> = ({
   onChange: onChangeProp,
   isDisabled,
   value,
+  maxSize,
   ...props
 }) => {
   const supportedLanguages = SUPPORTED_LANGUAGES_SOURCE as Record<
@@ -40,12 +42,17 @@ export const LanguageInput: FunctionComponent<LanguageInputProps> = ({
     onChangeProp?.(normalizedValue);
   };
 
+  const maxLimitReached = maxSize
+    ? selectedLanguageOptions.length >= maxSize
+    : false;
+
   return (
     <Select
       options={languageOptions}
       value={selectedLanguageOptions}
       onChange={onChange}
       isDisabled={isDisabled}
+      isOptionDisabled={() => maxLimitReached}
       {...props}
     />
   );

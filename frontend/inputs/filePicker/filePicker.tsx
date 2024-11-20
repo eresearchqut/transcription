@@ -22,7 +22,7 @@ import { TRANSCRIBE_QUOTAS } from "../../model";
 export interface FilePickerProps
   extends Pick<
     DropzoneOptions,
-    "accept" | "maxFiles" | "maxSize" | "validator"
+    "accept" | "maxFiles" | "maxSize" | "validator" | "disabled"
   > {
   onFilesPicked(files: File[]): void;
 }
@@ -60,7 +60,7 @@ interface UploadStatus {
 }
 
 export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
-  const { onFilesPicked } = props;
+  const { disabled, onFilesPicked } = props;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
     accepted: [],
@@ -69,6 +69,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      onFilesPicked(acceptedFiles);
       setUploadStatus(() => ({
         accepted: acceptedFiles.map((file) => ({
           name: file.name,
@@ -80,13 +81,13 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           errors: errors.map((fileError) => fileError.message),
         })),
       }));
-      onFilesPicked(acceptedFiles);
     },
     [onFilesPicked],
   );
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
     noClick: true,
+    disabled,
     ...props,
   });
   const { size: nativeSize, ...chakraInputProps } = getInputProps();
@@ -116,6 +117,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
             colorScheme={"blue"}
             variant={"solid"}
             rightIcon={<AddIcon />}
+            isDisabled={disabled}
           >
             Upload
           </Button>
