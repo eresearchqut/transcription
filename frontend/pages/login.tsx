@@ -70,9 +70,9 @@ const Login: NextPage = () => {
               Amazon transcribe uses a deep learning process called automatic
               speech recognition (ASR) to convert speech to text quickly and
               accurately. It can be used to transcribe audio and video files,
-              with speaker identification. Amazon Transcribe is powered by a
-              next-generation, multi-billion parameter speech foundation model
-              that delivers high accuracy transcriptions for streaming and
+              and includes speaker identification. Amazon Transcribe is powered
+              by a next-generation, multi-billion parameter speech foundation
+              model that delivers high accuracy transcriptions for streaming and
               recorded speech.
             </Text>
           </CardBody>
@@ -93,9 +93,9 @@ const Login: NextPage = () => {
                 Kept for {formatDuration(TRANSCRIBE_QUOTAS.storageDuration)} and
                 then automatically deleted
               </ListItem>
+              <ListItem>Encrypted in transit and at rest</ListItem>
               <ListItem>
-                Encrypted in transit and at rest Media and transcriptions are
-                accessible only by the uploader
+                Media and transcriptions are accessible only by the uploader
               </ListItem>
               <ListItem>
                 For more information refer to the:{" "}
