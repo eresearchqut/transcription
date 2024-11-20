@@ -36,9 +36,7 @@ const Upload: NextPage = () => {
     onOpen();
   };
 
-  const [uploadData, setUploadData] = useState<Map<string, UploadProps>>(
-    new Map(),
-  );
+  const [uploadData, setUploadData] = useState<Record<string, UploadProps>>({});
 
   const { handleLogout } = useLogout();
 
@@ -56,10 +54,16 @@ const Upload: NextPage = () => {
         languages: languages.join(","),
         enablePiiRedaction: JSON.stringify(enablePiiRedaction),
       };
-      uploadData.set(id, {
-        filename: file.name,
-        uploadProgressPercent: 0,
-        transcriptionProgress: undefined,
+
+      setUploadData((current) => {
+        return {
+          ...current,
+          [id]: {
+            filename: file.name,
+            uploadProgressPercent: 0,
+            transcriptionProgress: undefined,
+          },
+        };
       });
 
       Auth.currentSession()
@@ -69,14 +73,16 @@ const Upload: NextPage = () => {
             metadata,
             progressCallback: (progress) => {
               const progressPercent = (progress.loaded / progress.total) * 100;
+
               setUploadData((current) => {
-                const updatedData = new Map(current);
-                updatedData.set(id, {
-                  filename: file.name,
-                  uploadProgressPercent: progressPercent,
-                  transcriptionProgress: undefined,
-                });
-                return updatedData;
+                return {
+                  ...current,
+                  [id]: {
+                    filename: file.name,
+                    uploadProgressPercent: progressPercent,
+                    transcriptionProgress: undefined,
+                  },
+                };
               });
             },
           });
@@ -92,7 +98,7 @@ const Upload: NextPage = () => {
   return (
     <>
       <VStack spacing={4} align="stretch">
-        {Array.from(uploadData.entries()).map(
+        {Object.entries(uploadData).map(
           ([key, { filename, uploadProgressPercent }]) => (
             <TranscriptionProgress
               key={key}
