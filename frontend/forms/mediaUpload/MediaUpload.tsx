@@ -2,9 +2,9 @@ import { ChangeEvent, FunctionComponent, useState } from "react";
 import { Stack } from "@chakra-ui/layout";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
+  Code,
   Flex,
   FormControl,
-  FormErrorMessage,
   FormHelperText,
   FormLabel,
   Heading,
@@ -14,6 +14,7 @@ import {
 import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
 import { TRANSCRIBE_QUOTAS } from "../../model";
+import { HelpPopover } from "../../components/helpPopover";
 
 export interface TranscribeProps {
   languages: string[];
@@ -58,7 +59,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   };
 
   const MAX_LANGUAGE_LIMIT = 5;
-  const languageSizeLimitReached = languages.length > MAX_LANGUAGE_LIMIT;
+  const languageSizeLimitAchieved = languages.length === MAX_LANGUAGE_LIMIT;
+  const languageSizeLimitExceeded = languages.length > MAX_LANGUAGE_LIMIT;
 
   return (
     <Stack align={"stretch"} spacing={[0, 4]}>
@@ -67,7 +69,12 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
           Options:
         </Heading>
         <HStack spacing={8}>
-          <FormControl display={"flex"} minWidth={"max-content"} gap={2}>
+          <FormControl
+            display={"flex"}
+            minWidth={"max-content"}
+            gap={2}
+            alignItems={"center"}
+          >
             <FormLabel m={0}>
               Redact{" "}
               <abbr title={"Personally Identifiable Information"}>PII</abbr>
@@ -76,13 +83,22 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               isChecked={enablePiiRedaction}
               onChange={onEnablePiiRedactionChange}
             />
+            <HelpPopover
+              ariaLabel={"Help with Redact PII"}
+              header={"Redact Personally Identifiable Information (PII)"}
+            >
+              PII includes names, addresses, phone numbers, and credit card
+              information. When PII redaction is enabled, identified instances
+              of PII will be replaced with <Code>[PII]</Code> in the
+              transcription.
+            </HelpPopover>
           </FormControl>
           <FormControl
             display={"flex"}
             minWidth={"max-content"}
             alignItems={"center"}
             gap={2}
-            isInvalid={languageSizeLimitReached}
+            isInvalid={languageSizeLimitExceeded}
           >
             <FormLabel
               m={0}
@@ -91,25 +107,33 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             >
               Languages
             </FormLabel>
-            <HStack alignItems={"start"}>
+            <HStack alignItems={"center"}>
               <LanguageInput
                 inputId={"languages"}
                 isMulti={true}
                 value={languages}
                 isDisabled={enablePiiRedaction}
                 onChange={onLanguageChange}
+                maxSize={MAX_LANGUAGE_LIMIT}
+                isInvalid={languageSizeLimitExceeded}
               />
-              <FormHelperText hidden={!enablePiiRedaction}>
+              <HelpPopover
+                ariaLabel={"Help with Languages"}
+                header={"Languages"}
+              >
+                Specify up to five (5) languages spoken in your audio files.
+              </HelpPopover>
+              <FormHelperText mt={0} hidden={!enablePiiRedaction}>
                 PII Redaction only available for English, US.
               </FormHelperText>
-              <FormErrorMessage>
-                Maximum {MAX_LANGUAGE_LIMIT} allowed.
-              </FormErrorMessage>
+              <FormHelperText mt={0} hidden={!languageSizeLimitAchieved}>
+                A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
+              </FormHelperText>
             </HStack>
           </FormControl>
         </HStack>
       </Flex>
-      <FilePicker {...filePickerProps} />
+      <FilePicker {...filePickerProps} disabled={languageSizeLimitExceeded} />
     </Stack>
   );
 };

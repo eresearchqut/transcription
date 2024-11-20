@@ -22,7 +22,7 @@ import { TRANSCRIBE_QUOTAS } from "../../model";
 export interface FilePickerProps
   extends Pick<
     DropzoneOptions,
-    "accept" | "maxFiles" | "maxSize" | "validator"
+    "accept" | "maxFiles" | "maxSize" | "validator" | "disabled"
   > {
   onFilesPicked(files: File[]): void;
 }
@@ -60,7 +60,7 @@ interface UploadStatus {
 }
 
 export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
-  const { onFilesPicked } = props;
+  const { disabled, onFilesPicked } = props;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
     accepted: [],
@@ -87,6 +87,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   const { getRootProps, getInputProps, open } = useDropzone({
     onDrop,
     noClick: true,
+    disabled,
     ...props,
   });
   const { size: nativeSize, ...chakraInputProps } = getInputProps();
@@ -116,6 +117,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
             colorScheme={"blue"}
             variant={"solid"}
             rightIcon={<AddIcon />}
+            isDisabled={disabled}
           >
             Upload
           </Button>
