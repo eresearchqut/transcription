@@ -1,7 +1,7 @@
 import React, { Fragment, FunctionComponent } from "react";
 import { Button, Flex, Link, Show, Spacer, VStack } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/layout";
-import { EmailIcon, ExternalLinkIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 const TeqsaLink: FunctionComponent = () => (
   <Link
