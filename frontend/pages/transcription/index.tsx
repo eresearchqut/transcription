@@ -77,20 +77,27 @@ const TranscriptionPage: NextPage = () => {
       id: "dateUploaded",
       header: "Date Uploaded",
       accessorFn: (transcription) => transcription.date,
-      cell: (props) => (
-        <Wrap>
-          <WrapItem>{formatDate(props.row.original.date)}</WrapItem>
-          {isExpiringSoon(props.row.original.date) && (
-            <WrapItem>
-              <Tooltip hasArrow label={"This transcription is expiring soon"}>
-                <Text as={"span"} color={"yellow.500"} mt={0.5} tabIndex={0}>
-                  <TbClockExclamation />
-                </Text>
-              </Tooltip>
-            </WrapItem>
-          )}
-        </Wrap>
-      ),
+      cell: (props) => {
+        const ttl = new Date(props.row.original.ttl * 1000);
+        const formattedTtl = formatDate(ttl.toISOString());
+        return (
+          <Wrap>
+            <WrapItem>{formatDate(props.row.original.date)}</WrapItem>
+            {isExpiringSoon(props.row.original.date) && (
+              <WrapItem>
+                <Tooltip
+                  hasArrow
+                  label={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+                >
+                  <Text as={"span"} color={"yellow.500"} mt={0.5} tabIndex={0}>
+                    <TbClockExclamation />
+                  </Text>
+                </Tooltip>
+              </WrapItem>
+            )}
+          </Wrap>
+        );
+      },
     },
     {
       header: "File Name",

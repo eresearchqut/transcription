@@ -59,7 +59,7 @@ const UploadProgressStatus = ({
 const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
   const iconProps = { mr: 2, mb: 1 };
   return (
-    <Text>
+    <Text as={"div"}>
       {status === TranscriptionJobStatus.IN_PROGRESS ? (
         <Spinner mr={2} size={"sm"} />
       ) : status === TranscriptionJobStatus.COMPLETED ? (

@@ -1,7 +1,7 @@
 import React, { Fragment, FunctionComponent } from "react";
 import { Button, Flex, Link, Show, Spacer, VStack } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/layout";
-import { EmailIcon, ExternalLinkIcon } from "@chakra-ui/icons";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 
 const TeqsaLink: FunctionComponent = () => (
   <Link
@@ -39,11 +39,15 @@ export const Footer: FunctionComponent = () => {
         </Fragment>
       </VStack>
       <Spacer />
-      <Link href={"mailto:eresearch@qut.edu.au"} isExternal>
+      <Link
+        href={
+          "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage/supercomputing"
+        }
+        isExternal
+      >
         <Button
           colorScheme={"blue"}
           variant={"solid"}
-          leftIcon={<EmailIcon />}
           rightIcon={<ExternalLinkIcon />}
         >
           Contact eResearch
