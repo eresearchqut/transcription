@@ -69,6 +69,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      onFilesPicked(acceptedFiles);
       setUploadStatus(() => ({
         accepted: acceptedFiles.map((file) => ({
           name: file.name,
@@ -80,7 +81,6 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           errors: errors.map((fileError) => fileError.message),
         })),
       }));
-      onFilesPicked(acceptedFiles);
     },
     [onFilesPicked],
   );

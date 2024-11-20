@@ -56,14 +56,14 @@ const Upload: NextPage = () => {
         languages: languages.join(","),
         enablePiiRedaction: JSON.stringify(enablePiiRedaction),
       };
+      uploadData.set(id, {
+        filename: file.name,
+        uploadProgressPercent: 0,
+        transcriptionProgress: undefined,
+      });
 
       Auth.currentSession()
         .then(() => {
-          uploadData.set(id, {
-            filename: file.name,
-            uploadProgressPercent: 0,
-            transcriptionProgress: undefined,
-          });
           return Storage.put(key, file, {
             level: "private",
             metadata,
