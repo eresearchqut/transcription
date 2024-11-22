@@ -41,7 +41,7 @@ export const Footer: FunctionComponent = () => {
       <Spacer />
       <Link
         href={
-          "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage/supercomputing"
+          "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
         }
         isExternal
       >
