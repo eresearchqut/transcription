@@ -16,9 +16,11 @@ jobs:
       actions: write
       contents: read
       id-token: write
-    if: github.ref == 'refs/heads/dev'
+    if: github.event.workflow_run.head_branch == 'dev'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
       - name: Setup api
         uses: actions/setup-node@v4
         with:
@@ -33,13 +35,15 @@ jobs:
         run: npm run test
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name }}
+    environment: ${{ github.event.workflow_run.head_branch }}
     permissions:
       actions: write
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
       - name: Create frontend output dir
         run: mkdir -p frontend/out
       - name: Setup api
