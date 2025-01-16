@@ -1,5 +1,5 @@
 import { FunctionComponent, ReactElement } from "react";
-import { Button, Stack } from "@chakra-ui/react";
+import { chakra, Link, LinkProps, List } from "@chakra-ui/react";
 import NextLink from "next/link";
 
 interface NavigationItemProps {
@@ -7,35 +7,36 @@ interface NavigationItemProps {
   icon: ReactElement;
 }
 
-export interface NavigationProps {
+export interface NavigationProps extends LinkProps {
   items: Record<string, NavigationItemProps>;
 }
 
 export const Navigation: FunctionComponent<NavigationProps> = ({
   items,
+  ...linkProps
 }: NavigationProps) => {
   return (
-    <Stack
-      spacing={4}
-      direction={{ base: "column", sm: "row" }}
-      align={"start"}
-    >
-      {Object.keys(items).map((title) => {
-        const { icon, url } = items[title];
-        return (
-          <Button
-            key={title}
-            as={NextLink}
-            leftIcon={icon}
-            href={url}
-            variant={"link"}
-            color={"white"}
-          >
-            {title}
-          </Button>
-        );
-      })}
-    </Stack>
+    <chakra.nav>
+      <List.Root
+        variant={"plain"}
+        flexDirection={{ base: "column", sm: "row" }}
+        gap={{ base: undefined, sm: 4 }}
+      >
+        {Object.keys(items).map((title) => {
+          const { icon, url } = items[title];
+          return (
+            <List.Item key={title}>
+              <Link {...linkProps} asChild>
+                <NextLink href={url}>
+                  {icon}
+                  {title}
+                </NextLink>
+              </Link>
+            </List.Item>
+          );
+        })}
+      </List.Root>
+    </chakra.nav>
   );
 };
 
