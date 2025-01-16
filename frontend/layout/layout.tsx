@@ -7,6 +7,7 @@ import {
   Heading,
   SkipNavLink,
   Stack,
+  chakra,
 } from "@chakra-ui/react";
 
 import { withAnonymous, withAuthentication } from "../context/with-auth";
@@ -78,7 +79,9 @@ const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
         bgColor={"brand.900"}
         justifyContent={"stretch"}
       >
-        <Header />
+        <chakra.header>
+          <Header />
+        </chakra.header>
       </GridItem>
       {isAuthenticated && (
         <Box width={"100%"} bgColor={"gray.800"} color={"white"}>
@@ -89,34 +92,45 @@ const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
             m={"auto"}
             p={4}
           >
-            <Navigation items={navigationItems} color={"white"} />
+            <chakra.nav>
+              <Navigation items={navigationItems} color={"white"} />
+            </chakra.nav>
           </Stack>
         </Box>
       )}
       <Box id={"main"} p={3} pt={30}>
-        <Box {...containerProps}>
-          {isLanding ? (
-            children
-          ) : (
-            <Card.Root rounded={1} mb={0} borderWidth={1} variant={"elevated"}>
-              <Card.Header pl={6} pr={6} pb={0}>
-                {pageTitle && (
-                  <Heading as={"h1"} fontSize={"3xl"}>
-                    {pageTitle}
-                  </Heading>
-                )}
-              </Card.Header>
-              <Card.Body pl={6} pr={6}>
-                {children}
-              </Card.Body>
-            </Card.Root>
-          )}
-        </Box>
+        <chakra.main>
+          <Box {...containerProps}>
+            {isLanding ? (
+              children
+            ) : (
+              <Card.Root
+                rounded={1}
+                mb={0}
+                borderWidth={1}
+                variant={"elevated"}
+              >
+                <Card.Header pl={6} pr={6} pb={0}>
+                  {pageTitle && (
+                    <Heading as={"h1"} fontSize={"3xl"}>
+                      {pageTitle}
+                    </Heading>
+                  )}
+                </Card.Header>
+                <Card.Body pl={6} pr={6}>
+                  {children}
+                </Card.Body>
+              </Card.Root>
+            )}
+          </Box>
+        </chakra.main>
       </Box>
 
       <GridItem area={"footer"} bgColor={"brand.900"} color={"white"} p={4}>
         <Box {...containerProps}>
-          <Footer />
+          <chakra.footer>
+            <Footer />
+          </chakra.footer>
         </Box>
       </GridItem>
     </Grid>
