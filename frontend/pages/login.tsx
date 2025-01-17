@@ -20,7 +20,6 @@ const Login: NextPageWithLayout = () => {
   const styles = {
     root: {
       bgColor: { base: "gray.100", _dark: "gray.700" },
-      borderColor: { base: "blue.900", _dark: "gray.800" },
     },
   };
 
