@@ -7,7 +7,7 @@ const cardSlotRecipe = defineSlotRecipe(
   merge(chakraCardSlotRecipe, {
     base: {
       root: {
-        borderRadius: 0,
+        borderRadius: 2,
       },
       title: {
         pb: 2,
