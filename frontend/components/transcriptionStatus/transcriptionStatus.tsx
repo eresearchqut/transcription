@@ -5,13 +5,13 @@ import {
   mapTranscriptionStatus,
   TranscriptionJobStatus as Status,
 } from "../../model";
-import { Tag } from "@chakra-ui/tag";
 import { isUndefined } from "lodash";
 import { Spinner } from "@chakra-ui/react";
 import {
   useTranscription,
   UseTranscriptionProps,
 } from "../../hooks/useTranscription";
+import { Tag } from "../ui/tag";
 
 const formatStatus = (status: string) =>
   (status ?? "PENDING")?.split("_").join(" ");
@@ -36,7 +36,7 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
     }
   }, [transcription]);
 
-  const colorScheme =
+  const colorPalette =
     status === Status.FAILED
       ? "red"
       : status === Status.COMPLETED
@@ -44,7 +44,7 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
         : "yellow";
 
   return (
-    <Tag colorScheme={colorScheme}>
+    <Tag colorPalette={colorPalette}>
       {isUndefined(status) ||
         (status === Status.IN_PROGRESS && <Spinner size={"sm"} mr={1} />)}
       {status && formatStatus(status)}

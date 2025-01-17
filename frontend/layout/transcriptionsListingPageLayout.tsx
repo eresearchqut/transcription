@@ -1,28 +1,22 @@
 import { PropsWithChildren } from "react";
-import { Layout, PageProps } from "./layout";
+import Layout from "./layout";
 import { TranscriptionsContextProvider } from "../context/transcriptions-context";
 
-export interface WithAuthenticationProps
-  extends PropsWithChildren<Partial<PageProps>> {}
-
-const WithTranscriptionListing = (props: WithAuthenticationProps) => {
-  const pageProps = {
-    pageTitle: "My Transcriptions",
-    ...props,
-  };
-  return <Layout {...pageProps} />;
-};
-
-const WithTranscriptionsListingContext = (props: WithAuthenticationProps) => {
+const WithTranscriptionsListingContext = ({
+  children,
+  ...props
+}: PropsWithChildren) => {
   return (
     <TranscriptionsContextProvider>
-      <WithTranscriptionListing {...props} />
+      <Layout pageTitle={"My Transcriptions"} {...props}>
+        {children}
+      </Layout>
     </TranscriptionsContextProvider>
   );
 };
 
 const mapTranscriptionsListingPagePropsToLayoutTree = (
-  props: WithAuthenticationProps,
+  props: PropsWithChildren,
 ) => <WithTranscriptionsListingContext {...props} />;
 
 export default mapTranscriptionsListingPagePropsToLayoutTree;

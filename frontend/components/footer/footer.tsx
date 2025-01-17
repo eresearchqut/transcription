@@ -1,58 +1,53 @@
 import React, { Fragment, FunctionComponent } from "react";
-import { Button, Flex, Link, Show, Spacer, VStack } from "@chakra-ui/react";
-import { Text } from "@chakra-ui/layout";
-import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { Button, Flex, Link, Spacer, VStack } from "@chakra-ui/react";
+import { Text } from "@chakra-ui/react";
+import { ExternalLink } from "../externalLink";
+import { MappedIcon } from "../mappedIcon";
 
 const TeqsaLink: FunctionComponent = () => (
-  <Link
+  <ExternalLink
     href={
       "https://www.teqsa.gov.au/national-register/provider/queensland-university-technology"
     }
-    isExternal
   >
-    PRV12079 <ExternalLinkIcon mb={1} />
-  </Link>
+    PRV12079 <MappedIcon icon={"external-link"} mb={1} />
+  </ExternalLink>
 );
 
 export const Footer: FunctionComponent = () => {
   return (
-    <Flex direction={["column", "column", "row"]} alignItems="center">
-      <VStack alignItems={"start"} spacing={0}>
-        <Text noOfLines={1}>Developed by the Office of eResearch, QUT</Text>
-        <Link href={"https://www.qut.edu.au/about/indigenous"} isExternal>
+    <Flex
+      direction={["column", "column", "row"]}
+      alignItems="center"
+      className="dark"
+    >
+      <VStack alignItems={"start"} gap={0}>
+        <Text lineClamp={1}>Developed by the Office of eResearch, QUT</Text>
+        <Link href={"https://www.qut.edu.au/about/indigenous"} color={"white"}>
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.
-          <ExternalLinkIcon mb={1} />
+          <MappedIcon icon={"external-link"} mb={1} />
         </Link>
         <Fragment>
-          <Show below={"md"}>
-            <Text>
-              TEQSA <TeqsaLink /> | CRICOS No. 00213J
-            </Text>
-          </Show>
-          <Show above={"md"}>
-            <Text>
-              TEQSA Provider ID <TeqsaLink />
-              Australian University | CRICOS No. 00213J
-            </Text>
-          </Show>
+          <Text hideFrom={"md"}>
+            TEQSA <TeqsaLink /> | CRICOS No. 00213J
+          </Text>
+          <Text hideBelow={"md"}>
+            TEQSA Provider ID <TeqsaLink /> Australian University | CRICOS No.
+            00213J
+          </Text>
         </Fragment>
       </VStack>
       <Spacer />
-      <Link
+      <ExternalLink
         href={
           "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
         }
-        isExternal
       >
-        <Button
-          colorScheme={"blue"}
-          variant={"solid"}
-          rightIcon={<ExternalLinkIcon />}
-        >
-          Contact eResearch
+        <Button colorPalette={"blue"} variant={"solid"}>
+          Contact eResearch <MappedIcon icon={"external-link"} mb={1} />
         </Button>
-      </Link>
+      </ExternalLink>
     </Flex>
   );
 };

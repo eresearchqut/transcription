@@ -1,52 +1,44 @@
 import * as React from "react";
 import { FunctionComponent } from "react";
+import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
+import Player from "../player";
 import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
-  Button,
-  Drawer,
   DrawerBody,
   DrawerContent,
   DrawerFooter,
-  DrawerOverlay,
-  DrawerProps,
-} from "@chakra-ui/react";
-import { Box } from "@chakra-ui/layout";
-import Player from "../player";
+  DrawerRoot,
+} from "../ui/drawer";
+import { Alert } from "../ui/alert";
 
-export interface MediaPlayerDrawerProps extends Omit<DrawerProps, "children"> {
+export interface MediaPlayerDrawerProps
+  extends Omit<DrawerRootProps, "children"> {
   mediaUrl: string;
   transcriptUrl: string;
 }
 
 const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
-  isOpen,
-  onClose,
   mediaUrl,
   transcriptUrl,
+  open,
+  onOpenChange,
+  ...drawerProps
 }) => {
   const finalRef = React.useRef(null);
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      placement="right"
-      onClose={onClose}
+    <DrawerRoot
+      placement="end"
       finalFocusRef={finalRef}
       size={"md"}
+      open={open}
+      onOpenChange={onOpenChange}
+      {...drawerProps}
     >
-      <DrawerOverlay />
       <DrawerContent>
-        <Alert status="info">
-          <AlertIcon />
+        <Alert status="info" title={"Web Player"}>
           <Box>
-            <AlertTitle>Web Player</AlertTitle>
-            <AlertDescription>
-              Scroll to any point in the transcript and click the dialogue to
-              hear the associated audio.
-            </AlertDescription>
+            Scroll to any point in the transcript and click the dialogue to hear
+            the associated audio.
           </Box>
         </Alert>
 
@@ -57,12 +49,18 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
         </DrawerBody>
 
         <DrawerFooter>
-          <Button variant="outline" mr={3} onClick={onClose}>
+          <Button
+            variant="outline"
+            mr={3}
+            onClick={() => {
+              onOpenChange({ open: false });
+            }}
+          >
             Close player
           </Button>
         </DrawerFooter>
       </DrawerContent>
-    </Drawer>
+    </DrawerRoot>
   );
 };
 
