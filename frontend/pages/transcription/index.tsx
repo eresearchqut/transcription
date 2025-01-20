@@ -1,55 +1,54 @@
-import type { NextPage } from "next";
 import { useContext, useState } from "react";
-import { withLayout } from "@moxy/next-layout";
 import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
+  Box,
   Flex,
+  HStack,
+  IconButton,
+  Input,
   Link,
-  Progress,
   Text,
-  Tooltip,
-  useDisclosure,
   VStack,
-  Wrap,
-  WrapItem,
 } from "@chakra-ui/react";
 import { ColumnDef, SortingState } from "@tanstack/react-table";
-import DataTable from "../../components/dataTable";
-import { Box } from "@chakra-ui/layout";
-import { TranscriptionDownloadOptions } from "../../components/TranscriptionDownloadOptions";
-import TranscriptionsListingPageLayout from "../../layout/transcriptionsListingPageLayout";
-import { TranscriptionsContext } from "../../context/transcriptions-context";
+import DataTable from "@/components/dataTable";
+import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
 import { TRANSCRIBE_QUOTAS, Transcription } from "../../model";
-import { TranscriptionStatus } from "../../components/transcriptionStatus";
-import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
-import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
+import { TranscriptionStatus } from "@/components/transcriptionStatus";
+import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
+import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
 import NextLink from "next/link";
-import { TbClockExclamation } from "react-icons/tb";
 import { add, set } from "date-fns";
-import { Input, InputGroup, InputLeftElement } from "@chakra-ui/input";
-import { SearchIcon } from "@chakra-ui/icons";
 import {
   languagesFromTranscription,
   TranscriptionLanguages,
-} from "../../components/transcriptionLanguages";
+} from "@/components/transcriptionLanguages";
+import { OpenChangeDetails } from "@zag-js/dialog";
+import { MappedIcon } from "@/components/mappedIcon";
+import { Alert } from "@/components/ui/alert";
+import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
+import { InputGroup } from "@/components/ui/input-group";
+import TranscriptionsListingPageLayout from "../../layout/transcriptionsListingPageLayout";
+import { NextPageWithLayout } from "@/pages/_app";
+import { TranscriptionsContext } from "../../context/transcriptions-context";
+import { ToggleTip } from "@/components/ui/toggle-tip";
 
-const TranscriptionPage: NextPage = () => {
-  const { isOpen, onOpen, onClose } = useDisclosure();
+const TranscriptionPage: NextPageWithLayout = () => {
+  const [open, setOpen] = useState(false);
   const { transcriptions, transcriptionsLoading } = useContext(
     TranscriptionsContext,
   );
   const [play, setPlay] = useState<
     Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
   >({} as MediaPlayerDrawerProps);
-  const onPlayClick = (mediaUrl: string, transcriptUrl: string) => {
+  const handlePlayClick = (mediaUrl: string, transcriptUrl: string) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
     });
-    onOpen();
+    setOpen(true);
+  };
+  const onMediaPlayerOpenChange = (e: OpenChangeDetails) => {
+    setOpen(e.open);
   };
 
   const [filter, setFilter] = useState<string>("");
@@ -81,21 +80,26 @@ const TranscriptionPage: NextPage = () => {
         const ttl = new Date(props.row.original.ttl * 1000);
         const formattedTtl = formatDate(ttl.toISOString());
         return (
-          <Wrap>
-            <WrapItem>{formatDate(props.row.original.date)}</WrapItem>
+          <HStack wrap={"wrap"}>
+            <Flex align={"flex-start"}>
+              {formatDate(props.row.original.date)}
+            </Flex>
             {isExpiringSoon(props.row.original.date) && (
-              <WrapItem>
-                <Tooltip
-                  hasArrow
-                  label={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+              <Flex align={"flex-start"}>
+                <ToggleTip
+                  content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
                 >
-                  <Text as={"span"} color={"yellow.500"} mt={0.5} tabIndex={0}>
-                    <TbClockExclamation />
-                  </Text>
-                </Tooltip>
-              </WrapItem>
+                  <IconButton size={"xs"} rounded={"full"} variant={"ghost"}>
+                    <MappedIcon
+                      icon={"clock-exclamation"}
+                      aria-label={"Expiring soon"}
+                      color={"yellow.500"}
+                    />
+                  </IconButton>
+                </ToggleTip>
+              </Flex>
             )}
-          </Wrap>
+          </HStack>
         );
       },
     },
@@ -146,12 +150,7 @@ const TranscriptionPage: NextPage = () => {
         if (transcription.jobStatusUpdated?.detail.FailureReason) {
           return (
             <Alert status="error">
-              <AlertIcon />
-              <Box>
-                <AlertDescription>
-                  {transcription.jobStatusUpdated?.detail.FailureReason}
-                </AlertDescription>
-              </Box>
+              <Box>{transcription.jobStatusUpdated?.detail.FailureReason}</Box>
             </Alert>
           );
         }
@@ -159,7 +158,7 @@ const TranscriptionPage: NextPage = () => {
         return (
           <TranscriptionDownloadOptions
             initialTranscription={transcription}
-            onPlayClick={onPlayClick}
+            handlePlayClick={handlePlayClick}
           />
         );
       },
@@ -179,23 +178,23 @@ const TranscriptionPage: NextPage = () => {
 
   return (
     <>
-      <VStack spacing={4} align="stretch">
-        {transcriptionsLoading && <Progress isIndeterminate />}
+      <VStack gap={4} align="stretch">
+        {transcriptionsLoading && (
+          <ProgressRoot value={null} colorPalette={"blue"}>
+            <ProgressBar />
+          </ProgressRoot>
+        )}
 
         {!transcriptionsLoading &&
           transcriptions &&
           transcriptions.length === 0 && (
             <>
-              <Alert status="info">
-                <AlertIcon />
+              <Alert status="info" title={"Getting Started"}>
                 <Box>
-                  <AlertTitle>Getting Started</AlertTitle>
-                  <AlertDescription>
-                    <Link as={NextLink} href={"/transcription/upload"}>
-                      Upload Media
-                    </Link>{" "}
-                    to start the transcription process.
-                  </AlertDescription>
+                  <Link as={NextLink} href={"/transcription/upload"}>
+                    Upload Media
+                  </Link>{" "}
+                  to start the transcription process.
                 </Box>
               </Alert>
             </>
@@ -204,20 +203,15 @@ const TranscriptionPage: NextPage = () => {
           transcriptions &&
           transcriptions.length > 0 && (
             <>
-              <Flex>
-                <InputGroup variant={"flushed"}>
-                  <InputLeftElement>
-                    <SearchIcon />
-                  </InputLeftElement>
-                  <Input
-                    value={filter}
-                    placeholder={searchInputPlaceholder}
-                    onChange={(e) => setFilter(() => e.target.value)}
-                    aria-label={searchInputPlaceholder}
-                    variant={"outline"}
-                  />
-                </InputGroup>
-              </Flex>
+              <InputGroup startElement={<MappedIcon icon={"search"} />}>
+                <Input
+                  value={filter}
+                  placeholder={searchInputPlaceholder}
+                  onChange={(e) => setFilter(() => e.target.value)}
+                  aria-label={searchInputPlaceholder}
+                  variant={"outline"}
+                />
+              </InputGroup>
               <DataTable
                 {...tableProps}
                 columns={columns}
@@ -230,11 +224,25 @@ const TranscriptionPage: NextPage = () => {
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
         transcriptUrl={play?.transcriptUrl}
-        isOpen={isOpen}
-        onClose={onClose}
+        open={open}
+        onOpenChange={onMediaPlayerOpenChange}
       />
     </>
   );
 };
 
-export default withLayout(TranscriptionsListingPageLayout)(TranscriptionPage);
+export const getStaticProps = () => {
+  return {
+    props: {
+      pageTitle: "My Transcriptions",
+    },
+  };
+};
+
+TranscriptionPage.getLayout = (page) => {
+  return (
+    <TranscriptionsListingPageLayout>{page}</TranscriptionsListingPageLayout>
+  );
+};
+
+export default TranscriptionPage;

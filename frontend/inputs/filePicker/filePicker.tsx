@@ -1,23 +1,10 @@
 import { FunctionComponent, useCallback, useState } from "react";
 import { DropzoneOptions, FileRejection, useDropzone } from "react-dropzone";
-import {
-  Alert,
-  AlertDescription,
-  AlertIcon,
-  AlertTitle,
-  Box,
-  Button,
-  Heading,
-  Icon,
-  Stack,
-  VStack,
-} from "@chakra-ui/react";
-import { LuUpload } from "react-icons/lu";
-import { TbFileAlert } from "react-icons/tb";
-import { Input } from "@chakra-ui/input";
-import { AddIcon } from "@chakra-ui/icons";
+import { Box, Button, Heading, Input, Stack, VStack } from "@chakra-ui/react";
 import { Quotas } from "../../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "../../model";
+import { Alert } from "@/components/ui/alert";
+import { MappedIcon } from "@/components/mappedIcon";
 
 export interface FilePickerProps
   extends Pick<
@@ -93,33 +80,34 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   const { size: nativeSize, ...chakraInputProps } = getInputProps();
 
   return (
-    <Stack spacing={[2, 4]}>
+    <Stack gap={[2, 4]}>
       {uploadStatus.rejected &&
         uploadStatus.rejected.map((rejected, index) => (
-          <Alert status={"error"} variant="left-accent" key={index}>
-            <AlertIcon as={TbFileAlert} boxSize={[10, 12]} />
-            <Box>
-              <AlertTitle>{rejected.name}</AlertTitle>
-              <AlertDescription>{rejected.errors?.join(", ")}</AlertDescription>
-            </Box>
+          <Alert
+            status={"error"}
+            variant="outline"
+            key={index}
+            icon={<MappedIcon icon={"file-alert"} />}
+            title={rejected.name}
+          >
+            {rejected.errors?.join(", ")}
           </Alert>
         ))}
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
         <Input {...chakraInputProps} />
-        <VStack spacing={8}>
-          <Icon as={LuUpload} boxSize={[10, 20]} />
+        <VStack gap={8}>
+          <MappedIcon icon={"upload"} boxSize={[10, 20]} />
           <Heading>Drag and drop files here or select files to upload</Heading>
-          <Stack spacing={0} alignItems={"center"}>
+          <Stack gap={0} alignItems={"center"}>
             <Quotas asTextOnly={true} {...TRANSCRIBE_QUOTAS} />
           </Stack>
           <Button
             onClick={open}
-            colorScheme={"blue"}
+            colorPalette={"blue"}
             variant={"solid"}
-            rightIcon={<AddIcon />}
-            isDisabled={disabled}
+            disabled={disabled}
           >
-            Upload
+            Upload <MappedIcon icon={"plus"} />
           </Button>
         </VStack>
       </Box>

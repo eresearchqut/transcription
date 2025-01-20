@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { formatDuration } from "date-fns";
-import { Heading, Stack, StackDivider, Text } from "@chakra-ui/react";
+import { Heading, Stack, StackSeparator, Text } from "@chakra-ui/react";
 import { bytesToSize } from "../../inputs/filePicker";
 import { isEmpty, lowerFirst, upperFirst } from "lodash";
 import { TranscribeQuotaProps } from "../../model";
@@ -82,7 +82,7 @@ export const Quotas: FunctionComponent<QuotasProps> = ({
   };
 
   return (
-    <Stack spacing={2} divider={<StackDivider />}>
+    <Stack gap={2} separator={<StackSeparator />}>
       {Object.keys(items).map(
         (key) =>
           items[key] && (

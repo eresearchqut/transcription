@@ -46,7 +46,7 @@ export const useDownload = () => {
       .then((url) => {
         handleDownload(filename, url);
       })
-      .catch((e) => handleLogout())
+      .catch(() => handleLogout())
       .finally(() => setIsLoading(() => false));
   };
 

@@ -6,9 +6,16 @@ import React, {
   useState,
 } from "react";
 
-import { Input, InputGroup, InputLeftElement } from "@chakra-ui/input";
-import { SearchIcon } from "@chakra-ui/icons";
-import { Grid, GridItem, Highlight, Text } from "@chakra-ui/react";
+import {
+  Grid,
+  GridItem,
+  Highlight,
+  Input,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { InputGroup } from "./ui/input-group";
+import { MappedIcon } from "./mappedIcon";
 
 export interface PlayerProps {
   audio: string;
@@ -121,7 +128,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
   }, [tries]);
 
   return (
-    <>
+    <VStack align="stretch" gap={2}>
       <audio
         style={{ width: "100%" }}
         controls
@@ -134,10 +141,10 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         <track default kind="subtitles" src={props.transcript} ref={track} />
       </audio>
 
-      <InputGroup mt={2}>
-        <InputLeftElement pointerEvents="none">
-          <SearchIcon color="gray.300" />
-        </InputLeftElement>
+      <InputGroup
+        mt={2}
+        startElement={<MappedIcon icon={"search"} color={"gray.300"} />}
+      >
         <Input
           value={query}
           placeholder="Search"
@@ -152,7 +159,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
           currentTime={currentTime}
         />
       )}
-    </>
+    </VStack>
   );
 };
 
