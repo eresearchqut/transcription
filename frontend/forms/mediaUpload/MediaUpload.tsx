@@ -106,7 +106,6 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
           label={"Languages"}
         >
           <LanguageInput
-            inputId={"languages"}
             isMulti={true}
             value={languages}
             disabled={enablePiiRedaction}
