@@ -1,6 +1,5 @@
 import React, { Fragment, FunctionComponent } from "react";
-import { Button, Flex, Link, Spacer, VStack } from "@chakra-ui/react";
-import { Text } from "@chakra-ui/react";
+import { Button, Flex, Spacer, Text, VStack } from "@chakra-ui/react";
 import { ExternalLink } from "../externalLink";
 import { MappedIcon } from "../mappedIcon";
 
@@ -23,11 +22,14 @@ export const Footer: FunctionComponent = () => {
     >
       <VStack alignItems={"start"} gap={0}>
         <Text lineClamp={1}>Developed by the Office of eResearch, QUT</Text>
-        <Link href={"https://www.qut.edu.au/about/indigenous"} color={"white"}>
+        <ExternalLink
+          href={"https://www.qut.edu.au/about/indigenous"}
+          color={"white"}
+        >
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.
           <MappedIcon icon={"external-link"} mb={1} />
-        </Link>
+        </ExternalLink>
         <Fragment>
           <Text hideFrom={"md"}>
             TEQSA <TeqsaLink /> | CRICOS No. 00213J
