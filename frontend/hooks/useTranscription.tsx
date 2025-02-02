@@ -6,8 +6,7 @@ import {
 } from "../model";
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
-import { isDefined } from "@chakra-ui/utils";
-import { isEmpty } from "lodash";
+import { isEmpty, isUndefined } from "lodash";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -33,7 +32,7 @@ export const useTranscription = ({
   const currentStatus = mapTranscriptionStatus(transcription);
   const isJobFinished: boolean = transcription
     ? !isEmpty(transcription.downloadKey) &&
-      isDefined(currentStatus) &&
+      !isUndefined(currentStatus) &&
       [
         TranscriptionJobStatus.FAILED,
         TranscriptionJobStatus.COMPLETED,

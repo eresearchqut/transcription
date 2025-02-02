@@ -3,11 +3,11 @@ import {
   useTranscription,
   UseTranscriptionProps,
 } from "../../hooks/useTranscription";
-import { List, ListItem, Tag } from "@chakra-ui/react";
-import { isDefined } from "@chakra-ui/utils";
+import { List, ListItem } from "@chakra-ui/react";
 import { get, isUndefined } from "lodash";
 import supportedLanguages from "@/public/supported_languages.json";
 import { Transcription } from "model";
+import { Tag } from "../ui/tag";
 
 export const languagesFromTranscription = (
   transcription: Transcription | undefined,
@@ -20,7 +20,7 @@ export const languagesFromTranscription = (
     ...(jobResponse?.LanguageCodes?.map((lang) => lang.LanguageCode) ?? []),
     ...(jobResponse?.LanguageOptions ?? []),
   ]
-    .filter((lang) => isDefined(lang))
+    .filter((lang) => !isUndefined(lang))
     .map((lang) => get(supportedLanguages, lang!, lang));
 };
 
@@ -31,7 +31,7 @@ export const TranscriptionLanguages: FunctionComponent<
     jobId,
     initialTranscription,
   });
-  const piiRedacted = isDefined(
+  const piiRedacted = !isUndefined(
     transcription?.transcriptionResponse?.TranscriptionJob?.ContentRedaction
       ?.RedactionType,
   );
@@ -39,7 +39,7 @@ export const TranscriptionLanguages: FunctionComponent<
   if (!isJobFinished) return <Tag>LOADING...</Tag>;
 
   return (
-    <List variant={"unstyled"}>
+    <List.Root variant={"plain"}>
       {languagesFromTranscription(transcription)?.map((lang) => (
         <ListItem key={lang} display={"inline-list-item"}>
           <Tag mr={2}>{lang?.toUpperCase()}</Tag>
@@ -47,12 +47,12 @@ export const TranscriptionLanguages: FunctionComponent<
       ))}
       {piiRedacted && (
         <ListItem display={"inline-list-item"}>
-          <Tag mr={2} variant={"outline"} colorScheme={"red"}>
+          <Tag mr={2} variant={"outline"} colorPalette={"red"}>
             PII REDACTED
           </Tag>
         </ListItem>
       )}
-    </List>
+    </List.Root>
   );
 };
 

@@ -1,15 +1,15 @@
-import { FunctionComponent } from "react";
+import React, { FunctionComponent } from "react";
+import { IconButton } from "@chakra-ui/react";
+import { MappedIcon } from "../mappedIcon";
 import {
-  IconButton,
-  Popover,
   PopoverArrow,
   PopoverBody,
-  PopoverCloseButton,
+  PopoverCloseTrigger,
   PopoverContent,
   PopoverHeader,
+  PopoverRoot,
   PopoverTrigger,
-} from "@chakra-ui/react";
-import { QuestionIcon } from "@chakra-ui/icons";
+} from "@/components/ui/popover";
 
 export interface HelpPopoverProps {
   ariaLabel: string;
@@ -23,24 +23,25 @@ export const HelpPopover: FunctionComponent<HelpPopoverProps> = ({
   children,
 }) => {
   return (
-    <Popover>
-      <PopoverTrigger>
+    <PopoverRoot>
+      <PopoverTrigger asChild>
         <IconButton
           aria-label={ariaLabel}
-          icon={<QuestionIcon />}
-          isRound={true}
-          size={"xxs"}
+          rounded={"full"}
           cursor={"pointer"}
-          color={"brand.500"}
-        />
+          colorPalette={"blue"}
+          size={"2xs"}
+        >
+          <MappedIcon icon={"question"} asIcon={false} />
+        </IconButton>
       </PopoverTrigger>
       <PopoverContent>
-        <PopoverArrow />
-        <PopoverCloseButton />
         <PopoverHeader>{header}</PopoverHeader>
+        <PopoverArrow />
         <PopoverBody>{children}</PopoverBody>
+        <PopoverCloseTrigger />
       </PopoverContent>
-    </Popover>
+    </PopoverRoot>
   );
 };
 

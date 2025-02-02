@@ -1,28 +1,20 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { theme } from "../theme";
-import { ChakraProvider } from "@chakra-ui/react";
-import { LayoutTree } from "@moxy/next-layout";
 import { AuthProvider } from "../context/auth-context";
 import { Amplify } from "aws-amplify";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "@/components/ui/provider";
+import Layout from "../layout/layout";
+import { ReactElement, ReactNode } from "react";
+import { NextPage } from "next";
 
-const data = {
-  NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID:
-    process.env.NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID,
-  NEXT_PUBLIC_AWS_REGION: process.env.NEXT_PUBLIC_AWS_REGION,
-  NEXT_PUBLIC_AUTH_USER_POOL_ID: process.env.NEXT_PUBLIC_AUTH_USER_POOL_ID,
-  NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID:
-    process.env.NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID,
-  NEXT_PUBLIC_AUTH_DOMAIN: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
-  NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT:
-    process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT,
-  NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT:
-    process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT,
-  NEXT_PUBLIC_TRANSCRIPTION_BUCKET:
-    process.env.NEXT_PUBLIC_TRANSCRIPTION_BUCKET,
+export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+  getLayout?: (page: ReactElement) => ReactNode;
 };
-console.log({ data });
+
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout;
+};
 
 Amplify.configure({
   Auth: {
@@ -55,15 +47,23 @@ Amplify.configure({
 
 const queryClient = new QueryClient();
 
-function App({ Component, pageProps }: AppProps) {
+function App({ Component, pageProps }: AppPropsWithLayout) {
+  const { pageTitle, isLanding, ...componentProps } = pageProps;
+  const getLayout =
+    Component.getLayout ??
+    ((page) => (
+      <Layout isLanding={isLanding} pageTitle={pageTitle}>
+        {page}
+      </Layout>
+    ));
   return (
-    <ChakraProvider theme={theme}>
+    <Provider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <LayoutTree Component={Component} pageProps={pageProps} />
+          {getLayout(<Component {...componentProps} />)}
         </AuthProvider>
       </QueryClientProvider>
-    </ChakraProvider>
+    </Provider>
   );
 }
 

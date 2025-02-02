@@ -1,17 +1,15 @@
 import { NextPage } from "next";
-import { withLayout } from "@moxy/next-layout";
-import Layout from "../../layout/layout";
-import * as React from "react";
 import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
 import Auth from "@aws-amplify/auth";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
-import { useDisclosure, VStack } from "@chakra-ui/react";
-import { TranscriptionProgress } from "../../components/transcriptionProgress";
-import { MediaPlayerDrawerProps } from "../../components/mediaPlayerDrawer/mediaPlayerDrawer";
-import { MediaPlayerDrawer } from "../../components/mediaPlayerDrawer";
+import { VStack } from "@chakra-ui/react";
+import { TranscriptionProgress } from "@/components/transcriptionProgress";
+import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
+import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
+import { OpenChangeDetails } from "@zag-js/dialog";
 
 interface UploadProps {
   filename: string;
@@ -27,13 +25,14 @@ const Upload: NextPage = () => {
   const [play, setPlay] = useState<
     Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
   >({} as MediaPlayerDrawerProps);
-  const { isOpen, onClose, onOpen } = useDisclosure();
+  const [open, setOpen] = useState(false);
+  const onMediaPlayerOpenChange = (e: OpenChangeDetails) => setOpen(e.open);
   const onPlayClick = (mediaUrl: string, transcriptUrl: string) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
     });
-    onOpen();
+    setOpen(true);
   };
 
   const [uploadData, setUploadData] = useState<Record<string, UploadProps>>({});
@@ -97,7 +96,7 @@ const Upload: NextPage = () => {
 
   return (
     <>
-      <VStack spacing={4} align="stretch">
+      <VStack gap={4} align="stretch">
         {Object.entries(uploadData).map(
           ([key, { filename, uploadProgressPercent }]) => (
             <TranscriptionProgress
@@ -114,11 +113,19 @@ const Upload: NextPage = () => {
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
         transcriptUrl={play?.transcriptUrl}
-        isOpen={isOpen}
-        onClose={onClose}
+        open={open}
+        onOpenChange={onMediaPlayerOpenChange}
       />
     </>
   );
 };
 
-export default withLayout(<Layout pageTitle={"Upload Media"} />)(Upload);
+export const getStaticProps = () => {
+  return {
+    props: {
+      pageTitle: "Upload",
+    },
+  };
+};
+
+export default Upload;

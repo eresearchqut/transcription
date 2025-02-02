@@ -1,20 +1,20 @@
-import { ChangeEvent, FunctionComponent, useState } from "react";
-import { Stack } from "@chakra-ui/layout";
+import { FunctionComponent, useState } from "react";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
   Code,
-  Flex,
-  FormControl,
-  FormHelperText,
-  FormLabel,
+  Field as ChakraField,
   Heading,
-  HStack,
-  Switch,
+  Stack,
+  Text,
+  VStack,
 } from "@chakra-ui/react";
 import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
 import { TRANSCRIBE_QUOTAS } from "../../model";
-import { HelpPopover } from "../../components/helpPopover";
+import { HelpPopover } from "@/components/helpPopover";
+import { Field } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
+import { CheckedChangeDetails } from "@zag-js/switch";
 
 export interface TranscribeProps {
   languages: string[];
@@ -37,8 +37,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     );
   };
 
-  const onEnablePiiRedactionChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const isChecked = event.target.checked;
+  const onEnablePiiRedactionChange = (d: CheckedChangeDetails) => {
+    const isChecked = d.checked;
     if (isChecked) {
       setLanguages(["en-US"]);
     }
@@ -63,78 +63,73 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const languageSizeLimitExceeded = languages.length > MAX_LANGUAGE_LIMIT;
 
   return (
-    <Stack align={"stretch"} spacing={[0, 4]}>
-      <Flex alignItems={"center"} gap={4}>
+    <VStack align={"stretch"} gap={4}>
+      <Stack
+        direction={{ base: "column", sm: "row" }}
+        gap={4}
+        alignSelf={"flex-start"}
+        alignItems={{ sm: "center" }}
+      >
         <Heading size={"sm"} as={"h2"}>
           Options:
         </Heading>
-        <HStack spacing={8}>
-          <FormControl
-            display={"flex"}
-            minWidth={"max-content"}
-            gap={2}
-            alignItems={"center"}
-          >
-            <FormLabel m={0}>
+        <Field
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          label={
+            <Text as={"span"}>
               Redact{" "}
               <abbr title={"Personally Identifiable Information"}>PII</abbr>
-            </FormLabel>
-            <Switch
-              isChecked={enablePiiRedaction}
-              onChange={onEnablePiiRedactionChange}
-            />
-            <HelpPopover
-              ariaLabel={"Help with Redact PII"}
-              header={"Redact Personally Identifiable Information (PII)"}
-            >
-              PII includes names, addresses, phone numbers, and credit card
-              information. When PII redaction is enabled, identified instances
-              of PII will be replaced with <Code>[PII]</Code> in the
-              transcription.
-            </HelpPopover>
-          </FormControl>
-          <FormControl
-            display={"flex"}
-            minWidth={"max-content"}
-            alignItems={"center"}
-            gap={2}
-            isInvalid={languageSizeLimitExceeded}
+            </Text>
+          }
+        >
+          <Switch
+            checked={enablePiiRedaction}
+            onCheckedChange={onEnablePiiRedactionChange}
+          />
+          <HelpPopover
+            ariaLabel={"Help with Redact PII"}
+            header={"Redact Personally Identifiable Information (PII)"}
           >
-            <FormLabel
-              m={0}
-              as={enablePiiRedaction ? "h3" : undefined}
-              htmlFor={!enablePiiRedaction ? "languages" : undefined}
-            >
-              Languages
-            </FormLabel>
-            <HStack alignItems={"center"}>
-              <LanguageInput
-                inputId={"languages"}
-                isMulti={true}
-                value={languages}
-                isDisabled={enablePiiRedaction}
-                onChange={onLanguageChange}
-                maxSize={MAX_LANGUAGE_LIMIT}
-                isInvalid={languageSizeLimitExceeded}
-              />
-              <HelpPopover
-                ariaLabel={"Help with Languages"}
-                header={"Languages"}
-              >
-                Specify up to five (5) languages spoken in your audio files.
-              </HelpPopover>
-              <FormHelperText mt={0} hidden={!enablePiiRedaction}>
-                PII Redaction only available for English, US.
-              </FormHelperText>
-              <FormHelperText mt={0} hidden={!languageSizeLimitAchieved}>
-                A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
-              </FormHelperText>
-            </HStack>
-          </FormControl>
-        </HStack>
-      </Flex>
+            PII includes names, addresses, phone numbers, and credit card
+            information. When PII redaction is enabled, identified instances of
+            PII will be replaced with <Code>[PII]</Code> in the transcription.
+          </HelpPopover>
+        </Field>
+        <Field
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          minWidth={"max-content"}
+          invalid={languageSizeLimitExceeded}
+          label={"Languages"}
+        >
+          <LanguageInput
+            isMulti={true}
+            value={languages}
+            disabled={enablePiiRedaction}
+            onChange={onLanguageChange}
+            maxSize={MAX_LANGUAGE_LIMIT}
+            invalid={languageSizeLimitExceeded}
+          />
+          <HelpPopover ariaLabel={"Help with Languages"} header={"Languages"}>
+            Specify up to five (5) languages spoken in your audio files.
+          </HelpPopover>
+          {enablePiiRedaction && (
+            <ChakraField.HelperText whiteSpace={"nowrap"}>
+              PII Redaction only available for English, US.
+            </ChakraField.HelperText>
+          )}
+          {languageSizeLimitAchieved && (
+            <ChakraField.HelperText whiteSpace={"nowrap"}>
+              A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
+            </ChakraField.HelperText>
+          )}
+        </Field>
+      </Stack>
       <FilePicker {...filePickerProps} disabled={languageSizeLimitExceeded} />
-    </Stack>
+    </VStack>
   );
 };
 

@@ -1,58 +1,45 @@
-import { FunctionComponent, PropsWithChildren, Suspense, useEffect } from "react";
 import type { Preview } from "@storybook/react";
-import { ChakraProvider, useColorMode } from "@chakra-ui/react";
-import { theme } from "../theme";
+import { ChakraProvider } from "@chakra-ui/react";
+import { withThemeByClassName } from "@storybook/addon-themes";
+import { system } from "../theme";
+import { ColorModeProvider } from "../components/ui/color-mode";
+import { AuthProvider } from "../context/auth-context";
 
-
-interface ColorModeProps {
-  colorMode: 'light' | 'dark';
-}
-
-const ColorMode: FunctionComponent<PropsWithChildren<ColorModeProps>> = ({colorMode, children}) => {
-  const {setColorMode} = useColorMode();
-  useEffect(() => {
-    setColorMode(colorMode);
-  }, [colorMode]);
-  return children;
-}
-
-export const globalTypes = {
+const globalTypes = {
   colorMode: {
-    name: 'Chakra UI Color Mode',
-    defaultValue: 'dark',
+    name: "Chakra UI Color Mode",
+    defaultValue: "dark",
     toolbar: {
       items: [
-        {title: 'Light', value: 'light'},
-        {title: 'Dark', value: 'dark'}
+        { title: "Light", value: "light" },
+        { title: "Dark", value: "dark" },
       ],
-      dynamicTitle: true
-    }
-  }
+      dynamicTitle: true,
+    },
+  },
 };
 
 const withChakra = (Story, context) => {
   return (
-    <ChakraProvider theme={theme}>
-      <ColorMode colorMode={context.globals.colorMode}>
-        <Story/>
-      </ColorMode>
-    </ChakraProvider>
+    <AuthProvider>
+      <ChakraProvider value={system}>
+        <ColorModeProvider forcedTheme={context.globals.colorMode}>
+          <Story />
+        </ColorModeProvider>
+      </ChakraProvider>
+    </AuthProvider>
   );
 };
 
 const preview: Preview = {
   globalTypes,
-  parameters: {
-    controls: {
-      matchers: {
-        color: /(background|color)$/i,
-        date: /Date$/i,
-      },
-    },
-  },
   decorators: [
+    withThemeByClassName({
+      defaultTheme: "light",
+      themes: { light: "", dark: "dark" },
+    }),
     withChakra,
-  ]
+  ],
 };
 
 export default preview;
