@@ -23,14 +23,19 @@ const Upload: NextPage = () => {
   } = useAuth();
 
   const [play, setPlay] = useState<
-    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
+    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl" | "summary">
   >({} as MediaPlayerDrawerProps);
   const [open, setOpen] = useState(false);
   const onMediaPlayerOpenChange = (e: OpenChangeDetails) => setOpen(e.open);
-  const onPlayClick = (mediaUrl: string, transcriptUrl: string) => {
+  const onPlayClick = (
+    mediaUrl: string,
+    transcriptUrl: string,
+    summary?: string,
+  ) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
+      summary,
     });
     setOpen(true);
   };
@@ -42,7 +47,7 @@ const Upload: NextPage = () => {
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
     const uploadFile = (
       file: File,
-      { languages, enablePiiRedaction }: TranscribeProps,
+      { languages, enablePiiRedaction, generateSummary }: TranscribeProps,
     ) => {
       const id = uuid();
       const key = `${user?.id}/${id}.upload`;
@@ -52,6 +57,7 @@ const Upload: NextPage = () => {
         filetype: "userUploadedFile",
         languages: languages.join(","),
         enablePiiRedaction: JSON.stringify(enablePiiRedaction),
+        generateSummary: JSON.stringify(generateSummary),
       };
 
       setUploadData((current) => {
@@ -70,7 +76,7 @@ const Upload: NextPage = () => {
           return Storage.put(key, file, {
             level: "private",
             metadata,
-            progressCallback: (progress) => {
+            progressCallback: (progress: any) => {
               const progressPercent = (progress.loaded / progress.total) * 100;
 
               setUploadData((current) => {
@@ -113,6 +119,7 @@ const Upload: NextPage = () => {
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
         transcriptUrl={play?.transcriptUrl}
+        summary={play?.summary}
         open={open}
         onOpenChange={onMediaPlayerOpenChange}
       />
@@ -123,7 +130,7 @@ const Upload: NextPage = () => {
 export const getStaticProps = () => {
   return {
     props: {
-      pageTitle: "Upload",
+      pageTitle: "Upload Media",
     },
   };
 };

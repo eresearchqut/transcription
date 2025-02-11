@@ -9,10 +9,9 @@ import {
 } from "@chakra-ui/react";
 import { useLogin } from "../context/auth-context";
 import { Quotas } from "../components/quotas";
-import { TRANSCRIBE_QUOTAS } from "../model";
+import { TRANSCRIBE_QUOTAS } from "model";
 import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
-import { MappedIcon } from "@/components/mappedIcon";
 import { NextPageWithLayout } from "@/pages/_app";
 import { LoginLayout } from "../layout/layout";
 
@@ -63,7 +62,7 @@ const Login: NextPageWithLayout = () => {
             <Text>
               This service is powered by{" "}
               <ExternalLink href={"https://aws.amazon.com/transcribe/"}>
-                Amazon Transcribe <MappedIcon icon={"external-link"} />
+                Amazon Transcribe
               </ExternalLink>
               . Amazon transcribe uses a deep learning process called automatic
               speech recognition (ASR) to convert speech to text quickly and
@@ -105,7 +104,6 @@ const Login: NextPageWithLayout = () => {
                   }
                 >
                   Amazon Transcribe Security Documentation{" "}
-                  <MappedIcon icon={"external-link"} display={"inline"} />
                 </ExternalLink>
                 .
               </List.Item>

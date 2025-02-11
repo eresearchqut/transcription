@@ -1,0 +1,21 @@
+{
+  "name": "transcription",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": ["api", "deployment", "frontend", "model"],
+  "packageManager": "pnpm@10.2.1",
+  "scripts": {
+    "clean": "rimraf node_modules && pnpm recursive run clean",
+    "build": "pnpm recursive run build",
+    "dev": "pnpm --filter frontend dev",
+    "test": "pnpm recursive run test",
+    "lint": "pnpm recursive run lint"
+  },
+  "author": "eResearch",
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}

@@ -12,6 +12,7 @@ import {
   FaExternalLinkAlt,
   FaPhotoVideo,
   FaQuestion,
+  FaReadme,
 } from "react-icons/fa";
 import { Icon, IconProps } from "@chakra-ui/react";
 import { get, isEmpty } from "lodash";
@@ -25,6 +26,7 @@ import {
   TbFileCheck,
 } from "react-icons/tb";
 import {
+  MdChecklist,
   MdKeyboardDoubleArrowLeft,
   MdKeyboardDoubleArrowRight,
   MdOutlineSearch,
@@ -53,12 +55,14 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   file: TbFile,
   "file-check": TbFileCheck,
   "file-alert": TbFileAlert,
+  generated: MdChecklist,
   json: VscJson,
   movie: FaPhotoVideo,
   "play-outline-square": AiOutlinePlaySquare,
   playlist: RiPlayList2Fill,
   plus: FiPlus,
   question: FaQuestion,
+  readme: FaReadme,
   search: MdOutlineSearch,
   subtitle: MdOutlineSubtitles,
   "triangle-down": GoTriangleDown,

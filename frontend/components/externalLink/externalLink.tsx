@@ -1,13 +1,16 @@
 import { Link, LinkProps } from "@chakra-ui/react";
 import React from "react";
+import { MappedIcon } from "@/components/mappedIcon";
 
 interface ExternalLinkProps extends LinkProps {
   href: string;
+  withIcon?: boolean;
   children: React.ReactNode;
 }
 
 const ExternalLink: React.FC<ExternalLinkProps> = ({
   href,
+  withIcon = true,
   children,
   ...rest
 }) => {
@@ -19,7 +22,10 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
       color={{ base: "blue.600", _dark: "white" }}
       {...rest}
     >
-      {children}
+      {children}{" "}
+      {withIcon && (
+        <MappedIcon icon={"external-link"} mb={1} display={"inline"} />
+      )}
     </Link>
   );
 };

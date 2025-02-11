@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
     "target": "es2020",
     "module": "commonjs",
     "esModuleInterop": true,
@@ -7,6 +9,9 @@
     "strict": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
+    "declaration": true,
+    "lib": ["ES2022"]
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

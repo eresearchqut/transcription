@@ -76,7 +76,7 @@ export const useDownload = () => {
           level: "private",
           download: true,
         })
-          .then((output) => (output.Body as Blob).text())
+          .then((output: any) => (output.Body as Blob).text())
           .then((text) => JSON.parse(text) as TranscriptJob)
           .then((transcriptJob) =>
             format === "docx"

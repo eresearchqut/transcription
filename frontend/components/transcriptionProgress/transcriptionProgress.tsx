@@ -1,9 +1,13 @@
 import * as React from "react";
 import { FunctionComponent } from "react";
-import { Spinner, Stack, Text, VStack } from "@chakra-ui/react";
+import { Box, Spinner, Stack, Text, VStack } from "@chakra-ui/react";
 import { lowerCase } from "lodash";
 import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
-import { mapTranscriptionStatus, TranscriptionJobStatus } from "../../model";
+import {
+  enableGenerateSummary,
+  mapTranscriptionStatus,
+  TranscriptionJobStatus,
+} from "model";
 import {
   useTranscription,
   UseTranscriptionProps,
@@ -20,11 +24,14 @@ export interface FileTranscriptionProgressProps
   extends Pick<UseTranscriptionProps, "jobId"> {
   filename: string;
   uploadProgress: number;
-  onPlayClick: (mediaUrl: string, transcriptUrl: string) => void;
+  onPlayClick: (
+    mediaUrl: string,
+    transcriptUrl: string,
+    summary?: string,
+  ) => void;
 }
 
-const isCompleted = (progress: number) => progress === 100;
-
+const isUploadComplete = (progress: number) => progress === 100;
 const UploadProgressStatus = ({
   progress,
   processingText,
@@ -72,11 +79,40 @@ const TranscriptionProgressStatus = ({ status }: TranscriptionJobProgress) => {
   );
 };
 
+const GenerateSummaryStatus = ({
+  summaryKey,
+}: {
+  summaryKey: string | undefined;
+}) => {
+  const iconProps = { mr: 2, mb: 1 };
+  return (
+    <Box>
+      {!summaryKey ? (
+        <>
+          <Spinner size={"sm"} mr={1} /> Generating summary
+        </>
+      ) : (
+        <>
+          <MappedIcon
+            icon={"check-circle"}
+            {...iconProps}
+            color={"green.600"}
+          />
+          Summary generated
+        </>
+      )}
+    </Box>
+  );
+};
+
 export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
 > = ({ jobId, filename, uploadProgress, onPlayClick }) => {
-  const { transcription } = useTranscription({ jobId });
+  const { transcription, isTranscribeCompleted, isPipelineCompleted } =
+    useTranscription({ jobId });
   const transcriptionStatus = mapTranscriptionStatus(transcription);
+  const uploadCompleted = isUploadComplete(uploadProgress);
+  const isTranscribeJobCompleted = transcriptionStatus === "COMPLETED";
 
   return (
     <Alert
@@ -87,7 +123,7 @@ export const TranscriptionProgress: FunctionComponent<
         </Text>
       }
       status={
-        transcriptionStatus === TranscriptionJobStatus.COMPLETED
+        isPipelineCompleted
           ? "success"
           : transcriptionStatus === TranscriptionJobStatus.FAILED
             ? "error"
@@ -98,7 +134,7 @@ export const TranscriptionProgress: FunctionComponent<
           boxSize={[10, 12]}
           my={"auto"}
           icon={
-            transcriptionStatus === TranscriptionJobStatus.COMPLETED
+            isTranscribeJobCompleted
               ? "file-check"
               : transcriptionStatus === TranscriptionJobStatus.FAILED
                 ? "file-alert"
@@ -115,20 +151,23 @@ export const TranscriptionProgress: FunctionComponent<
         <VStack align={"flex-start"} gap={0} flexGrow={2}>
           <UploadProgressStatus
             progress={uploadProgress}
-            processingText={"Uploading..."}
+            processingText={"Uploading. Please do not close your browser..."}
             completedText={"Upload successful"}
           />
-          {isCompleted(uploadProgress) && (
+          {uploadCompleted && (
             <TranscriptionProgressStatus status={transcriptionStatus} />
           )}
+          {isTranscribeJobCompleted &&
+            enableGenerateSummary(transcription!) && (
+              <GenerateSummaryStatus summaryKey={transcription?.summaryKey} />
+            )}
         </VStack>
-        {transcriptionStatus === TranscriptionJobStatus.COMPLETED &&
-          transcription && (
-            <TranscriptionDownloadOptions
-              initialTranscription={transcription}
-              handlePlayClick={onPlayClick}
-            />
-          )}
+        {isTranscribeCompleted && (
+          <TranscriptionDownloadOptions
+            initialTranscription={transcription!}
+            handlePlayClick={onPlayClick}
+          />
+        )}
       </Stack>
     </Alert>
   );

@@ -4,7 +4,7 @@ import {
   Transcription,
   mapTranscriptionStatus,
   TranscriptionJobStatus as Status,
-} from "../../model";
+} from "model";
 import { isUndefined } from "lodash";
 import { Spinner } from "@chakra-ui/react";
 import {

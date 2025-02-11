@@ -3,7 +3,7 @@ import { formatDuration } from "date-fns";
 import { Heading, Stack, StackSeparator, Text } from "@chakra-ui/react";
 import { bytesToSize } from "../../inputs/filePicker";
 import { isEmpty, lowerFirst, upperFirst } from "lodash";
-import { TranscribeQuotaProps } from "../../model";
+import { TranscribeQuotaProps } from "model";
 
 export interface QuotasProps extends Omit<TranscribeQuotaProps, "accept"> {
   asTextOnly?: boolean;
