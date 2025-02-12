@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
-import Auth from "@aws-amplify/auth";
+import { Auth } from "aws-amplify";
 import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";

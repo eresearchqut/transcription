@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLogout } from "../context/auth-context";
-import Auth from "@aws-amplify/auth";
-import { Storage } from "aws-amplify";
+import { Auth, Storage } from "aws-amplify";
 import transcriptDocument, {
   TranscriptJob,
 } from "../components/transcriptDocument";

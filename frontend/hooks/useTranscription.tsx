@@ -8,8 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
 import { isEmpty, isUndefined } from "lodash";
-import Auth from "@aws-amplify/auth";
-import { Storage } from "aws-amplify";
+import { Auth, Storage } from "aws-amplify";
 import { useLogout } from "../context/auth-context";
 
 const API_ENDPOINT =
