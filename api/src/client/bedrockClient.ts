@@ -7,14 +7,18 @@ export const bedrockClientConfig = {
   region: process.env.AWS_REGION || "ap-southeast-2",
 };
 
+const ANTHROPIC_VERSION = process.env.ANTHROPIC_VERSION ?? "bedrock-2023-05-31";
+const BEDROCK_MODEL_ID =
+  process.env.BEDROCK_MODEL_ID ?? "anthropic.claude-3-haiku-20240307-v1:0";
+
 export const invokeModel = async (
   client: BedrockRuntimeClient,
   prompt: string,
-  modelId: string = "anthropic.claude-3-haiku-20240307-v1:0",
+  modelId: string = BEDROCK_MODEL_ID,
 ): Promise<string> => {
   // Prepare the payload for the model.
   const payload = {
-    anthropic_version: "bedrock-2023-05-31",
+    anthropic_version: ANTHROPIC_VERSION,
     max_tokens: 1000,
     messages: [
       {

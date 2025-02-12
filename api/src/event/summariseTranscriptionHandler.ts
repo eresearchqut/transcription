@@ -21,6 +21,12 @@ const outputPattern = /private\/(.*)\/(.*)\/(.*)/gm;
 const s3Client = new S3Client({ region });
 const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
 
+const GENERATE_SUMMARY_PROMPT =
+  process.env.GENERATE_SUMMARY_PROMPT ??
+  "Provide a professional summary, of the following transcript that is clear and concise, " +
+    'relying strictly on the text provided, and without telling me "here it is". Keep it to a ' +
+    "single paragraph, under 100 words.";
+
 if (process.env.NODE_ENV !== "test") {
   xray.captureAWSv3Client(s3Client);
 }
@@ -65,9 +71,7 @@ export const handler = async (event: S3Event) => {
                 .then((transcript: string) =>
                   invokeModel(
                     bedrockClient,
-                    `Provide a professional summary, of the following transcript that is clear and concise, ` +
-                      `relying strictly on the text provided, and without telling me "here it is". Keep it to a ` +
-                      `single paragraph, under 100 words. Transcript: ${transcript}`,
+                    `${GENERATE_SUMMARY_PROMPT} Transcript: ${transcript}`,
                   ),
                 )
                 .then((summary: string) =>
