@@ -23,9 +23,8 @@ const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
 
 const GENERATE_SUMMARY_PROMPT =
   process.env.GENERATE_SUMMARY_PROMPT ??
-  "Provide a professional summary, of the following transcript that is clear and concise, " +
-    'relying strictly on the text provided, and without telling me "here it is". Keep it to a ' +
-    "single paragraph, under 100 words.";
+  "Summarise the following transcript in a single paragraph, under 100 words, and " +
+    "relying strictly on the text provided. In your response, skip the preamble and go straight into the summary.";
 
 if (process.env.NODE_ENV !== "test") {
   xray.captureAWSv3Client(s3Client);
