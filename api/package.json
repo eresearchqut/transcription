@@ -10,7 +10,9 @@
         "build": "tsc",
         "test": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_XRAY_LOG_LEVEL=silent jest --maxWorkers 1",
         "fmt": "prettier --write .",
-        "lint": "eslint --fix ."
+        "fmt:check": "prettier --check .",
+        "lint": "eslint --fix '**/*.{ts,tsx}'",
+        "lint:check": "eslint '**/*.{ts,tsx}'"
     },
     "dependencies": {
         "@aws-sdk/client-bedrock-runtime": "^3.741.0",

@@ -11,7 +11,9 @@
     "clean": "rimraf dist && rimraf node_modules",
     "build": "tsc",
     "fmt": "prettier --write .",
-    "lint": "eslint --fix ."
+    "fmt:check": "prettier --check .",
+    "lint": "eslint --fix '**/*.{ts,tsx}'",
+    "lint:check": "eslint '**/*.{ts,tsx}'"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

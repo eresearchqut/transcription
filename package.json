@@ -11,7 +11,10 @@
     "build": "pnpm recursive run build",
     "dev": "pnpm --filter frontend dev",
     "test": "pnpm recursive run test",
-    "lint": "pnpm recursive run lint"
+    "lint": "pnpm recursive run lint",
+    "lint:check": "pnpm recursive run lint:check",
+    "fmt": "pnpm recursive run fmt",
+    "fmt:check": "pnpm recursive run fmt:check"
   },
   "author": "eResearch",
   "license": "MIT",
