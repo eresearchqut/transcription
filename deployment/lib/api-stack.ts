@@ -296,7 +296,7 @@ export class ApiStack extends cdk.Stack {
     const summariseTranscriptionFunction = new NodejsFunction(this, "SummariseTranscriptionFunction", {
       runtime: lambda.Runtime.NODEJS_20_X,
       description: "Generates a summary of the transcription output",
-      timeout: cdk.Duration.seconds(15),
+      timeout: cdk.Duration.minutes(5),
       memorySize: 1024,
       entry: "../api/src/event/summariseTranscriptionHandler.ts",
       handler: "handler",
