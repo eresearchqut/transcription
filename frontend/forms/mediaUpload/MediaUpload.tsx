@@ -95,23 +95,31 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             ariaLabel={"Help with Generate Summary"}
             header={"Generate Summary"}
           >
-            This service is powered by{" "}
-            <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
-              Amazon Bedrock
-            </ExternalLink>
-            . Using generative AI and the Claude Haiku model, a summary is
-            generated from the transcription of the provided media. Classifier
-            metrics are used to identify potential violations of{" "}
-            <ExternalLink href={"https://aws.amazon.com/aup/"}>
-              Acceptable Use
-            </ExternalLink>{" "}
-            and{" "}
-            <ExternalLink
-              href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
-            >
-              Responsible Use
-            </ExternalLink>{" "}
-            policies.
+            <Text mb={4}>
+              This service is powered by{" "}
+              <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
+                Amazon Bedrock
+              </ExternalLink>
+              . Using generative AI and the Claude Haiku model, a summary is
+              generated from the transcription of the provided media. Classifier
+              metrics are used to identify potential violations of{" "}
+              <ExternalLink href={"https://aws.amazon.com/aup/"}>
+                Acceptable Use
+              </ExternalLink>{" "}
+              and{" "}
+              <ExternalLink
+                href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
+              >
+                Responsible Use
+              </ExternalLink>{" "}
+              policies.
+            </Text>
+            <Text>
+              Please be aware that factual assertions in the output should not
+              be relied upon without independently checking their accuracy, as
+              they may be false, incomplete, misleading or not reflective of
+              recent events or information.
+            </Text>
           </HelpPopover>
         </Field>
         <Field
