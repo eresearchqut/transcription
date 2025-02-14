@@ -9,7 +9,7 @@ import { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 import { Transcription } from "model";
 
-import { invokeModel, bedrockClientConfig } from "../client/bedrockClient";
+import { bedrockClientConfig, invokeModel } from "../client/bedrockClient";
 import {
   getTranscription,
   summaryKey as updateSummaryKey,
@@ -23,8 +23,11 @@ const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
 
 const GENERATE_SUMMARY_PROMPT =
   process.env.GENERATE_SUMMARY_PROMPT ??
-  "Summarise the following transcript in a single paragraph, under 100 words, and " +
-    "relying strictly on the text provided. In your response, skip the preamble and go straight into the summary.";
+  "Summarise the following transcript in a single paragraph, under 100 words " +
+    "relying strictly on the text provided.";
+const NO_PREAMBLE_PROMPT =
+  process.env.NO_PREAMBLE_PROMPT ??
+  "Skip the preamble and go straight into the summary.";
 
 if (process.env.NODE_ENV !== "test") {
   xray.captureAWSv3Client(s3Client);
@@ -70,7 +73,7 @@ export const handler = async (event: S3Event) => {
                 .then((transcript: string) =>
                   invokeModel(
                     bedrockClient,
-                    `${GENERATE_SUMMARY_PROMPT} Transcript: ${transcript}`,
+                    `${GENERATE_SUMMARY_PROMPT} <transcript>${transcript}</transcript> ${NO_PREAMBLE_PROMPT}`,
                   ),
                 )
                 .then((summary: string) =>

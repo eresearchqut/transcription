@@ -97,9 +97,10 @@ describe("summariseTranscriptionHandler", () => {
               {
                 type: "text",
                 text:
-                  "Summarise the following transcript in a single paragraph, under 100 words, and " +
-                  "relying strictly on the text provided. In your response, skip the preamble and go straight into the summary. " +
-                  "Transcript: dummy transcription from mock",
+                  "Summarise the following transcript in a single paragraph, under 100 words " +
+                  "relying strictly on the text provided. " +
+                  "<transcript>dummy transcription from mock</transcript> " +
+                  "Skip the preamble and go straight into the summary.",
               },
             ],
           },
