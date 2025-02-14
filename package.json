@@ -1,0 +1,24 @@
+{
+  "name": "transcription",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": ["api", "deployment", "frontend", "model"],
+  "packageManager": "pnpm@10.2.1",
+  "scripts": {
+    "clean": "pnpm recursive run clean && rimraf node_modules",
+    "build": "pnpm recursive run build",
+    "dev": "pnpm --filter frontend dev",
+    "test": "pnpm recursive run test",
+    "lint": "pnpm recursive run lint",
+    "lint:check": "pnpm recursive run lint:check",
+    "fmt": "pnpm recursive run fmt",
+    "fmt:check": "pnpm recursive run fmt:check"
+  },
+  "author": "eResearch",
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}

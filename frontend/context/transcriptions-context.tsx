@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { Transcription } from "../model";
+import { Transcription } from "model";
 import { getter } from "../client/fetchers";
 import { useLogout } from "./auth-context";
 

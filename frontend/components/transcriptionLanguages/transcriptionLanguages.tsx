@@ -27,7 +27,7 @@ export const languagesFromTranscription = (
 export const TranscriptionLanguages: FunctionComponent<
   UseTranscriptionProps
 > = ({ jobId, initialTranscription }) => {
-  const { transcription, isJobFinished } = useTranscription({
+  const { transcription, isTranscribeCompleted } = useTranscription({
     jobId,
     initialTranscription,
   });
@@ -36,7 +36,7 @@ export const TranscriptionLanguages: FunctionComponent<
       ?.RedactionType,
   );
 
-  if (!isJobFinished) return <Tag>LOADING...</Tag>;
+  if (!isTranscribeCompleted) return <Tag>LOADING...</Tag>;
 
   return (
     <List.Root variant={"plain"}>

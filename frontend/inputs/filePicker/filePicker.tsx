@@ -2,7 +2,7 @@ import { FunctionComponent, useCallback, useState } from "react";
 import { DropzoneOptions, FileRejection, useDropzone } from "react-dropzone";
 import { Box, Button, Heading, Input, Stack, VStack } from "@chakra-ui/react";
 import { Quotas } from "../../components/quotas";
-import { TRANSCRIBE_QUOTAS } from "../../model";
+import { TRANSCRIBE_QUOTAS } from "model";
 import { Alert } from "@/components/ui/alert";
 import { MappedIcon } from "@/components/mappedIcon";
 

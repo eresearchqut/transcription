@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLogout } from "../context/auth-context";
-import Auth from "@aws-amplify/auth";
-import { Storage } from "aws-amplify";
+import { Auth, Storage } from "aws-amplify";
 import transcriptDocument, {
   TranscriptJob,
 } from "../components/transcriptDocument";
@@ -76,7 +75,7 @@ export const useDownload = () => {
           level: "private",
           download: true,
         })
-          .then((output) => (output.Body as Blob).text())
+          .then((output: any) => (output.Body as Blob).text())
           .then((text) => JSON.parse(text) as TranscriptJob)
           .then((transcriptJob) =>
             format === "docx"

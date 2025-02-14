@@ -1,24 +1,26 @@
 import { FunctionComponent, useState } from "react";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
+  Box,
   Code,
   Field as ChakraField,
-  Heading,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { LanguageInput } from "../../inputs/languageInput";
 import { isArray } from "lodash";
-import { TRANSCRIBE_QUOTAS } from "../../model";
+import { TRANSCRIBE_QUOTAS } from "model";
 import { HelpPopover } from "@/components/helpPopover";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import { CheckedChangeDetails } from "@zag-js/switch";
+import { ExternalLink } from "@/components/externalLink";
 
 export interface TranscribeProps {
   languages: string[];
   enablePiiRedaction: boolean;
+  generateSummary: boolean;
 }
 
 export interface MediaUploadProps {
@@ -30,6 +32,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 }) => {
   const [languages, setLanguages] = useState<string[]>(["en-AU"]);
   const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
+  const [generateSummary, setGenerateSummary] = useState<boolean>(true);
 
   const onLanguageChange = (selectedLanguages: string | string[]) => {
     setLanguages(
@@ -45,8 +48,12 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     setEnablePiiRedaction(isChecked);
   };
 
+  const onGenerateSummaryChange = (d: CheckedChangeDetails) => {
+    setGenerateSummary(d.checked);
+  };
+
   const onFilesPicked = (files: File[]) => {
-    onSubmit({ languages, enablePiiRedaction }, files);
+    onSubmit({ languages, enablePiiRedaction, generateSummary }, files);
   };
 
   const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_QUOTAS;
@@ -70,9 +77,59 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
         alignSelf={"flex-start"}
         alignItems={{ sm: "center" }}
       >
-        <Heading size={"sm"} as={"h2"}>
-          Options:
-        </Heading>
+        <Field
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          label={
+            <Box as={"span"} whiteSpace={"nowrap"}>
+              Generate Summary
+            </Box>
+          }
+        >
+          <Switch
+            checked={generateSummary}
+            onCheckedChange={onGenerateSummaryChange}
+          />
+          <HelpPopover
+            ariaLabel={"Help with Generate Summary"}
+            header={"Generate Summary"}
+          >
+            <VStack gap={3}>
+              <Text>
+                This service is powered by{" "}
+                <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
+                  Amazon Bedrock
+                </ExternalLink>
+                . Using generative AI and the Claude Haiku model, a summary is
+                generated from the transcription of the provided media.
+                Classifier metrics are used to identify potential violations of{" "}
+                <ExternalLink href={"https://aws.amazon.com/aup/"}>
+                  Acceptable Use
+                </ExternalLink>{" "}
+                and{" "}
+                <ExternalLink
+                  href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
+                >
+                  Responsible Use
+                </ExternalLink>{" "}
+                policies.
+              </Text>
+              <Text>
+                By using this service you are expected to comply with{" "}
+                <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
+                  Anthropic's Usage Policy.
+                </ExternalLink>
+              </Text>
+              <Text>
+                Please be aware that factual assertions in the output should not
+                be relied upon without independently checking their accuracy, as
+                they may be false, incomplete, misleading or not reflective of
+                recent events or information.
+              </Text>
+            </VStack>
+          </HelpPopover>
+        </Field>
         <Field
           display={"flex"}
           flexDirection={"row"}

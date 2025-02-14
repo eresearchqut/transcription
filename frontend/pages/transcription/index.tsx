@@ -12,7 +12,7 @@ import {
 import { ColumnDef, SortingState } from "@tanstack/react-table";
 import DataTable from "@/components/dataTable";
 import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
-import { TRANSCRIBE_QUOTAS, Transcription } from "../../model";
+import { TRANSCRIBE_QUOTAS, Transcription } from "model";
 import { TranscriptionStatus } from "@/components/transcriptionStatus";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
@@ -31,6 +31,7 @@ import TranscriptionsListingPageLayout from "../../layout/transcriptionsListingP
 import { NextPageWithLayout } from "@/pages/_app";
 import { TranscriptionsContext } from "../../context/transcriptions-context";
 import { ToggleTip } from "@/components/ui/toggle-tip";
+import { TranscriptionSummary } from "@/components/transcriptionSummary";
 
 const TranscriptionPage: NextPageWithLayout = () => {
   const [open, setOpen] = useState(false);
@@ -38,12 +39,17 @@ const TranscriptionPage: NextPageWithLayout = () => {
     TranscriptionsContext,
   );
   const [play, setPlay] = useState<
-    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl">
+    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl" | "summary">
   >({} as MediaPlayerDrawerProps);
-  const handlePlayClick = (mediaUrl: string, transcriptUrl: string) => {
+  const handlePlayClick = (
+    mediaUrl: string,
+    transcriptUrl: string,
+    summary?: string,
+  ) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
+      summary,
     });
     setOpen(true);
   };
@@ -110,7 +116,15 @@ const TranscriptionPage: NextPageWithLayout = () => {
         const transcription = props.row.original as Transcription;
         const filename = formatFilename(transcription.metadata.filename);
 
-        return <Text>{filename}</Text>;
+        return (
+          <HStack>
+            <Text>{filename}</Text>
+            <TranscriptionSummary
+              jobId={transcription.sk}
+              initialTranscription={transcription}
+            />
+          </HStack>
+        );
       },
     },
     {
@@ -224,6 +238,7 @@ const TranscriptionPage: NextPageWithLayout = () => {
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
         transcriptUrl={play?.transcriptUrl}
+        summary={play?.summary}
         open={open}
         onOpenChange={onMediaPlayerOpenChange}
       />

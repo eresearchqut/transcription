@@ -293,6 +293,52 @@ export class ApiStack extends cdk.Stack {
       { suffix: ".json" }
     );
 
+    const summariseTranscriptionFunction = new NodejsFunction(this, "SummariseTranscriptionFunction", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      description: "Generates a summary of the transcription output",
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 1024,
+      entry: "../api/src/event/summariseTranscriptionHandler.ts",
+      handler: "handler",
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: "es2020"
+      },
+      environment: {
+        TABLE_NAME: dataTable.tableName,
+        BUCKET_NAME: dataBucket.bucketName,
+        APPLICATION_NAME: props.parameters.ApplicationName,
+        ENVIRONMENT: props.parameters.Environment
+      }
+    });
+
+    summariseTranscriptionFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:GetObjectAcl",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:PutObjectAcl"
+      ],
+      resources: [
+        `${dataBucket.bucketArn}/*`
+      ],
+      effect: iam.Effect.ALLOW
+    }));
+    summariseTranscriptionFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["bedrock:InvokeModel"],
+      resources: ["arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0"],
+    }))
+    dataTable.grantReadWriteData(summariseTranscriptionFunction);
+    dataBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(summariseTranscriptionFunction),
+      { prefix: "private" },
+      { suffix: ".json" }
+    );
+
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders: props.parameters.SupportedIdentityProviders.map(provider => cognito.UserPoolClientIdentityProvider.custom(provider)),
       oAuth: {

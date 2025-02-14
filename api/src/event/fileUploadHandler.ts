@@ -45,7 +45,6 @@ export const handler = async (event: S3Event) => {
           continue;
         }
 
-
         const languages: string[] =
           headResponse.Metadata["languages"].split(/,\s?/);
         const enablePiiRedaction: boolean = JSON.parse(
@@ -58,19 +57,19 @@ export const handler = async (event: S3Event) => {
                 LanguageCode: LanguageCode.EN_US,
               }
             : languages.length > 1
-            ? {
-                IdentifyMultipleLanguages: true,
-                LanguageOptions: languages.map(
-                  (language) => language as LanguageCode,
-                ),
-              }
-            : languages.length > 0
-            ? {
-                LanguageCode: languages.at(0) as LanguageCode,
-              }
-            : {
-                IdentifyLanguage: true,
-              }),
+              ? {
+                  IdentifyMultipleLanguages: true,
+                  LanguageOptions: languages.map(
+                    (language) => language as LanguageCode,
+                  ),
+                }
+              : languages.length > 0
+                ? {
+                    LanguageCode: languages.at(0) as LanguageCode,
+                  }
+                : {
+                    IdentifyLanguage: true,
+                  }),
         };
 
         const piiParams = {

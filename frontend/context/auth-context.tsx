@@ -9,7 +9,8 @@ import React, {
   useReducer,
   useState,
 } from "react";
-import Auth, { CognitoUser } from "@aws-amplify/auth";
+import { Auth } from "aws-amplify";
+import { CognitoUser } from "amazon-cognito-identity-js";
 import { authReducer, AuthReducerAction, AuthState } from "./auth-reducer";
 import { useRouter } from "next/router";
 

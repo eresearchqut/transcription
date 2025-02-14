@@ -3,22 +3,32 @@ import { FunctionComponent } from "react";
 import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
 import Player from "../player";
 import {
+  DrawerBackdrop,
   DrawerBody,
+  DrawerCloseTrigger,
   DrawerContent,
   DrawerFooter,
   DrawerRoot,
 } from "../ui/drawer";
 import { Alert } from "../ui/alert";
+import {
+  AccordionItem,
+  AccordionItemContent,
+  AccordionItemTrigger,
+  AccordionRoot,
+} from "@/components/ui/accordion";
 
 export interface MediaPlayerDrawerProps
   extends Omit<DrawerRootProps, "children"> {
   mediaUrl: string;
   transcriptUrl: string;
+  summary?: string;
 }
 
 const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   mediaUrl,
   transcriptUrl,
+  summary,
   open,
   onOpenChange,
   ...drawerProps
@@ -28,12 +38,13 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   return (
     <DrawerRoot
       placement="end"
-      finalFocusRef={finalRef}
+      finalFocusEl={() => finalRef.current}
       size={"md"}
       open={open}
       onOpenChange={onOpenChange}
       {...drawerProps}
     >
+      <DrawerBackdrop />
       <DrawerContent>
         <Alert status="info" title={"Web Player"}>
           <Box>
@@ -43,6 +54,16 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
         </Alert>
 
         <DrawerBody>
+          {summary && (
+            <AccordionRoot collapsible variant={"enclosed"} mb={4}>
+              <AccordionItem value={"summary"}>
+                <AccordionItemTrigger>
+                  Summary of transcript
+                </AccordionItemTrigger>
+                <AccordionItemContent>{summary}</AccordionItemContent>
+              </AccordionItem>
+            </AccordionRoot>
+          )}
           {mediaUrl && transcriptUrl && (
             <Player audio={mediaUrl} transcript={transcriptUrl} />
           )}
@@ -53,12 +74,13 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
             variant="outline"
             mr={3}
             onClick={() => {
-              onOpenChange({ open: false });
+              onOpenChange?.({ open: false });
             }}
           >
             Close player
           </Button>
         </DrawerFooter>
+        <DrawerCloseTrigger />
       </DrawerContent>
     </DrawerRoot>
   );

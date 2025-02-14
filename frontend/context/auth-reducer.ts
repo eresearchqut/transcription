@@ -1,4 +1,4 @@
-import type { CognitoUser } from "@aws-amplify/auth";
+import { CognitoUser } from "amazon-cognito-identity-js";
 
 export type User = {
   username: string;
