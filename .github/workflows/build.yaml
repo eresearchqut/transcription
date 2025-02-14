@@ -17,16 +17,10 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-  checks:
-    needs: install
-    steps:
       - name: Linting
         run: pnpm lint
       - name: Formatting
         run: pnpm fmt:check
-  build:
-    needs: install
-    steps:
       - name: Build modules
         run: pnpm build
       - name: Run tests
