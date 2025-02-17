@@ -2,14 +2,13 @@ import { NextPage } from "next";
 import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
-import { Auth } from "aws-amplify";
-import { Storage } from "aws-amplify";
 import { useAuth, useLogout } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
 import { OpenChangeDetails } from "@zag-js/dialog";
+import { uploadData } from "aws-amplify/storage";
 
 interface UploadProps {
   filename: string;
@@ -20,6 +19,7 @@ interface UploadProps {
 const Upload: NextPage = () => {
   const {
     state: { user },
+    getCurrentSession,
   } = useAuth();
 
   const [play, setPlay] = useState<
@@ -40,7 +40,9 @@ const Upload: NextPage = () => {
     setOpen(true);
   };
 
-  const [uploadData, setUploadData] = useState<Record<string, UploadProps>>({});
+  const [uploadProps, setUploadProps] = useState<Record<string, UploadProps>>(
+    {},
+  );
 
   const { handleLogout } = useLogout();
 
@@ -60,7 +62,7 @@ const Upload: NextPage = () => {
         generateSummary: JSON.stringify(generateSummary),
       };
 
-      setUploadData((current) => {
+      setUploadProps((current) => {
         return {
           ...current,
           [id]: {
@@ -71,27 +73,32 @@ const Upload: NextPage = () => {
         };
       });
 
-      Auth.currentSession()
-        .then(() => {
-          return Storage.put(key, file, {
-            level: "private",
-            metadata,
-            progressCallback: (progress: any) => {
-              const progressPercent = (progress.loaded / progress.total) * 100;
+      getCurrentSession()
+        .then(() =>
+          uploadData({
+            path: ({ identityId }) => `private/${identityId}/${key}`,
+            data: file,
+            options: {
+              contentDisposition: `attachment; filename = ${metadata.filename}`,
+              metadata,
+              onProgress: ({ transferredBytes, totalBytes }) => {
+                const progressPercent =
+                  (transferredBytes / (totalBytes ?? 1)) * 100;
 
-              setUploadData((current) => {
-                return {
-                  ...current,
-                  [id]: {
-                    filename: file.name,
-                    uploadProgressPercent: progressPercent,
-                    transcriptionProgress: undefined,
-                  },
-                };
-              });
+                setUploadProps((current) => {
+                  return {
+                    ...current,
+                    [id]: {
+                      filename: file.name,
+                      uploadProgressPercent: progressPercent,
+                      transcriptionProgress: undefined,
+                    },
+                  };
+                });
+              },
             },
-          });
-        })
+          }),
+        )
         .catch(() => {
           handleLogout().then();
         });
@@ -103,7 +110,7 @@ const Upload: NextPage = () => {
   return (
     <>
       <VStack gap={4} align="stretch">
-        {Object.entries(uploadData).map(
+        {Object.entries(uploadProps).map(
           ([key, { filename, uploadProgressPercent }]) => (
             <TranscriptionProgress
               key={key}

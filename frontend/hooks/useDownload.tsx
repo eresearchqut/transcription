@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useLogout } from "../context/auth-context";
-import { Auth, Storage } from "aws-amplify";
+import { useAuth, useLogout } from "../context/auth-context";
 import transcriptDocument, {
   TranscriptJob,
 } from "../components/transcriptDocument";
 import { Packer } from "docx";
 import srtConvert from "aws-transcription-to-srt";
 import toWebVTT from "srt-webvtt";
+import { downloadData, getUrl } from "aws-amplify/storage";
 
 export interface DownloadProps {
   filename: string;
@@ -21,6 +21,7 @@ export interface DownloadTranscriptProps extends DownloadProps {
 export const useDownload = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { handleLogout } = useLogout();
+  const { getCurrentSession } = useAuth();
 
   const handleDownload = (fileName: string, url: string) => {
     const link = document.createElement("a");
@@ -53,12 +54,14 @@ export const useDownload = () => {
     objectKey: string,
     fileName: string,
   ): Promise<string> =>
-    Auth.currentSession()
+    getCurrentSession()
       .then(() =>
-        Storage.get(objectKey, {
-          level: "private",
-          contentDisposition: `attachment; filename = ${fileName}`,
-        }),
+        getUrl({
+          path: ({ identityId }) => `private/${identityId}/${objectKey}`,
+          options: {
+            contentDisposition: `attachment; filename = ${fileName}`,
+          },
+        }).then((output) => output.url.href),
       )
       .catch((e) => {
         handleLogout().then();
@@ -69,22 +72,22 @@ export const useDownload = () => {
     objectKey: string,
     format: "srt" | "vtt" | "docx",
   ): Promise<string> => {
-    return Auth.currentSession()
+    return getCurrentSession()
       .then(() =>
-        Storage.get(objectKey, {
-          level: "private",
-          download: true,
-        })
-          .then((output: any) => (output.Body as Blob).text())
-          .then((text) => JSON.parse(text) as TranscriptJob)
-          .then((transcriptJob) =>
-            format === "docx"
-              ? Packer.toBlob(transcriptDocument(transcriptJob))
-              : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
-          )
-          .then((blob) =>
-            format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
-          ),
+        downloadData({
+          path: ({ identityId }) => `private/${identityId}/${objectKey}`,
+        }),
+      )
+      .then((downloadDataOutput) => downloadDataOutput.result)
+      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
+      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
+      .then((transcriptJob) =>
+        format === "docx"
+          ? Packer.toBlob(transcriptDocument(transcriptJob))
+          : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
+      )
+      .then((blob) =>
+        format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
       )
       .catch((e) => {
         handleLogout().then();

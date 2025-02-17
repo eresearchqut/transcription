@@ -9,17 +9,27 @@ import React, {
   useReducer,
   useState,
 } from "react";
-import { Auth } from "aws-amplify";
-import { CognitoUser } from "amazon-cognito-identity-js";
-import { authReducer, AuthReducerAction, AuthState } from "./auth-reducer";
+import {
+  authReducer,
+  AuthReducerAction,
+  AuthState,
+  User,
+} from "./auth-reducer";
 import { useRouter } from "next/router";
+import {
+  AuthTokens,
+  fetchAuthSession,
+  fetchUserAttributes,
+  JWT,
+  signInWithRedirect,
+  signOut,
+} from "aws-amplify/auth";
 
 type AuthContextValue = [AuthState, Dispatch<AuthReducerAction>];
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export const JWT_LOCALSTORAGE_KEY = "cognito_id_token";
 export const IDENTITY_LOCALSTORAGE_KEY = "cognito_identity_id";
-export const TEMP_PWD_LOCALSTORAGE_KEY = "auto_sign_in";
 
 const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, {
@@ -48,51 +58,50 @@ function useAuth() {
   }
   const [state, dispatch] = context;
 
-  const setIdentityIdInLocalStorage = useCallback(async () => {
-    const credentials = await Auth.currentCredentials();
-    localStorage.setItem(IDENTITY_LOCALSTORAGE_KEY, credentials.identityId);
+  const setIdentityIdInLocalStorage = useCallback((identityId: string | undefined) => {
+    localStorage.setItem(IDENTITY_LOCALSTORAGE_KEY, identityId ?? "");
   }, []);
 
-  const setTokenInLocalStorage = useCallback((cognitoUser: CognitoUser) => {
-    localStorage.setItem(
-      JWT_LOCALSTORAGE_KEY,
-      cognitoUser.getSignInUserSession()?.getIdToken().getJwtToken() || "",
-    );
+  const setTokenInLocalStorage = useCallback((jwtToken: JWT | undefined) => {
+    localStorage.setItem(JWT_LOCALSTORAGE_KEY, jwtToken?.toString() ?? "");
   }, []);
 
-  const getCurrentUser = useCallback(async () => {
-    const cognitoUser =
-      (await Auth.currentAuthenticatedUser()) as CognitoUser & {
-        attributes: CognitoUserAttributes;
-      };
-    return cognitoUser;
+  const getCurrentSession = useCallback(async () => {
+    const authSession = await fetchAuthSession();
+    if (authSession.identityId === undefined) {
+      throw new Error("No current user");
+    }
+    return authSession;
   }, []);
 
   const initializeUser = useCallback(async () => {
     try {
-      const cognitoUser = await getCurrentUser();
-      const groups =
-        (await cognitoUser.getSignInUserSession()?.getAccessToken().payload[
-          "cognito:groups"
-        ]) || [];
-      setTokenInLocalStorage(cognitoUser);
-      await setIdentityIdInLocalStorage();
-      const { attributes } = cognitoUser;
+      const authSession = await getCurrentSession();
+      const { identityId, tokens } = authSession;
+
+      setTokenInLocalStorage(tokens?.idToken);
+      setIdentityIdInLocalStorage(identityId);
+
+      const attributes = (await fetchUserAttributes()) as CognitoUserAttributes;
+      const groups = tokens?.accessToken?.payload?.["cognito:groups"] || [];
+
       dispatch({
         type: "LOGIN_SUCCESS",
-        userConfig: cognitoUser,
+        userConfig: authSession,
         user: {
           username: attributes["custom:uid"],
           id: attributes["custom:qutIdentityId"],
           groups,
-        },
+        } as User,
       });
     } catch (e) {
-      console.log(e);
       if (e instanceof Error) {
-        dispatch({ type: "LOGIN_FAILURE", error: e });
-      } else if (JSON.stringify(e).toLowerCase().includes("no current user")) {
-        dispatch({ type: "LOGIN_FAILURE", error: undefined });
+        dispatch({
+          type: "LOGIN_FAILURE",
+          error: e.message.toLowerCase().includes("no current user")
+            ? undefined
+            : e,
+        });
       } else {
         dispatch({
           type: "LOGIN_FAILURE",
@@ -102,17 +111,13 @@ function useAuth() {
       localStorage.removeItem(JWT_LOCALSTORAGE_KEY);
       localStorage.removeItem(IDENTITY_LOCALSTORAGE_KEY);
     }
-  }, [
-    dispatch,
-    getCurrentUser,
-    setIdentityIdInLocalStorage,
-    setTokenInLocalStorage,
-  ]);
+  }, [dispatch, setTokenInLocalStorage, setIdentityIdInLocalStorage]);
 
   return {
     state,
     dispatch,
     initializeUser,
+    getCurrentSession,
   };
 }
 
@@ -124,7 +129,7 @@ function useLogout() {
   async function handleLogout() {
     try {
       setIsLoggingOut(true);
-      await Auth.signOut();
+      await signOut();
       dispatch({ type: "LOGOUT_SUCCESS" });
     } finally {
       localStorage.clear();
@@ -146,9 +151,8 @@ function useLogin() {
   async function handleLogin() {
     setError(null);
     setIsLoggingIn(true);
-    localStorage.removeItem(TEMP_PWD_LOCALSTORAGE_KEY);
     try {
-      const user = await Auth.federatedSignIn({ customProvider: "QUT" });
+      const user = await signInWithRedirect({ provider: { custom: "QUT" } });
       initializeUser().then(() => console.log("User initialised post login"));
       router.push("/").then(() => console.log("Routing to home post login"));
       return user;
