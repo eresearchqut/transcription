@@ -21,8 +21,8 @@ export const withAuthentication = (
     } = useAuth();
 
     useEffect(() => {
-      initializeUser().then(() => console.log("Initialised user"));
-    }, [initializeUser]);
+      initializeUser().then();
+    }, []);
 
     const router = useRouter();
 
@@ -56,8 +56,8 @@ export const withAnonymous = (
     } = useAuth();
     const router = useRouter();
     useEffect(() => {
-      initializeUser().then(() => console.log("Initialised user"));
-    }, [initializeUser]);
+      initializeUser().then();
+    }, []);
 
     if (isAuthenticating) {
       return <Spinner />;

@@ -8,8 +8,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
 import { isEmpty, isUndefined } from "lodash";
-import { Auth, Storage } from "aws-amplify";
-import { useLogout } from "../context/auth-context";
+import { useAuth, useLogout } from "../context/auth-context";
+import { downloadData } from "aws-amplify/storage";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -31,6 +31,7 @@ export const useTranscription = ({
   initialTranscription,
 }: UseTranscriptionProps): UseTranscriptionState => {
   const { handleLogout } = useLogout();
+  const { getCurrentSession } = useAuth();
   const [transcription, setTranscription] = useState<Transcription | undefined>(
     initialTranscription,
   );
@@ -69,12 +70,16 @@ export const useTranscription = ({
     queryKey: ["transcription.summary", jobId],
     queryFn: async (): Promise<string | undefined> => {
       return !isEmpty(transcription?.summaryKey)
-        ? Auth.currentSession()
+        ? getCurrentSession()
             .then(() =>
-              Storage.get(transcription!.summaryKey!, {
-                level: "private",
-                download: true,
-              }).then((output: any) => (output.Body as Blob).text()),
+              downloadData({
+                path: ({ identityId }) =>
+                  `private/${identityId}/${transcription!.summaryKey}`,
+              }),
+            )
+            .then((downloadDataOutput) => downloadDataOutput.result)
+            .then((downloadDataOutputResult) =>
+              downloadDataOutputResult.body.text(),
             )
             .catch((e) => {
               handleLogout().then();

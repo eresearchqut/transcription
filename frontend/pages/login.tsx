@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Card,
   Grid,
@@ -101,7 +102,7 @@ const Login: NextPageWithLayout = () => {
           </Card.Header>
           <Card.Body>
             <VStack gap={4}>
-              <Text>
+              <Box>
                 Uploaded media and generated transcriptions are:
                 <List.Root listStylePosition={"inside"}>
                   <List.Item>
@@ -127,8 +128,8 @@ const Login: NextPageWithLayout = () => {
                     .
                   </List.Item>
                 </List.Root>
-              </Text>
-              <Text>
+              </Box>
+              <Box>
                 Generated transcription summaries:
                 <List.Root listStylePosition={"inside"}>
                   <List.Item>
@@ -149,7 +150,7 @@ const Login: NextPageWithLayout = () => {
                     policies.
                   </List.Item>
                 </List.Root>
-              </Text>
+              </Box>
             </VStack>
           </Card.Body>
         </Card.Root>
