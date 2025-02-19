@@ -38,6 +38,7 @@ import { FiPlus } from "react-icons/fi";
 import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 import { RiPlayList2Fill } from "react-icons/ri";
 import { VscJson } from "react-icons/vsc";
+import { HiMiniSparkles } from "react-icons/hi2";
 
 const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "check-circle": FaCheckCircle,
@@ -64,6 +65,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   question: FaQuestion,
   readme: FaReadme,
   search: MdOutlineSearch,
+  sparkle: HiMiniSparkles,
   subtitle: MdOutlineSubtitles,
   "triangle-down": GoTriangleDown,
   "triangle-up": GoTriangleUp,
