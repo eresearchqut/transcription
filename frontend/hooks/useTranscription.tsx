@@ -1,12 +1,15 @@
 import { useEffect, useState } from "react";
 import {
-  Transcription,
+  enableGenerateSummary,
   mapTranscriptionStatus,
+  Transcription,
   TranscriptionJobStatus,
-} from "../model";
+} from "model";
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
 import { isEmpty, isUndefined } from "lodash";
+import { useAuth, useLogout } from "../context/auth-context";
+import { downloadData } from "aws-amplify/storage";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -18,19 +21,24 @@ export interface UseTranscriptionProps {
 
 export interface UseTranscriptionState {
   transcription?: Transcription;
-  isJobFinished: boolean;
+  summary?: string;
+  isTranscribeCompleted: boolean;
+  isPipelineCompleted: boolean;
 }
 
 export const useTranscription = ({
   jobId,
   initialTranscription,
 }: UseTranscriptionProps): UseTranscriptionState => {
+  const { handleLogout } = useLogout();
+  const { getCurrentSession } = useAuth();
   const [transcription, setTranscription] = useState<Transcription | undefined>(
     initialTranscription,
   );
+  const [summary, setSummary] = useState<string | undefined>();
 
   const currentStatus = mapTranscriptionStatus(transcription);
-  const isJobFinished: boolean = transcription
+  const isTranscribeCompleted: boolean = transcription
     ? !isEmpty(transcription.downloadKey) &&
       !isUndefined(currentStatus) &&
       [
@@ -38,9 +46,15 @@ export const useTranscription = ({
         TranscriptionJobStatus.COMPLETED,
       ].includes(currentStatus!)
     : false;
+  const isPipelineCompleted: boolean =
+    !isUndefined(transcription) &&
+    isTranscribeCompleted &&
+    (enableGenerateSummary(transcription)
+      ? !isEmpty(transcription?.summaryKey)
+      : true);
 
   const { data } = useQuery({
-    enabled: !isJobFinished,
+    enabled: !isPipelineCompleted,
     queryKey: ["transcription", jobId],
     queryFn: async (): Promise<Transcription> =>
       getter({
@@ -51,14 +65,46 @@ export const useTranscription = ({
     refetchInterval: 5000,
   });
 
+  const { data: summaryResponse } = useQuery({
+    enabled: !isEmpty(transcription?.summaryKey),
+    queryKey: ["transcription.summary", jobId],
+    queryFn: async (): Promise<string | undefined> => {
+      return !isEmpty(transcription?.summaryKey)
+        ? getCurrentSession()
+            .then(() =>
+              downloadData({
+                path: ({ identityId }) =>
+                  `private/${identityId}/${transcription!.summaryKey}`,
+              }),
+            )
+            .then((downloadDataOutput) => downloadDataOutput.result)
+            .then((downloadDataOutputResult) =>
+              downloadDataOutputResult.body.text(),
+            )
+            .catch((e) => {
+              handleLogout().then();
+              throw e;
+            })
+        : undefined;
+    },
+  });
+
   useEffect(() => {
     if (data) {
       setTranscription(data);
     }
   }, [data]);
 
+  useEffect(() => {
+    if (summaryResponse) {
+      setSummary(summaryResponse);
+    }
+  }, [summaryResponse]);
+
   return {
     transcription,
-    isJobFinished,
+    summary,
+    isTranscribeCompleted,
+    isPipelineCompleted,
   };
 };

@@ -8,24 +8,22 @@
     "node": ">=20.0.0"
   },
   "scripts": {
+    "clean": "rimraf node_modules && rimraf cdk.out && rimraf cdk.context.json",
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.13",
     "@types/node": "20.16.11",
-    "aws-cdk": "2.161.1",
+    "aws-cdk": "^2.178.1",
     "esbuild": "^0.24.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
-    "typescript": "~5.6.3"
+    "typescript": "~5.6.3",
+    "rimraf": "^6.0.1"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.667.0",
-    "aws-cdk-lib": "2.161.1",
+    "aws-cdk-lib": "^2.178.1",
     "cdk-pipelines-github": "^0.4.125",
     "constructs": "^10.3.0",
     "source-map-support": "^0.5.21"

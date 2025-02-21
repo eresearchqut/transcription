@@ -13,9 +13,11 @@ export interface Transcription {
     languagecode: string;
     mimetype: string;
     filename: string;
+    generatesummary: string;
   };
   date: string;
   downloadKey?: string;
+  summaryKey?: string;
   ttl: number;
   jobStatusUpdated?: {
     detail: {
@@ -49,3 +51,7 @@ export const mapTranscriptionStatus = (
   ((transcription?.jobStatusUpdated?.detail.TranscriptionJobStatus ||
     transcription?.transcriptionResponse?.TranscriptionJob
       ?.TranscriptionJobStatus) as TranscriptionJobStatus) ?? undefined;
+
+export const enableGenerateSummary = (transcription: Transcription): boolean =>
+  transcription.metadata.generatesummary &&
+  JSON.parse(transcription.metadata.generatesummary);

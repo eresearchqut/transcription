@@ -9,7 +9,7 @@ const TeqsaLink: FunctionComponent = () => (
       "https://www.teqsa.gov.au/national-register/provider/queensland-university-technology"
     }
   >
-    PRV12079 <MappedIcon icon={"external-link"} mb={1} />
+    PRV12079
   </ExternalLink>
 );
 
@@ -28,7 +28,6 @@ export const Footer: FunctionComponent = () => {
         >
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.
-          <MappedIcon icon={"external-link"} mb={1} />
         </ExternalLink>
         <Fragment>
           <Text hideFrom={"md"}>
@@ -45,9 +44,11 @@ export const Footer: FunctionComponent = () => {
         href={
           "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
         }
+        withIcon={false}
       >
         <Button colorPalette={"blue"} variant={"solid"}>
-          Contact eResearch <MappedIcon icon={"external-link"} mb={1} />
+          Contact eResearch{" "}
+          <MappedIcon icon={"external-link"} width={"1em"} height={"1em"} />
         </Button>
       </ExternalLink>
     </Flex>

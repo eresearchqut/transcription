@@ -30,6 +30,11 @@ const headingRecipe = defineRecipe(
 );
 
 const customConfig = defineConfig({
+  globalCss: {
+    html: {
+      colorPalette: "blue",
+    },
+  },
   theme: {
     tokens: {
       colors,

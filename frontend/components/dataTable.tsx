@@ -197,7 +197,7 @@ export const DataTable = (props: DataTableProps) => {
         <HStack wrap={"wrap"} justify={"space-between"} width={"100%"}>
           <Flex align={"flex-start"}>
             <Flex>
-              <Tooltip label="First Page">
+              <Tooltip content="First Page">
                 <IconButton
                   aria-label={"First Page"}
                   onClick={() => table.setPageIndex(0)}
@@ -208,7 +208,7 @@ export const DataTable = (props: DataTableProps) => {
                   <MappedIcon icon={"double-arrow-left"} h={6} w={6} />
                 </IconButton>
               </Tooltip>
-              <Tooltip label="Previous Page">
+              <Tooltip content="Previous Page">
                 <IconButton
                   aria-label={"Previous Page"}
                   onClick={() => table.previousPage()}
@@ -237,7 +237,7 @@ export const DataTable = (props: DataTableProps) => {
                   const page = e.value ? parseInt(e.value) - 1 : 0;
                   table.setPageIndex(page);
                 }}
-                defaultValue={table.getState().pagination.pageIndex + 1}
+                defaultValue={String(table.getState().pagination.pageIndex + 1)}
               >
                 <NumberInputField />
               </NumberInputRoot>
@@ -245,7 +245,7 @@ export const DataTable = (props: DataTableProps) => {
                 w={32}
                 variant={"outline"}
                 collection={paginationPages}
-                value={[table.getState().pagination.pageSize]}
+                value={[String(table.getState().pagination.pageSize)]}
                 onValueChange={(e: ValueChangeDetails) => {
                   table.setPageSize(Number(e.value));
                 }}
@@ -267,7 +267,7 @@ export const DataTable = (props: DataTableProps) => {
           </Flex>
           <Flex align={"flex-start"}>
             <Flex>
-              <Tooltip label="Next Page">
+              <Tooltip content="Next Page">
                 <IconButton
                   aria-label={"Next Page"}
                   onClick={() => table.nextPage()}
@@ -277,7 +277,7 @@ export const DataTable = (props: DataTableProps) => {
                   <MappedIcon icon={"chevron-right"} h={4} w={4} />
                 </IconButton>
               </Tooltip>
-              <Tooltip label="Last Page">
+              <Tooltip content="Last Page">
                 <IconButton
                   aria-label={"Last Page"}
                   onClick={() => table.setPageIndex(table.getPageCount() - 1)}
