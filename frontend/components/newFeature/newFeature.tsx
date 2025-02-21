@@ -13,12 +13,12 @@ export const NewFeature: FunctionComponent<
     <HStack
       pos={"relative"}
       w={"full"}
-      borderColor={"purple.200"}
+      borderColor={"purple.300"}
       borderWidth={2}
       p={2}
     >
       <Text
-        color={"purple.700"}
+        color={{ base: "purple.700", _dark: "purple.300" }}
         position={"absolute"}
         top={-3}
         bg={"bg"}
