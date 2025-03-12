@@ -44,6 +44,13 @@ export const downloadKey = (
 ) =>
   updateResource(identityId, normaliseJobId(jobId), "downloadKey", downloadKey);
 
+export const summaryKey = (
+  identityId: string,
+  jobId: string,
+  summaryKey: string,
+) =>
+  updateResource(identityId, normaliseJobId(jobId), "summaryKey", summaryKey);
+
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);
 

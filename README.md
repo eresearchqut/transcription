@@ -6,22 +6,43 @@
 ![transcriptions](images/transcriptions.png)
 ![player](images/player.png)
 
+This application is monorepo using a pnpm workspace.
+
+* `pnpm build`
+* `pnpm install`
+* `pnpm test`
+
+## Local frontend development
+1. Copy the dev environment variables into your local `.env.local`
+```
+cd frontend
+export STACK_NAME=dev-transcription
+aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.local
+```
+2. Modify `.env.local` to redirect to the local app after login:
+```
+NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
+```
+3. Start the app
+```
+pnpm dev
+```
+
 ## Linting and Formatting
 
 ### Frontend
 
 ```
-cd frontend
-yarn lint
-yarn fmt
+pnpm --filter frontend lint
+pnpm --filter frontend fmt
 ```
 
 ### API
 
 ```
 cd api
-npm run lint
-npm run fmt
+pnpm --filter transcription-api lint
+pnpm --filter transcription-api fmt
 ```
 
 Ignore formatting revisions in `.git-blame-ignore-revs`:
@@ -39,7 +60,7 @@ npm install
 
 ```
 cd frontend
-yarn install
+pnpm install
 mkdir -p out
 ```
 
@@ -102,27 +123,11 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 From the top-level `frontend` directory:
 
 ```
-yarn build
+pnpm build
 ```
 
 ### Deploy frontend stack
 
 ```
 cdk deploy FrontEndStack
-```
-
-## Local frontend development
-1. Copy the dev environment variables into your local `.env.local`
-```
-cd frontend
-export STACK_NAME=dev-transcription
-aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.local
-```
-2. Modify `.env.local` to redirect to the local app after login:
-```
-NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
-```
-3. Start the app
-```
-yarn dev
 ```

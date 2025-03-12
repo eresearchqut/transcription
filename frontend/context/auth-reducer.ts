@@ -1,4 +1,4 @@
-import type { CognitoUser } from "@aws-amplify/auth";
+import { AuthSession } from "aws-amplify/auth";
 
 export type User = {
   username: string;
@@ -12,12 +12,12 @@ export type AuthState = {
   isAuthenticated: boolean;
   isAuthenticating: boolean;
   user: User | undefined;
-  userConfig: CognitoUser | undefined;
+  userConfig: AuthSession | undefined;
 };
 
 export type AuthReducerAction =
   | { type: "IS_LOGGING_IN" }
-  | { type: "LOGIN_SUCCESS"; user: User; userConfig: CognitoUser }
+  | { type: "LOGIN_SUCCESS"; user: User; userConfig: AuthSession }
   | { type: "LOGIN_FAILURE"; error: Error | undefined }
   | { type: "LOGOUT_SUCCESS" };
 

@@ -18,27 +18,30 @@ type AppPropsWithLayout = AppProps & {
 
 Amplify.configure({
   Auth: {
-    identityPoolId: process.env.NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID,
-    region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2",
-    userPoolId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_ID,
-    userPoolWebClientId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID,
-    mandatorySignIn: true,
-    oauth: {
-      domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN,
-      scope: [
-        "phone",
-        "email",
-        "profile",
-        "openid",
-        "aws.cognito.signin.user.admin",
-      ],
-      redirectSignIn: process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT,
-      redirectSignOut: process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT,
-      responseType: "token",
+    Cognito: {
+      userPoolClientId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID!,
+      userPoolId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_ID!,
+      loginWith: {
+        oauth: {
+          domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
+          scopes: [
+            "phone",
+            "email",
+            "profile",
+            "openid",
+            "aws.cognito.signin.user.admin",
+          ],
+          redirectSignIn: [process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT!],
+          redirectSignOut: [process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT!],
+          responseType: "token",
+        },
+      },
+      identityPoolId: process.env.NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID!,
+      allowGuestAccess: false,
     },
   },
   Storage: {
-    AWSS3: {
+    S3: {
       bucket: process.env.NEXT_PUBLIC_TRANSCRIPTION_BUCKET,
       region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2",
     },

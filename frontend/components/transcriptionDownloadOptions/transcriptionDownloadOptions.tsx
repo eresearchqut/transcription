@@ -2,7 +2,6 @@ import * as React from "react";
 import { FunctionComponent } from "react";
 import { Button, Stack } from "@chakra-ui/react";
 import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
-import { Transcription } from "../../model";
 import {
   useTranscription,
   UseTranscriptionProps,
@@ -18,13 +17,18 @@ import {
   MenuTrigger,
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
+import { Transcription } from "model";
 
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
 
 export interface DownloadOptionsProps
   extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
-  handlePlayClick: (mediaUrl: string, transcriptUrl: string) => void;
+  handlePlayClick: (
+    mediaUrl: string,
+    transcriptUrl: string,
+    summary?: string,
+  ) => void;
 }
 
 const filenameFromFormat = (transcription: Transcription, format: string) =>
@@ -48,7 +52,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     downloadTranscript,
     downloadFile,
   } = useDownload();
-  const { transcription } = useTranscription({
+  const { transcription, summary } = useTranscription({
     jobId: initialTranscription.sk,
     initialTranscription,
   });
@@ -61,15 +65,15 @@ export const TranscriptionDownloadOptions: FunctionComponent<
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
       fetchTranscriptUrl(objectKey, format),
     ]).then(([mediaUrl, transcriptUrl]) => {
-      handlePlayClick(mediaUrl, transcriptUrl);
+      handlePlayClick(mediaUrl, transcriptUrl, summary);
     });
   };
 
   return (
     <Stack direction={{ base: "column", sm: "row" }}>
       <MenuRoot>
-        <MenuTrigger variant={"outline"} colorPalette={"blue"} asChild>
-          <Button>
+        <MenuTrigger asChild>
+          <Button variant={"outline"} colorPalette={"blue"}>
             <MappedIcon icon={"chevron-down"} size={"xs"} />
             Download
           </Button>
@@ -88,6 +92,22 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               <MappedIcon icon={"movie"} /> Media file
             </MenuItem>
           </MenuItemGroup>
+          <MenuSeparator />
+          {transcription.summaryKey && (
+            <MenuItemGroup>
+              <MenuItem
+                value={"summary-txt"}
+                onClick={() => {
+                  downloadFile({
+                    objectKey: transcription.summaryKey!,
+                    filename: `Summary - ${filenameFromFormat(transcription, "txt")}`,
+                  });
+                }}
+              >
+                <MappedIcon icon={"readme"} /> Summary (.txt)
+              </MenuItem>
+            </MenuItemGroup>
+          )}
           <MenuSeparator />
           {transcription.downloadKey && (
             <MenuItemGroup title={"Transcription formats"}>
@@ -137,7 +157,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
         </MenuContent>
       </MenuRoot>
       <Tooltip
-        label={
+        content={
           isUndefined(transcription.downloadKey) &&
           "This action is available once your transcription job has completed."
         }

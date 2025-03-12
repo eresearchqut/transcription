@@ -1,4 +1,4 @@
-import Auth from "@aws-amplify/auth";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 export interface FetcherProps {
   apiUrl: string;
@@ -29,9 +29,7 @@ const createPath = (id?: string | string[]) =>
   id ? (Array.isArray(id) ? id.join("/") : id) : "";
 
 const fetchAuthToken = () =>
-  Auth.currentSession().then((currentSession) =>
-    currentSession.getIdToken().getJwtToken(),
-  );
+  fetchAuthSession().then((session) => session.tokens?.idToken?.toString());
 
 const rejectApiError = (response: Response) =>
   response

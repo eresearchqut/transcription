@@ -12,6 +12,9 @@ const dynamoDbClientConfig = {
   }),
 };
 const dynamoDBClient = new DynamoDBClient(dynamoDbClientConfig);
-xray.captureAWSv3Client(dynamoDBClient);
+
+if (process.env.NODE_ENV !== "test") {
+  xray.captureAWSv3Client(dynamoDBClient);
+}
 
 export default dynamoDBClient;

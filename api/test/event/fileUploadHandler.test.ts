@@ -12,7 +12,7 @@ describe("config", () => {
   it("start job after file upload", async () => {
     const transcribeMock = mockClient(TranscribeClient);
     const s3Mock = mockClient(S3Client);
-    const fileUploadEvent = require("./fileUplopadEvent.json");
+    const fileUploadEvent = require("./fileUploadEvent.json");
     const fileMetadata = require("./fileMetadata.json");
 
     s3Mock.on(HeadObjectCommand).resolves(fileMetadata);

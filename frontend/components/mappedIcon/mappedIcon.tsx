@@ -12,6 +12,7 @@ import {
   FaExternalLinkAlt,
   FaPhotoVideo,
   FaQuestion,
+  FaReadme,
 } from "react-icons/fa";
 import { Icon, IconProps } from "@chakra-ui/react";
 import { get, isEmpty } from "lodash";
@@ -25,6 +26,7 @@ import {
   TbFileCheck,
 } from "react-icons/tb";
 import {
+  MdChecklist,
   MdKeyboardDoubleArrowLeft,
   MdKeyboardDoubleArrowRight,
   MdOutlineSearch,
@@ -36,6 +38,7 @@ import { FiPlus } from "react-icons/fi";
 import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 import { RiPlayList2Fill } from "react-icons/ri";
 import { VscJson } from "react-icons/vsc";
+import { HiMiniSparkles } from "react-icons/hi2";
 
 const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "check-circle": FaCheckCircle,
@@ -53,13 +56,16 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   file: TbFile,
   "file-check": TbFileCheck,
   "file-alert": TbFileAlert,
+  generated: MdChecklist,
   json: VscJson,
   movie: FaPhotoVideo,
   "play-outline-square": AiOutlinePlaySquare,
   playlist: RiPlayList2Fill,
   plus: FiPlus,
   question: FaQuestion,
+  readme: FaReadme,
   search: MdOutlineSearch,
+  sparkle: HiMiniSparkles,
   subtitle: MdOutlineSubtitles,
   "triangle-down": GoTriangleDown,
   "triangle-up": GoTriangleUp,
