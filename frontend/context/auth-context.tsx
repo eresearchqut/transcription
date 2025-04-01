@@ -59,7 +59,7 @@ function useAuth() {
   const [state, dispatch] = context;
 
   const setIdentityIdInLocalStorage = useCallback((identityId: string | undefined) => {
-    localStorage.setItem(IDENTITY_LOCALSTORAGE_KEY, identityId ?? "");
+      localStorage.setItem(IDENTITY_LOCALSTORAGE_KEY, identityId ?? "");
   }, []);
 
   const setTokenInLocalStorage = useCallback((jwtToken: JWT | undefined) => {
@@ -154,7 +154,6 @@ function useLogin() {
     try {
       const user = await signInWithRedirect({ provider: { custom: "QUT" } });
       initializeUser().then(() => console.log("User initialised post login"));
-      router.push("/").then(() => console.log("Routing to home post login"));
       return user;
     } catch (e: any) {
       setError(e);
