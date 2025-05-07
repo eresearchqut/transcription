@@ -92,8 +92,18 @@ const formatTime = (time: string) => {
   );
 };
 
-const table = (job: TranscriptJob, withAlternatives: boolean = false) =>
-  new Table({
+const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
+  const formatSpeakerLabel = (startTime: string, endTime: string) => {
+    const speakerLabel = job.results.speaker_labels.segments.find(
+      ({ start_time: speakerStartTime }) =>
+        parseFloat(speakerStartTime) <= parseFloat(endTime) &&
+        parseFloat(speakerStartTime) >= parseFloat(startTime),
+    )?.speaker_label;
+
+    return speakerLabel ? speakers[speakerLabel] : "";
+  };
+
+  return new Table({
     rows: [
       new TableRow({
         children: [
@@ -117,7 +127,7 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) =>
         ],
       }),
       ...job.results.segments
-        .map((segment, segmentIndex) =>
+        .map((segment) =>
           (withAlternatives
             ? segment.alternatives
             : segment.alternatives.slice(0, 1)
@@ -129,10 +139,10 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) =>
                     ? [
                         cell(formatTime(segment.start_time)),
                         cell(
-                          speakers[
-                            job.results.speaker_labels.segments[segmentIndex]
-                              .speaker_label
-                          ],
+                          formatSpeakerLabel(
+                            segment.start_time,
+                            segment.end_time,
+                          ),
                         ),
                         cell(alternative.transcript),
                       ]
@@ -146,6 +156,7 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) =>
         .flat(1),
     ],
   });
+};
 
 export const cell = (text: string, columnSpan?: number) =>
   new TableCell({
