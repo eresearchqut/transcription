@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth, useLogout } from "../context/auth-context";
+import { useAuth } from "../context/auth-context";
 import transcriptDocument, {
   TranscriptJob,
 } from "../components/transcriptDocument";
@@ -20,7 +20,6 @@ export interface DownloadTranscriptProps extends DownloadProps {
 
 export const useDownload = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { handleLogout } = useLogout();
   const { getCurrentSession } = useAuth();
 
   const handleDownload = (fileName: string, url: string) => {
@@ -46,7 +45,6 @@ export const useDownload = () => {
       .then((url) => {
         handleDownload(filename, url);
       })
-      .catch(() => handleLogout())
       .finally(() => setIsLoading(() => false));
   };
 
@@ -54,19 +52,14 @@ export const useDownload = () => {
     objectKey: string,
     fileName: string,
   ): Promise<string> =>
-    getCurrentSession()
-      .then(() =>
-        getUrl({
-          path: ({ identityId }) => `private/${identityId}/${objectKey}`,
-          options: {
-            contentDisposition: `attachment; filename = ${fileName}`,
-          },
-        }).then((output) => output.url.href),
-      )
-      .catch((e) => {
-        handleLogout().then();
-        throw e;
-      });
+    getCurrentSession().then(() =>
+      getUrl({
+        path: ({ identityId }) => `private/${identityId}/${objectKey}`,
+        options: {
+          contentDisposition: `attachment; filename = ${fileName}`,
+        },
+      }).then((output) => output.url.href),
+    );
 
   const fetchTranscriptUrl = async (
     objectKey: string,
@@ -88,15 +81,14 @@ export const useDownload = () => {
       )
       .then((blob) =>
         format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
-      )
-      .catch((e) => {
-        handleLogout().then();
-        throw e;
-      });
+      );
   };
 
   const downloadFile = ({ objectKey, filename }: DownloadProps) => {
-    download({ downloadUrl: fetchMediaUrl(objectKey, filename), filename });
+    download({
+      downloadUrl: fetchMediaUrl(objectKey, filename),
+      filename,
+    });
   };
 
   const downloadTranscript = ({
