@@ -13,13 +13,16 @@ import {
 import { Text } from "@chakra-ui/react";
 import { ExternalLink } from "@/components/externalLink";
 import { FallbackProps, useErrorBoundary } from "react-error-boundary";
+import { MappedIcon } from "@/components/mappedIcon";
 
 export interface ErrorMessageProps extends FallbackProps {
+  icon?: string;
   title?: string;
   message?: string;
 }
 
 const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
+  icon = "exclamation-circle",
   title = "An unexpected error has occurred",
   message,
 }) => {
@@ -38,12 +41,14 @@ const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
       <DialogContent>
         <DialogCloseTrigger />
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>
+            {icon && <MappedIcon mb={1} icon={icon} />} {title}
+          </DialogTitle>
         </DialogHeader>
         <DialogBody>
           {message && <Text>{message}</Text>}
           <Text>
-            Please try again and{" "}
+            If you continue to receive this error, please{" "}
             <ExternalLink
               href={
                 "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
@@ -51,7 +56,7 @@ const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
             >
               contact eResearch
             </ExternalLink>{" "}
-            if this error persists.
+            for assistance.
           </Text>
         </DialogBody>
         <DialogFooter />
