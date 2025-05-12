@@ -1,5 +1,5 @@
 {
-    "name": "transcription-api",
+    "name": "api",
     "version": "1.0.0",
     "description": "API for the Transcription Service",
     "engines": {

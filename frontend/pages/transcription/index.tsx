@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 import {
+  AlertIndicator,
+  AlertRoot,
+  AlertTitle,
   Box,
   Flex,
   HStack,
@@ -163,9 +166,12 @@ const TranscriptionPage: NextPageWithLayout = () => {
 
         if (transcription.jobStatusUpdated?.detail.FailureReason) {
           return (
-            <Alert status="error">
-              <Box>{transcription.jobStatusUpdated?.detail.FailureReason}</Box>
-            </Alert>
+            <AlertRoot status="error" size={"md"}>
+              <AlertIndicator />
+              <AlertTitle>
+                {transcription.jobStatusUpdated?.detail.FailureReason}
+              </AlertTitle>
+            </AlertRoot>
           );
         }
 
