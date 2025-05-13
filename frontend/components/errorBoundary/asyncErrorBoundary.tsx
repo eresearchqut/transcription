@@ -11,11 +11,9 @@ const AsyncErrorBoundary: FunctionComponent<PropsWithChildren> = ({
       showBoundary(event);
     };
 
-    window.addEventListener("error", handleError);
     window.addEventListener("unhandledrejection", handleError);
 
     return () => {
-      window.removeEventListener("error", handleError);
       window.removeEventListener("unhandledrejection", handleError);
     };
   }, [showBoundary]);
