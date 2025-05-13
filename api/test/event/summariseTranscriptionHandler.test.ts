@@ -32,14 +32,25 @@ describe("summariseTranscriptionHandler", () => {
     bedrockClientMock.reset();
   });
 
-  test("handler", async () => {
+  test.each([
+    {
+      name: "generate summary",
+      metadata: { generatesummary: "true" },
+      transcriptionKey: "2e9b38b5-1df0-4841-8308-f174fb88aac7.json",
+    },
+    {
+      name: "generate summary with pii redaction",
+      metadata: { generatesummary: "true", enablepiiredaction: "true" },
+      transcriptionKey: "redacted-2e9b38b5-1df0-4841-8308-f174fb88aac7.json",
+    },
+  ])("test $name", async ({ name, metadata, transcriptionKey }) => {
     await dynamoDBClient.send(
       new PutItemCommand({
         TableName: tableName,
         Item: marshall({
           pk: "76c65a59-1c57-489b-be96-020ceaa9675a",
           sk: "2e9b38b5-1df0-4841-8308-f174fb88aac7",
-          metadata: JSON.parse(JSON.stringify({ generatesummary: "true" })),
+          metadata: JSON.parse(JSON.stringify(metadata)),
         }),
       }),
     );
@@ -72,7 +83,7 @@ describe("summariseTranscriptionHandler", () => {
             s3: {
               bucket: { name: "local-transcriptions" },
               object: {
-                key: "private/ap-southeast-2%3Abcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/2e9b38b5-1df0-4841-8308-f174fb88aac7.json",
+                key: `private/ap-southeast-2%3Abcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/${transcriptionKey}`,
               },
             },
           },
@@ -82,7 +93,7 @@ describe("summariseTranscriptionHandler", () => {
 
     expect(s3ClientMock).toHaveReceivedCommandWith(GetObjectCommand, {
       Bucket: "local-transcriptions",
-      Key: "private/ap-southeast-2:bcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/2e9b38b5-1df0-4841-8308-f174fb88aac7.json",
+      Key: `private/ap-southeast-2:bcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/${transcriptionKey}`,
     });
 
     expect(bedrockClientMock).toHaveReceivedCommandWith(InvokeModelCommand, {

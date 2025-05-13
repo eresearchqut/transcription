@@ -55,7 +55,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ```
 cd api
-npm install
+pnpm install
 ```
 
 ```
