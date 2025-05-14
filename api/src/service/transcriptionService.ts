@@ -7,7 +7,7 @@ import {
   updateResource,
 } from "../repository/repository";
 
-const normaliseJobId = (jobId: string): string =>
+export const normaliseJobId = (jobId: string): string =>
   jobId.split("redacted-").at(-1) ?? jobId;
 
 export const jobStarted = (

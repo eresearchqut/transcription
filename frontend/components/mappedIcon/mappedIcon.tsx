@@ -9,6 +9,7 @@ import {
   FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
+  FaExclamationCircle,
   FaExternalLinkAlt,
   FaPhotoVideo,
   FaQuestion,
@@ -16,7 +17,6 @@ import {
 } from "react-icons/fa";
 import { Icon, IconProps } from "@chakra-ui/react";
 import { get, isEmpty } from "lodash";
-import { FaCircleExclamation } from "react-icons/fa6";
 import { AiOutlinePlaySquare } from "react-icons/ai";
 import {
   TbClock,
@@ -50,7 +50,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "double-arrow-left": MdKeyboardDoubleArrowLeft,
   "double-arrow-right": MdKeyboardDoubleArrowRight,
   "enter-outline": IoEnterOutline,
-  "exclamation-circle": FaCircleExclamation,
+  "exclamation-circle": FaExclamationCircle,
   "exit-outline": IoExitOutline,
   "external-link": FaExternalLinkAlt,
   file: TbFile,

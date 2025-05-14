@@ -14,6 +14,7 @@ export interface Transcription {
     mimetype: string;
     filename: string;
     generatesummary: string;
+    enablepiiredaction: string;
   };
   date: string;
   downloadKey?: string;

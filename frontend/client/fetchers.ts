@@ -1,4 +1,4 @@
-import { fetchAuthSession } from "aws-amplify/auth";
+import { fetchAuthSession, signOut } from "aws-amplify/auth";
 
 export interface FetcherProps {
   apiUrl: string;
@@ -58,25 +58,26 @@ export const buildApiEndpoint = ({
 
 export const getHeaders = async () =>
   fetchAuthToken()
-    .then(
-      (idToken) =>
-        ({
-          Authorization: `Bearer ${idToken}`,
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        }) as HeadersInit,
-    )
-    .catch((error) => {
-      console.error(error);
-      throw error;
+    .then((idToken) => {
+      if (idToken === undefined) throw Error("No idToken");
+      return {
+        Authorization: `Bearer ${idToken}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      } as HeadersInit;
+    })
+    .catch(async () => {
+      await signOut();
     });
 
 export const getter = (props: FetcherProps) =>
-  getHeaders().then((headers) =>
-    fetch(buildApiEndpoint(props), {
-      ...props.init,
-      headers,
-    }).then((response) =>
-      response.ok ? response.json() : rejectApiError(response),
-    ),
+  getHeaders().then(
+    (headers) =>
+      headers &&
+      fetch(buildApiEndpoint(props), {
+        ...props.init,
+        headers,
+      }).then((response) =>
+        response.ok ? response.json() : rejectApiError(response),
+      ),
   );

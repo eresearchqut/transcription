@@ -15,15 +15,15 @@
   },
   "devDependencies": {
     "@types/node": "20.16.11",
-    "aws-cdk": "^2.178.1",
-    "esbuild": "^0.24.0",
+    "aws-cdk": "^2.1014.0",
+    "esbuild": "^0.25.4",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3",
     "rimraf": "^6.0.1"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.667.0",
-    "aws-cdk-lib": "^2.178.1",
+    "aws-cdk-lib": "^2.195.0",
     "cdk-pipelines-github": "^0.4.125",
     "constructs": "^10.3.0",
     "source-map-support": "^0.5.21"

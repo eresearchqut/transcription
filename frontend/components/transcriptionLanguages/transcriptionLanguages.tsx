@@ -27,15 +27,17 @@ export const languagesFromTranscription = (
 export const TranscriptionLanguages: FunctionComponent<
   UseTranscriptionProps
 > = ({ jobId, initialTranscription }) => {
-  const { transcription, isTranscribeCompleted } = useTranscription({
-    jobId,
-    initialTranscription,
-  });
+  const { transcription, isTranscribeCompleted, isTranscribeFailed } =
+    useTranscription({
+      jobId,
+      initialTranscription,
+    });
   const piiRedacted = !isUndefined(
     transcription?.transcriptionResponse?.TranscriptionJob?.ContentRedaction
       ?.RedactionType,
   );
 
+  if (isTranscribeFailed) return <Tag colorPalette={"red"}>FAILED</Tag>;
   if (!isTranscribeCompleted) return <Tag>LOADING...</Tag>;
 
   return (

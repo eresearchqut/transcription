@@ -8,7 +8,6 @@ import {
 } from "react";
 import { Transcription } from "model";
 import { getter } from "../client/fetchers";
-import { useLogout } from "./auth-context";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -34,28 +33,15 @@ export const TranscriptionsContextProvider: FunctionComponent<
     transcriptions: [],
   });
 
-  const [error, setError] = useState();
-  const { handleLogout } = useLogout();
-
   useEffect(() => {
-    getter({ apiUrl: API_ENDPOINT, resource: "transcription" })
-      .then((data) => {
-        setState((current) => ({
-          ...current,
-          transcriptions: data,
-          transcriptionsLoading: false,
-        }));
-      })
-      .catch((e) => {
-        setError(e);
-      });
+    getter({ apiUrl: API_ENDPOINT, resource: "transcription" }).then((data) => {
+      setState((current) => ({
+        ...current,
+        transcriptions: data,
+        transcriptionsLoading: false,
+      }));
+    });
   }, []);
-
-  useEffect(() => {
-    if (error) {
-      handleLogout().then();
-    }
-  }, [error, handleLogout]);
 
   return (
     <TranscriptionsContext.Provider

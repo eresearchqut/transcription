@@ -7,6 +7,9 @@ import { Provider } from "@/components/ui/provider";
 import Layout from "../layout/layout";
 import { ReactElement, ReactNode } from "react";
 import { NextPage } from "next";
+import { ErrorMessage } from "@/components/errorMessage";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+import { AsyncErrorBoundary } from "@/components/errorBoundary";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -63,7 +66,11 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     <Provider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          {getLayout(<Component {...componentProps} />)}
+          <ReactErrorBoundary FallbackComponent={ErrorMessage}>
+            <AsyncErrorBoundary>
+              {getLayout(<Component {...componentProps} />)}
+            </AsyncErrorBoundary>
+          </ReactErrorBoundary>
         </AuthProvider>
       </QueryClientProvider>
     </Provider>
