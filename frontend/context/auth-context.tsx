@@ -5,6 +5,7 @@ import React, {
   PropsWithChildren,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   useState,
@@ -17,13 +18,13 @@ import {
 } from "./auth-reducer";
 import { useRouter } from "next/router";
 import {
-  AuthTokens,
   fetchAuthSession,
   fetchUserAttributes,
   JWT,
   signInWithRedirect,
   signOut,
 } from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
 
 type AuthContextValue = [AuthState, Dispatch<AuthReducerAction>];
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -41,6 +42,27 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     userConfig: undefined,
   });
   const value = useMemo(() => [state, dispatch], [state]) as AuthContextValue;
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleAuthEvents = async (data: { payload: { event: string } }) => {
+      const { event } = data.payload;
+
+      switch (event) {
+        case "tokenRefresh_failure":
+        case "signedOut":
+          localStorage.clear();
+          await router.push("/login");
+          break;
+        default:
+          console.debug("Unhandled Auth Event:", event);
+      }
+    };
+
+    // Subscribe to Auth events
+    Hub.listen("auth", handleAuthEvents);
+  }, []);
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
@@ -68,8 +90,8 @@ function useAuth() {
 
   const getCurrentSession = useCallback(async () => {
     const authSession = await fetchAuthSession();
-    if (authSession.identityId === undefined) {
-      throw new Error("No current user");
+    if (state.isAuthenticated && authSession.identityId === undefined) {
+      await signOut();
     }
     return authSession;
   }, []);
@@ -121,29 +143,8 @@ function useAuth() {
   };
 }
 
-function useLogout() {
-  const { dispatch } = useAuth();
-  const router = useRouter();
-  const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
-
-  async function handleLogout() {
-    try {
-      setIsLoggingOut(true);
-      await signOut();
-      dispatch({ type: "LOGOUT_SUCCESS" });
-    } finally {
-      localStorage.clear();
-      setIsLoggingOut(false);
-      await router.push("/login");
-    }
-  }
-
-  return { handleLogout, isLoggingOut };
-}
-
 function useLogin() {
   const { initializeUser } = useAuth();
-  const router = useRouter();
 
   const [error, setError] = useState<Error | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
@@ -165,4 +166,4 @@ function useLogin() {
   return { error, isLoggingIn, handleLogin };
 }
 
-export { AuthProvider, useAuth, useLogout, useLogin };
+export { AuthProvider, useAuth, useLogin };

@@ -12,6 +12,7 @@ import { Transcription } from "model";
 import { bedrockClientConfig, invokeModel } from "../client/bedrockClient";
 import {
   getTranscription,
+  normaliseJobId,
   summaryKey as updateSummaryKey,
 } from "../service/transcriptionService";
 
@@ -43,7 +44,7 @@ export const handler = async (event: S3Event) => {
       ...key.matchAll(outputPattern),
     ][0];
     if (matchedKey) {
-      const jobId = fileName.split(".")[0];
+      const jobId = normaliseJobId(fileName.split(".")[0]);
       const summaryKey = `${identityId}/summary/${jobId}`;
       const privateSummaryKey = `private/${cognitoId}/${summaryKey}`;
       promises.push(

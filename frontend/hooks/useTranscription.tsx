@@ -8,7 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
 import { isEmpty, isUndefined } from "lodash";
-import { useAuth, useLogout } from "../context/auth-context";
+import { useAuth } from "../context/auth-context";
 import { downloadData } from "aws-amplify/storage";
 
 const API_ENDPOINT =
@@ -23,6 +23,7 @@ export interface UseTranscriptionState {
   transcription?: Transcription;
   summary?: string;
   isTranscribeCompleted: boolean;
+  isTranscribeFailed: boolean;
   isPipelineCompleted: boolean;
 }
 
@@ -30,7 +31,6 @@ export const useTranscription = ({
   jobId,
   initialTranscription,
 }: UseTranscriptionProps): UseTranscriptionState => {
-  const { handleLogout } = useLogout();
   const { getCurrentSession } = useAuth();
   const [transcription, setTranscription] = useState<Transcription | undefined>(
     initialTranscription,
@@ -41,18 +41,18 @@ export const useTranscription = ({
   const isTranscribeCompleted: boolean = transcription
     ? !isEmpty(transcription.downloadKey) &&
       !isUndefined(currentStatus) &&
-      [
-        TranscriptionJobStatus.FAILED,
-        TranscriptionJobStatus.COMPLETED,
-      ].includes(currentStatus!)
+      currentStatus === TranscriptionJobStatus.COMPLETED
     : false;
-  const isPipelineCompleted: boolean =
-    !isUndefined(transcription) &&
-    isTranscribeCompleted &&
-    (enableGenerateSummary(transcription)
-      ? !isEmpty(transcription?.summaryKey)
-      : true);
 
+  const isTranscribeFailed: boolean =
+    currentStatus === TranscriptionJobStatus.FAILED;
+  const isPipelineCompleted: boolean =
+    isTranscribeFailed ||
+    (!isUndefined(transcription) &&
+      isTranscribeCompleted &&
+      (enableGenerateSummary(transcription)
+        ? !isEmpty(transcription?.summaryKey)
+        : true));
   const { data } = useQuery({
     enabled: !isPipelineCompleted,
     queryKey: ["transcription", jobId],
@@ -81,10 +81,6 @@ export const useTranscription = ({
             .then((downloadDataOutputResult) =>
               downloadDataOutputResult.body.text(),
             )
-            .catch((e) => {
-              handleLogout().then();
-              throw e;
-            })
         : undefined;
     },
   });
@@ -105,6 +101,7 @@ export const useTranscription = ({
     transcription,
     summary,
     isTranscribeCompleted,
+    isTranscribeFailed,
     isPipelineCompleted,
   };
 };

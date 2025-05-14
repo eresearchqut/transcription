@@ -2,7 +2,7 @@ import { NextPage } from "next";
 import { useState } from "react";
 import { MediaUpload, TranscribeProps } from "../../forms/mediaUpload";
 import { v4 as uuid } from "uuid";
-import { useAuth, useLogout } from "../../context/auth-context";
+import { useAuth } from "../../context/auth-context";
 import { VStack } from "@chakra-ui/react";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
@@ -44,8 +44,6 @@ const Upload: NextPage = () => {
     {},
   );
 
-  const { handleLogout } = useLogout();
-
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
     const uploadFile = (
       file: File,
@@ -73,35 +71,31 @@ const Upload: NextPage = () => {
         };
       });
 
-      getCurrentSession()
-        .then(() =>
-          uploadData({
-            path: ({ identityId }) => `private/${identityId}/${key}`,
-            data: file,
-            options: {
-              contentDisposition: `attachment; filename = ${metadata.filename}`,
-              metadata,
-              onProgress: ({ transferredBytes, totalBytes }) => {
-                const progressPercent =
-                  (transferredBytes / (totalBytes ?? 1)) * 100;
+      getCurrentSession().then(() =>
+        uploadData({
+          path: ({ identityId }) => `private/${identityId}/${key}`,
+          data: file,
+          options: {
+            contentDisposition: `attachment; filename = ${metadata.filename}`,
+            metadata,
+            onProgress: ({ transferredBytes, totalBytes }) => {
+              const progressPercent =
+                (transferredBytes / (totalBytes ?? 1)) * 100;
 
-                setUploadProps((current) => {
-                  return {
-                    ...current,
-                    [id]: {
-                      filename: file.name,
-                      uploadProgressPercent: progressPercent,
-                      transcriptionProgress: undefined,
-                    },
-                  };
-                });
-              },
+              setUploadProps((current) => {
+                return {
+                  ...current,
+                  [id]: {
+                    filename: file.name,
+                    uploadProgressPercent: progressPercent,
+                    transcriptionProgress: undefined,
+                  },
+                };
+              });
             },
-          }),
-        )
-        .catch(() => {
-          handleLogout().then();
-        });
+          },
+        }),
+      );
     };
 
     files.forEach((file) => uploadFile(file, transcribeProps));
