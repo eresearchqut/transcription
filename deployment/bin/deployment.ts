@@ -26,6 +26,7 @@ interface EnvironmentConfig {
     LogBucketSuffix: string;
     RegionalCertificateArn: string;
     RegionalWafArn: string;
+    SplunkRumAccessToken: string;
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
     UserPoolStackName: string;
