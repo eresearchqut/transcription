@@ -39,6 +39,7 @@ export interface ApiStackProps extends cdk.StackProps {
     LogBucketSuffix: string;
     RegionalCertificateArn: string;
     RegionalWafArn: string;
+    SplunkRumAccessToken: string;
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
     UserPoolStackName: string;
@@ -454,7 +455,8 @@ export class ApiStack extends cdk.Stack {
         NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT: `https://${props.parameters.FrontEndDomainName}/`,
         NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT: `https://${props.parameters.FrontEndDomainName}/`,
         NEXT_PUBLIC_AUTH_DOMAIN: cdk.Fn.importValue(`${props.parameters.UserPoolStackName}-DomainName`),
-        NEXT_PUBLIC_TRANSCRIPTION_BUCKET: dataBucket.bucketName
+        NEXT_PUBLIC_TRANSCRIPTION_BUCKET: dataBucket.bucketName,
+        NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN: props.parameters.SplunkRumAccessToken,
       })
     });
   }
