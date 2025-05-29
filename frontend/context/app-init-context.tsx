@@ -8,6 +8,7 @@ import {
 import SplunkOtelWeb from "@splunk/otel-web";
 import SplunkSessionRecorder from "@splunk/otel-web-session-recorder";
 import { LoadingPage } from "@/components/loadingPage";
+import { useAuth } from "./auth-context";
 
 export interface Config {
   splunkRum: {
@@ -29,6 +30,7 @@ export const AppInitContext = createContext<AppInitContextState>(
 export const AppInitProvider: FunctionComponent<PropsWithChildren> = ({
   children,
 }) => {
+  const { getCurrentSession } = useAuth();
   const [isInitialised, setIsInitialised] = useState(false);
   const [config] = useState<Config>({
     splunkRum: {
@@ -43,19 +45,34 @@ export const AppInitProvider: FunctionComponent<PropsWithChildren> = ({
     setIsInitialised(false);
     const rumAccessToken = config.splunkRum.accessToken;
     const realm = config.splunkRum.realm;
+
     if (rumAccessToken && realm) {
-      const splunkConfig = {
-        realm,
-        rumAccessToken,
-      };
-      SplunkOtelWeb.init({
-        ...splunkConfig,
-        applicationName: config.splunkRum.applicationName,
-        deploymentEnvironment: config.environment,
-      });
-      SplunkSessionRecorder.init(splunkConfig);
+      getCurrentSession()
+        .then(({ tokens }) => {
+          const username = tokens?.idToken?.payload?.[
+            "cognito:username"
+          ] as string;
+
+          const splunkConfig = {
+            realm,
+            rumAccessToken,
+          };
+          SplunkOtelWeb.init({
+            ...splunkConfig,
+            applicationName: config.splunkRum.applicationName,
+            deploymentEnvironment: config.environment,
+            globalAttributes: {
+              "cognito.username": username ?? "",
+            },
+          });
+          SplunkSessionRecorder.init(splunkConfig);
+        })
+        .then(() => {
+          setIsInitialised(true);
+        });
+    } else {
+      setIsInitialised(true);
     }
-    setIsInitialised(true);
   }, [config]);
 
   if (!isInitialised) {

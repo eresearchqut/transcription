@@ -14,9 +14,6 @@ const ErrorComponent = () => {
 };
 
 export const Default: Story = {
-  args: {
-    message: "An error occurred while processing your request.",
-  },
   render: (args) => (
     <ErrorBoundary fallback={<ErrorMessage {...args} />}>
       <ErrorComponent />

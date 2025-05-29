@@ -1,4 +1,4 @@
-import { FunctionComponent } from "react";
+import { FunctionComponent, useEffect, useState } from "react";
 import {
   DialogBackdrop,
   DialogBody,
@@ -10,10 +10,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Text } from "@chakra-ui/react";
+import { Box, Button, Clipboard, Text } from "@chakra-ui/react";
 import { ExternalLink } from "@/components/externalLink";
 import { FallbackProps, useErrorBoundary } from "react-error-boundary";
 import { MappedIcon } from "@/components/mappedIcon";
+import SplunkOtelWeb from "@splunk/otel-web";
+import { capitalize, isEmpty, words } from "lodash";
 
 export interface ErrorMessageProps extends FallbackProps {
   icon?: string;
@@ -21,12 +23,33 @@ export interface ErrorMessageProps extends FallbackProps {
   message?: string;
 }
 
+type ErrorDetail = { label: string; value: string };
+const clipboardText = (detail: Array<ErrorDetail>) =>
+  detail.map(({ label, value }) => `${label}: ${value}`).join("\n");
+
 const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
   icon = "exclamation-circle",
   title = "An unexpected error has occurred",
   message,
+  error,
 }) => {
   const { resetBoundary } = useErrorBoundary();
+  const [errorDetails, setErrorDetails] = useState<Array<ErrorDetail>>([]);
+
+  useEffect(() => {
+    setErrorDetails(
+      Object.entries({
+        splunkSessionId: SplunkOtelWeb.getSessionId(),
+        timestamp: new Date().toISOString(),
+        detail:
+          error?.reason?.toString() ?? error?.message ?? error?.toString(),
+      })
+        .filter(([_key, value]) => !isEmpty(value))
+        .map(([key, value]) => {
+          return { label: words(key)?.map(capitalize)?.join(" "), value };
+        }),
+    );
+  }, [error]);
 
   return (
     <DialogRoot
@@ -56,8 +79,30 @@ const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
             >
               contact eResearch
             </ExternalLink>{" "}
-            for assistance.
+            for assistance, providing the following information:
           </Text>
+          <Box
+            border={"dashed"}
+            borderWidth={1}
+            borderColor={"gray.300"}
+            p={2}
+            mt={4}
+            mb={4}
+          >
+            {errorDetails.map(({ label, value }) => (
+              <Text key={label}>
+                {label}: {value}
+              </Text>
+            ))}
+          </Box>
+          <Clipboard.Root value={clipboardText(errorDetails)}>
+            <Clipboard.Trigger asChild>
+              <Button variant="surface" size="sm">
+                <Clipboard.Indicator />
+                <Clipboard.CopyText />
+              </Button>
+            </Clipboard.Trigger>
+          </Clipboard.Root>
         </DialogBody>
         <DialogFooter />
       </DialogContent>
