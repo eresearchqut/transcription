@@ -17,6 +17,13 @@ const ErrorComponent = () => {
   throw new Error("Test error");
 };
 
+const PromiseRejectComponent = () => {
+  new Promise((_, reject) => {
+    reject(new Error("Unexpected promise rejection"));
+  }).then();
+  return <></>;
+};
+
 export const Default: Story = {
   args: {
     children: <ErrorComponent />,
@@ -26,6 +33,13 @@ export const Default: Story = {
       <AsyncErrorBoundary {...args} />
     </ErrorBoundary>
   ),
+};
+
+export const WithPromiseRejection: Story = {
+  ...Default,
+  args: {
+    children: <PromiseRejectComponent />,
+  },
 };
 
 export const WithNoErrors: Story = {
