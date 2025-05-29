@@ -48,11 +48,12 @@ export const AppInitProvider: FunctionComponent<PropsWithChildren> = ({
 
     if (rumAccessToken && realm) {
       getCurrentSession()
-        .then(({ tokens }) => {
-          const username = tokens?.idToken?.payload?.[
-            "cognito:username"
-          ] as string;
-
+        .then(
+          ({ tokens }) =>
+            tokens?.idToken?.payload?.["cognito:username"] as string,
+        )
+        .catch(() => "")
+        .then((username) => {
           const splunkConfig = {
             realm,
             rumAccessToken,
@@ -67,7 +68,7 @@ export const AppInitProvider: FunctionComponent<PropsWithChildren> = ({
           });
           SplunkSessionRecorder.init(splunkConfig);
         })
-        .then(() => {
+        .finally(() => {
           setIsInitialised(true);
         });
     } else {
