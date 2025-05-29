@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { AuthProvider } from "../context/auth-context";
+import { AppInitProvider } from "../context/app-init-context";
 import { Amplify } from "aws-amplify";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "@/components/ui/provider";
@@ -66,11 +67,13 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     <Provider>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <ReactErrorBoundary FallbackComponent={ErrorMessage}>
-            <AsyncErrorBoundary>
-              {getLayout(<Component {...componentProps} />)}
-            </AsyncErrorBoundary>
-          </ReactErrorBoundary>
+          <AppInitProvider>
+            <ReactErrorBoundary FallbackComponent={ErrorMessage}>
+              <AsyncErrorBoundary>
+                {getLayout(<Component {...componentProps} />)}
+              </AsyncErrorBoundary>
+            </ReactErrorBoundary>
+          </AppInitProvider>
         </AuthProvider>
       </QueryClientProvider>
     </Provider>
