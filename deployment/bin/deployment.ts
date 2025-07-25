@@ -29,6 +29,7 @@ interface EnvironmentConfig {
     SplunkRumAccessToken: string;
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
+    UmamiWebsiteId: string;
     UserPoolStackName: string;
     VpcId: string;
   };
