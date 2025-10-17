@@ -4,14 +4,14 @@ import { getIdentityId, getRoles, getUserName } from "../util/requestUtils";
 
 const router = express.Router();
 
-router.get("/", (request, response, next) => {
+router.get("/", (request, response, _next) => {
   const identityId = getIdentityId(request);
   const username = getUserName(request);
   const roles = getRoles(request);
   response.json({ identityId, username, roles });
 });
 
-router.get("/identity", (request, response, next) => {
+router.get("/identity", (request, response, _next) => {
   const identityId = getIdentityId(request);
   response.json({ identityId });
 });

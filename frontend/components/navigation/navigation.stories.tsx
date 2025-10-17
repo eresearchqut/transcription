@@ -1,5 +1,5 @@
 import Navigation from "./navigation";
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 import { MappedIcon } from "@/components/mappedIcon";
 
 const meta = {

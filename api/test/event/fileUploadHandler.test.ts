@@ -7,14 +7,13 @@ import {
 import { mockClient } from "aws-sdk-client-mock";
 
 import { handler } from "../../src/event/fileUploadHandler";
+import fileMetadata from "./fileMetadata.json";
+import fileUploadEvent from "./fileUploadEvent.json";
 
 describe("config", () => {
   it("start job after file upload", async () => {
     const transcribeMock = mockClient(TranscribeClient);
     const s3Mock = mockClient(S3Client);
-    const fileUploadEvent = require("./fileUploadEvent.json");
-    const fileMetadata = require("./fileMetadata.json");
-
     s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
 
     transcribeMock.on(StartTranscriptionJobCommand).resolves({
