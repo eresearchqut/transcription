@@ -36,11 +36,12 @@
         "@types/express": "^5.0.0",
         "@types/jest": "^29.5.14",
         "@typescript-eslint/parser": "8.46.1",
+        "@typescript-eslint/eslint-plugin": "^8.46.1",
         "aws-sdk-client-mock": "^4.1.0",
         "aws-sdk-client-mock-jest": "^4.1.0",
-        "eslint": "^8.57.1",
-        "eslint-config-prettier": "^9.0.0",
-        "eslint-plugin-prettier": "^5.2.1",
+        "eslint": "^9.37.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-prettier": "^5.5.4",
         "jest": "^30.2.0",
         "jest-dynalite": "^3.6.1",
         "prettier": "^3.0.3",
@@ -58,17 +59,5 @@
         "plugins": [
             "@trivago/prettier-plugin-sort-imports"
         ]
-    },
-    "eslintConfig": {
-        "extends": [
-            "plugin:prettier/recommended"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "parserOptions": {
-            "ecmaVersion": 2020
-        },
-        "env": {
-            "es6": true
-        }
     }
 }
