@@ -40,17 +40,12 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@chromatic-com/storybook": "^3.2.6",
-    "@storybook/addon-essentials": "^8.6.12",
-    "@storybook/addon-interactions": "^8.6.12",
-    "@storybook/addon-links": "^8.6.12",
-    "@storybook/addon-onboarding": "^8.6.12",
-    "@storybook/addon-themes": "^8.6.12",
-    "@storybook/blocks": "^8.6.12",
-    "@storybook/cli": "^8.6.12",
-    "@storybook/nextjs": "^8.6.12",
-    "@storybook/react": "^8.6.12",
-    "@storybook/test": "^8.6.12",
+    "@chromatic-com/storybook": "^4.1.1",
+    "@storybook/addon-links": "^9.1.12",
+    "@storybook/addon-onboarding": "^9.1.12",
+    "@storybook/addon-themes": "^9.1.12",
+    "@storybook/cli": "^9.1.12",
+    "@storybook/nextjs": "^9.1.12",
     "@types/lodash": "^4.17.14",
     "@types/node": "^20.5.9",
     "@types/react": "^18.3.18",
@@ -63,9 +58,10 @@
     "eslint-config-next": "^14.2.15",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
-    "eslint-plugin-storybook": "^0.11.2",
+    "eslint-plugin-storybook": "^9.1.12",
     "prettier": "^3.3.3",
-    "storybook": "^8.6.12",
-    "typescript": "^5.7.3"
+    "storybook": "^9.1.12",
+    "typescript": "^5.7.3",
+    "@storybook/addon-docs": "^9.1.12"
   }
 }
