@@ -43,6 +43,7 @@ describe("summariseTranscriptionHandler", () => {
       metadata: { generatesummary: "true", enablepiiredaction: "true" },
       transcriptionKey: "redacted-2e9b38b5-1df0-4841-8308-f174fb88aac7.json",
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ])("test $name", async ({ name, metadata, transcriptionKey }) => {
     await dynamoDBClient.send(
       new PutItemCommand({

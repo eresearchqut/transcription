@@ -21,13 +21,14 @@
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "eslint": "^8.57.1",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-prettier": "^5.2.1",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.0.3",
     "rimraf": "^6.0.1",
     "typescript": "^5.2.2",
-    "@typescript-eslint/parser": "7.2.0"
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1"
   },
   "prettier": {
     "importOrder": [
@@ -39,17 +40,5 @@
     "plugins": [
       "@trivago/prettier-plugin-sort-imports"
     ]
-  },
-  "eslintConfig": {
-    "extends": [
-      "plugin:prettier/recommended"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2020
-    },
-    "env": {
-      "es6": true
-    }
   }
 }

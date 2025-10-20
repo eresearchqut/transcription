@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from "@storybook/react";
+import { Meta, StoryObj } from "@storybook/nextjs";
 import { NewFeature } from ".";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";

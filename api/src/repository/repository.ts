@@ -48,7 +48,7 @@ export const updateResource = (
   pk: string,
   sk: string,
   attributeName: string,
-  attributeValue: string,
+  attributeValue: string | object,
 ) =>
   dynamoDBClient.send(
     new UpdateItemCommand({
