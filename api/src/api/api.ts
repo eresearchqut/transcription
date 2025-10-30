@@ -6,7 +6,7 @@ import express, { ErrorRequestHandler } from "express";
 import transcriptionRoutes from "../routes/transcriptionRoutes";
 import userRoutes from "../routes/userRoutes";
 
-const errorHandler: ErrorRequestHandler = (error, request, response, next) => {
+const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
   console.error(error.stack);
   response
     .status(500)

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { AsyncErrorBoundary } from "./";
 import { Text } from "@chakra-ui/react";
 import { ErrorBoundary } from "react-error-boundary";
