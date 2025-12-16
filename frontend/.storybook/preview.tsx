@@ -1,14 +1,9 @@
+import addonA11y from "@storybook/addon-a11y";
+import addonDocs from "@storybook/addon-docs";
+import addonLinks from "@storybook/addon-links";
 import { definePreview } from "@storybook/nextjs";
 import { AuthProvider } from "../context/auth-context";
-import { DecoratorFunction } from "storybook/internal/types";
 import { Provider } from "@/components/ui/provider";
-
-type DecoratorType = DecoratorFunction<
-  never,
-  {
-    [x: string]: any;
-  }
->;
 
 const withChakra = (Story: any, context: any) => (
   <Provider forcedTheme={context.globals.backgrounds.value}>
@@ -19,5 +14,6 @@ const withChakra = (Story: any, context: any) => (
 );
 
 export default definePreview({
-  decorators: [withChakra as unknown as DecoratorType],
+  decorators: [withChakra],
+  addons: [addonLinks(), addonDocs(), addonA11y()],
 });
