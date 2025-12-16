@@ -1,45 +1,23 @@
-import type { Preview } from "@storybook/nextjs";
-import { ChakraProvider } from "@chakra-ui/react";
-import { withThemeByClassName } from "@storybook/addon-themes";
-import { system } from "../theme";
-import { ColorModeProvider } from "../components/ui/color-mode";
+import { definePreview } from "@storybook/nextjs";
 import { AuthProvider } from "../context/auth-context";
+import { DecoratorFunction } from "storybook/internal/types";
+import { Provider } from "@/components/ui/provider";
 
-const globalTypes = {
-  colorMode: {
-    name: "Chakra UI Color Mode",
-    defaultValue: "dark",
-    toolbar: {
-      items: [
-        { title: "Light", value: "light" },
-        { title: "Dark", value: "dark" },
-      ],
-      dynamicTitle: true,
-    },
-  },
-};
+type DecoratorType = DecoratorFunction<
+  never,
+  {
+    [x: string]: any;
+  }
+>;
 
-const withChakra = (Story, context) => {
-  return (
+const withChakra = (Story: any, context: any) => (
+  <Provider forcedTheme={context.globals.backgrounds.value}>
     <AuthProvider>
-      <ChakraProvider value={system}>
-        <ColorModeProvider forcedTheme={context.globals.colorMode}>
-          <Story />
-        </ColorModeProvider>
-      </ChakraProvider>
+      <Story />
     </AuthProvider>
-  );
-};
+  </Provider>
+);
 
-const preview: Preview = {
-  globalTypes,
-  decorators: [
-    withThemeByClassName({
-      defaultTheme: "light",
-      themes: { light: "", dark: "dark" },
-    }),
-    withChakra,
-  ],
-};
-
-export default preview;
+export default definePreview({
+  decorators: [withChakra as unknown as DecoratorType],
+});
