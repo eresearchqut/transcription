@@ -5,7 +5,7 @@
     "deployment": "bin/deployment.js"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "clean": "rimraf node_modules && rimraf cdk.out && rimraf cdk.context.json",
@@ -14,16 +14,16 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@types/node": "20.16.11",
-    "aws-cdk": "^2.1014.0",
+    "@types/node": "^24.10.4",
+    "aws-cdk": "^2.1034.0",
     "esbuild": "^0.25.4",
     "ts-node": "^10.9.2",
-    "typescript": "~5.6.3",
+    "typescript": "^5.9.3",
     "rimraf": "^6.0.1"
   },
   "dependencies": {
-    "@aws-sdk/client-ssm": "^3.667.0",
-    "aws-cdk-lib": "^2.195.0",
+    "@aws-sdk/client-ssm": "^3.948.0",
+    "aws-cdk-lib": "^2.232.2",
     "cdk-pipelines-github": "^0.4.125",
     "constructs": "^10.3.0",
     "source-map-support": "^0.5.21"
