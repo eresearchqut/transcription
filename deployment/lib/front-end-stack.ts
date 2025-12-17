@@ -36,7 +36,7 @@ export class FrontEndStack extends cdk.Stack {
     distributionBucket.grantRead(originAccessIdentity);
 
     const edgeLambda = new cloudfront.experimental.EdgeFunction(this, "edge-lambda", {
-      runtime: lambda.Runtime.NODEJS_24_X,
+      runtime: lambda.Runtime.NODEJS_22_X,
       description: "Edge Lambda",
       timeout: cdk.Duration.seconds(5),
       memorySize: 128,
