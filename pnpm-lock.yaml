@@ -29,9 +29,9 @@ importers:
       '@aws-sdk/util-dynamodb':
         specifier: ^3.741.0
         version: 3.744.0(@aws-sdk/client-dynamodb@3.744.0)
-      '@vendia/serverless-express':
-        specifier: ^4.10.4
-        version: 4.12.6
+      '@codegenie/serverless-express':
+        specifier: ^4.17.1
+        version: 4.17.1
       aws-xray-sdk:
         specifier: ^3.5.1
         version: 3.10.3
@@ -1493,8 +1493,8 @@ packages:
       react: '>=18'
       react-dom: '>=18'
 
-  '@codegenie/serverless-express@4.16.0':
-    resolution: {integrity: sha512-TlvAHQysphN3OW6Ziz6AD2DnN9IIy/KkKNImZwMJpwGHHqLATi/9hMg8H8VBRg2L15pGt8ad3R6j6mfvHVWrCg==}
+  '@codegenie/serverless-express@4.17.1':
+    resolution: {integrity: sha512-B/4RRtVK2iAp5ho+qoUFxUeMaWCgSP+hNrdLJV3DWKZ1E9n9oLKdsJ6W9LQekZsD8rGD15hDadIKWKKw5i3f3A==}
     engines: {node: '>=18'}
 
   '@cspotcode/source-map-support@0.8.1':
@@ -3602,10 +3602,6 @@ packages:
     resolution: {integrity: sha512-lrW200hZdbfRtztbygyaq/6jP6AKE8qQN2KvPcJ+x7wiD038YtnYtZ82IMNJ69GJibV7bwL3y9FgK+5w/pYt6g==}
     cpu: [x64]
     os: [win32]
-
-  '@vendia/serverless-express@4.12.6':
-    resolution: {integrity: sha512-ePsIPk3VQwgm5nh/JGBtTKQs5ZOF7REjHxC+PKk/CHvhlKQkJuUU365uPOlxuLJhC+BAefDznDRReWxpnKjmYg==}
-    engines: {node: '>=12'}
 
   '@vitest/expect@3.2.4':
     resolution: {integrity: sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig==}
@@ -10394,7 +10390,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@codegenie/serverless-express@4.16.0': {}
+  '@codegenie/serverless-express@4.17.1': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -12920,10 +12916,6 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
-
-  '@vendia/serverless-express@4.12.6':
-    dependencies:
-      '@codegenie/serverless-express': 4.16.0
 
   '@vitest/expect@3.2.4':
     dependencies:
