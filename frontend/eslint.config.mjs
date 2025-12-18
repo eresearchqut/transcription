@@ -54,10 +54,6 @@ export default defineConfig([{
     files: ["**/*.+(ts|tsx)"],
     extends: compat.extends("plugin:@typescript-eslint/recommended", "prettier"),
 
-    plugins: {
-        "@typescript-eslint": typescriptEslintEslintPlugin,
-    },
-
     languageOptions: {
         parser: tsParser,
     },
