@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "clean": "rimraf dist && rimraf node_modules",
@@ -26,7 +26,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "prettier": "^3.0.3",
     "rimraf": "^6.0.1",
-    "typescript": "^5.2.2",
+    "typescript": "^5.9.3",
     "@typescript-eslint/eslint-plugin": "^8.46.1",
     "@typescript-eslint/parser": "^8.46.1"
   },
