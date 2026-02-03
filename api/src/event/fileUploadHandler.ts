@@ -24,6 +24,7 @@ xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
 export const handler = async (event: S3Event) => {
+  let uploadsCount = 0;
   for (const record of event["Records"]) {
     try {
       const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
@@ -116,7 +117,7 @@ export const handler = async (event: S3Event) => {
             record["s3"],
             transcriptionResponse,
             headResponse.Metadata,
-          );
+          ).then(() => uploadsCount++);
         } catch (error) {
           console.error("Failed to save job details", error);
         }
@@ -127,5 +128,5 @@ export const handler = async (event: S3Event) => {
       console.error(e);
     }
   }
-  return `Processed ${event["Records"].length} uploads`;
+  return `Processed ${uploadsCount} uploads`;
 };
