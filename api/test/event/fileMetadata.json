@@ -1,6 +1,7 @@
 {
   "Metadata": {
-    "languagecode": "en-AU",
+    "languages": "en-AU",
+    "enablepiiredaction": "false",
     "filename": "Welcome.wav",
     "filetype": "userUploadedFile"
   }
