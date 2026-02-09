@@ -1,5 +1,6 @@
 import { add, Duration } from "date-fns";
 import { get, keys, pick } from "lodash";
+import useLocalStorage from "use-local-storage";
 
 interface FeatureDisplayConfig {
   displayExpiry: string;
@@ -28,7 +29,8 @@ export const useNewFeatureStorage = (
 
   const currentIsoDate = new Date().toISOString();
   const storageKey = `features.${identityId}`;
-  const userStorageItem = localStorage.getItem(storageKey);
+
+  const [userStorageItem, setUserStorageItem] = useLocalStorage<string>(storageKey, "");
   const userSeenFeatures: UserStorage = userStorageItem
     ? JSON.parse(userStorageItem)
     : {};
@@ -43,13 +45,7 @@ export const useNewFeatureStorage = (
 
     const feature: FeatureDisplayConfig = get(features, featureId);
 
-    localStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        ...currentUserSeenFeatures,
-        ...(feature && { [featureId]: userFeature }),
-      }),
-    );
+    setUserStorageItem(JSON.stringify({ ...currentUserSeenFeatures, ...(feature && { [featureId]: userFeature })}));
 
     const displayDuration =
       feature?.displayDuration ?? DEFAULT_DISPLAY_DURATION;

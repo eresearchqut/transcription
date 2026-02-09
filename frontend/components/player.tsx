@@ -63,6 +63,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
               <GridItem
                 colSpan={2}
                 onClick={() => seek(cue.startTime)}
+                data-umami-event={"track-seek"}
                 cursor={"pointer"}
               >
                 <Text as={isCurrent ? "u" : undefined}>

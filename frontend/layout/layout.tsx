@@ -1,4 +1,4 @@
-import React, { FunctionComponent, PropsWithChildren, useEffect } from "react";
+import React, { FunctionComponent, PropsWithChildren } from "react";
 import {
   Box,
   Card,
@@ -10,50 +10,42 @@ import {
   chakra,
 } from "@chakra-ui/react";
 
-import { withAnonymous, withAuthentication } from "../context/with-auth";
-import { useAuth } from "../context/auth-context";
 import { Navigation } from "../components/navigation";
 import { Footer } from "../components/footer";
 import loginImage from "@/public/login.jpg";
 import { MappedIcon } from "@/components/mappedIcon";
 import { Header } from "@/components/header";
 
-export interface PageProps {
+export interface LayoutProps {
   pageTitle?: string;
   isLanding?: boolean;
+  isAuthenticated?: boolean;
+  onLogin?: () => void | Promise<void>;
+  onLogout?: () => void | Promise<void>;
 }
 
-const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
+export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   children,
   pageTitle,
   isLanding,
+  isAuthenticated,
+  onLogin,
+  onLogout
 }: any) => {
   const navigationItems = {
     "Upload Media": {
       icon: <MappedIcon icon={"upload"} />,
-      url: "/transcription/upload",
+      url: "/",
     },
     "My Transcriptions": {
       icon: <MappedIcon icon={"playlist"} />,
-      url: "/transcription",
+      url: "/transcriptions",
     },
   };
 
   const templateAreas = `"header" "navigation" "main" "footer"`;
   const gridTemplateRows = "auto auto 1fr auto";
-
-  const {
-    state: { isAuthenticated },
-    initializeUser,
-  } = useAuth();
-
   const containerProps = { maxWidth: "1576px", margin: "0 auto" };
-
-  useEffect(() => {
-    if (!isAuthenticated && !isLanding) {
-      initializeUser().then();
-    }
-  }, [isAuthenticated, isLanding, initializeUser]);
 
   const landingBackgroundProps = {
     backgroundImage: { base: undefined, sm: `url(${loginImage.src})` },
@@ -80,7 +72,7 @@ const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
         justifyContent={"stretch"}
       >
         <chakra.header>
-          <Header />
+          <Header isAuthenticated={isAuthenticated} onLogin={onLogin} onLogout={onLogout} />
         </chakra.header>
       </GridItem>
       {isAuthenticated && (
@@ -125,7 +117,6 @@ const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
           </Box>
         </chakra.main>
       </Box>
-
       <GridItem area={"footer"} bgColor={"brand.900"} color={"white"} p={4}>
         <Box {...containerProps}>
           <chakra.footer>
@@ -137,14 +128,4 @@ const Layout: FunctionComponent<PropsWithChildren<PageProps>> = ({
   );
 };
 
-const mapLayoutPropsToLayoutTree = (props: PropsWithChildren<PageProps>) => {
-  const AuthenticatedLayout = withAuthentication(Layout);
-  return <AuthenticatedLayout {...props} />;
-};
-
-export default mapLayoutPropsToLayoutTree;
-
-export const LoginLayout = (props: PropsWithChildren<PageProps>) => {
-  const AnonymousLayout = withAnonymous(Layout);
-  return <AnonymousLayout {...props} />;
-};
+export default Layout;
