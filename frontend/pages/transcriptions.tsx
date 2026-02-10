@@ -30,13 +30,16 @@ import { MappedIcon } from "@/components/mappedIcon";
 import { Alert } from "@/components/ui/alert";
 import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
 import { InputGroup } from "@/components/ui/input-group";
-import TranscriptionsListingPageLayout from "../../layout/transcriptionsListingPageLayout";
 import { NextPageWithLayout } from "@/pages/_app";
-import { TranscriptionsContext } from "../../context/transcriptions-context";
+import {
+  TranscriptionsContext,
+  TranscriptionsContextProvider,
+} from "../context/transcriptions-context";
 import { ToggleTip } from "@/components/ui/toggle-tip";
 import { TranscriptionSummary } from "@/components/transcriptionSummary";
+import AuthenticatedLayout from "../layout/authenticatedLayout";
 
-const TranscriptionPage: NextPageWithLayout = () => {
+const Transcriptions: NextPageWithLayout = () => {
   const [open, setOpen] = useState(false);
   const { transcriptions, transcriptionsLoading } = useContext(
     TranscriptionsContext,
@@ -252,18 +255,12 @@ const TranscriptionPage: NextPageWithLayout = () => {
   );
 };
 
-export const getStaticProps = () => {
-  return {
-    props: {
-      pageTitle: "My Transcriptions",
-    },
-  };
-};
-
-TranscriptionPage.getLayout = (page) => {
+Transcriptions.getLayout = (page) => {
   return (
-    <TranscriptionsListingPageLayout>{page}</TranscriptionsListingPageLayout>
+    <AuthenticatedLayout pageTitle={"My Transcriptions"} isLanding={false}>
+      <TranscriptionsContextProvider>{page}</TranscriptionsContextProvider>
+    </AuthenticatedLayout>
   );
 };
 
-export default TranscriptionPage;
+export default Transcriptions;

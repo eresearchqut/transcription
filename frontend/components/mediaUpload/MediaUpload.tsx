@@ -1,9 +1,10 @@
+"use client";
+
 import { FunctionComponent, useState } from "react";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
   Box,
   Code,
-  defineStyle,
   Field as ChakraField,
   Stack,
   Text,
@@ -20,7 +21,6 @@ import { ExternalLink } from "@/components/externalLink";
 import { NewFeature } from "@/components/newFeature";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
 import features from "@/public/features.json";
-import { useAuth } from "../../context/auth-context";
 
 export interface TranscribeProps {
   languages: string[];
@@ -30,18 +30,17 @@ export interface TranscribeProps {
 
 export interface MediaUploadProps {
   onSubmit: (transcribeProps: TranscribeProps, files: File[]) => void;
+  identityId?: string;
 }
 
 export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   onSubmit,
+  identityId,
 }) => {
   const [languages, setLanguages] = useState<string[]>(["en-AU"]);
   const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
 
-  const {
-    state: { userConfig: { identityId = undefined } = {} },
-  } = useAuth();
   const { showNewFeature } = useNewFeatureStorage({
     features,
     identityId,
@@ -133,7 +132,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
                 <Text>
                   By using this service you are expected to comply with{" "}
                   <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
-                    Anthropic's Usage Policy.
+                    Anthropic&apos;s Usage Policy.
                   </ExternalLink>
                 </Text>
                 <Text>

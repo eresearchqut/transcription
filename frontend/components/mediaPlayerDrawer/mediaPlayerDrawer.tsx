@@ -73,6 +73,7 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
           <Button
             variant="outline"
             mr={3}
+            data-umami-event={"close-player"}
             onClick={() => {
               onOpenChange?.({ open: false });
             }}

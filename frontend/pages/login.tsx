@@ -9,13 +9,17 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useLogin } from "../context/auth-context";
 import { Quotas } from "../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "model";
 import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
 import { NextPageWithLayout } from "@/pages/_app";
-import { LoginLayout } from "../layout/layout";
+import Layout from "../layout/layout";
+import { signInWithRedirect } from "aws-amplify/auth";
+
+export const handleLogin = async () => {
+  await signInWithRedirect({ provider: { custom: "QUT" } });
+};
 
 const Login: NextPageWithLayout = () => {
   const styles = {
@@ -23,8 +27,6 @@ const Login: NextPageWithLayout = () => {
       bgColor: { base: "gray.100", _dark: "gray.700" },
     },
   };
-
-  const { handleLogin } = useLogin();
   return (
     <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
       <Card.Root
@@ -185,16 +187,12 @@ const Login: NextPageWithLayout = () => {
   );
 };
 
-export const getStaticProps = () => {
-  return {
-    props: {
-      isLanding: true,
-    },
-  };
-};
-
 Login.getLayout = (page) => {
-  return <LoginLayout isLanding={true}>{page}</LoginLayout>;
+  return (
+    <Layout isLanding={true} isAuthenticated={false} onLogin={handleLogin}>
+      {page}
+    </Layout>
+  );
 };
 
 export default Login;
