@@ -2,18 +2,14 @@ import React, {
   createContext,
   FunctionComponent,
   PropsWithChildren,
-  useCallback, useContext,
+  useCallback,
+  useContext,
   useEffect,
   useState
 } from "react";
 
 import { useRouter } from "next/router";
-import {
-  fetchAuthSession,
-  fetchUserAttributes,
-  signOut,
-  AuthSession
-} from "aws-amplify/auth";
+import { AuthSession, fetchAuthSession, fetchUserAttributes, signOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { useAnalytics } from "./analytics-context";
 import { LoadingPage } from "@/components/loadingPage";
@@ -38,8 +34,8 @@ export interface AuthContextState {
 export const DefaultAuthContextState = {
   loading: true,
   authenticated: false,
-  user: undefined,
-}
+  user: undefined
+};
 
 export interface AuthContextOperations {
   getCurrentSession: () => Promise<AuthSession>;
@@ -57,9 +53,9 @@ export const useAuth = (): AuthContextState & AuthContextOperations => {
 
 const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
 
-  const [state, setState] = useState<AuthContextState>({...DefaultAuthContextState});
-  const {identify} = useAnalytics();
-  const {setAttributes} = useMonitoring();
+  const [state, setState] = useState<AuthContextState>({ ...DefaultAuthContextState });
+  const { identify } = useAnalytics();
+  const { setAttributes } = useMonitoring();
 
   useEffect(() => {
     fetchUserAttributes().then((userAttributes) => {
@@ -68,11 +64,11 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
         ...current,
         user: { username, id },
         loading: false,
-        authenticated: true,
+        authenticated: true
       }));
     }).catch(() => {
-      setState({...DefaultAuthContextState, loading: false})
-    })
+      setState(() => ({ loading: false, authenticated: false, user: undefined }));
+    });
   }, []);
 
   const getCurrentSession = useCallback(async () => {
@@ -84,13 +80,14 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    console.log("Auth Context State Changed:", JSON.stringify(state, null, 2));
     if (state.user?.id) {
       setAttributes({
-        "auth.username": state.user?.username,
+        "auth.username": state.user?.username
       });
       identify(state.user?.id);
     }
-  }, [state.user?.id, setAttributes, identify]);
+  }, [state]);
 
   const router = useRouter();
 
@@ -111,10 +108,10 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   }, []);
 
   if (state.loading) {
-    return <LoadingPage label={"Loading..."} />
+    return <LoadingPage label={"Loading..."} />;
   }
 
-  return <AuthContext.Provider value={{...state, getCurrentSession}}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...state, getCurrentSession }}>{children}</AuthContext.Provider>;
 };
 
 export { AuthProvider, AuthContext };
