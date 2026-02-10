@@ -18,6 +18,7 @@ import { Hub } from "aws-amplify/utils";
 import { useAnalytics } from "./analytics-context";
 import SplunkRum from "@splunk/otel-web";
 import { LoadingPage } from "@/components/loadingPage";
+import { useMonitoring } from "./monitoring-context";
 
 export type UserAttributes = {
   "custom:qutIdentityId": string;
@@ -59,6 +60,7 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
 
   const [state, setState] = useState<AuthContextState>({...DefaultAuthContextState});
   const {identify} = useAnalytics();
+  const {monitoringEnabled} = useMonitoring();
 
   useEffect(() => {
     fetchUserAttributes().then((userAttributes) => {
@@ -84,14 +86,14 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
 
   useEffect(() => {
     if (state.user?.id) {
-      SplunkRum.setGlobalAttributes({
-        "auth.username": state.user?.username,
-      });
-    }
-    if (state.user?.id) {
+      if (monitoringEnabled) {
+        SplunkRum.setGlobalAttributes({
+          "auth.username": state.user?.username,
+        });
+      }
       identify(state.user?.id);
     }
-  }, [state.user]);
+  }, [state.user, monitoringEnabled, identify]);
 
   const router = useRouter();
 
