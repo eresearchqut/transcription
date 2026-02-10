@@ -1,4 +1,4 @@
-import { createContext, FunctionComponent, PropsWithChildren, useContext, useEffect } from "react";
+import { createContext, FunctionComponent, PropsWithChildren, useCallback, useContext, useEffect } from "react";
 import SplunkOtelWeb, { SplunkOtelWebConfig } from "@splunk/otel-web";
 import SplunkSessionRecorder from "@splunk/otel-web-session-recorder";
 
@@ -26,23 +26,29 @@ export const useMonitoring = (): MonitoringContextState => {
   return useContext<MonitoringContextState>(MonitoringContext);
 };
 
+const initialiseMonitoring = () => {
+  if (config.rumAccessToken) {
+    SplunkOtelWeb.init({
+      ...config
+    });
+    SplunkSessionRecorder.init({
+      ...config
+    });
+  }
+};
+
 export const MonitoringProvider: FunctionComponent<PropsWithChildren> = ({
                                                                            children
                                                                          }) => {
-
   useEffect(() => {
-    if (config.rumAccessToken) {
-      SplunkOtelWeb.init({
-        ...config
-      });
-      SplunkSessionRecorder.init({
-        ...config
-      });
+    initialiseMonitoring();
+  }, [initialiseMonitoring]);
+  const monitoringEnabled = !!config.rumAccessToken;
+  const setAttributes = useCallback((attributes: Record<string, any>) => {
+    if (monitoringEnabled) {
+      SplunkOtelWeb.setGlobalAttributes(attributes)
     }
-  }, []);
-
-  const monitoringEnabled =  !!config.rumAccessToken;
-  const setAttributes = (attributes: Record<string, any>) => monitoringEnabled ? SplunkOtelWeb.setGlobalAttributes(attributes) : undefined
+  }, [monitoringEnabled]);
   const state = {
     monitoringEnabled,
     setAttributes

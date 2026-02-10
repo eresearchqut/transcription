@@ -61,7 +61,6 @@ const AnalyticsProvider: FunctionComponent<PropsWithChildren> = ({
     },
     [],
   );
-
   return (
     <AnalyticsContext.Provider value={{ track, identify }}>
       <UmamiAnalytics {...props} />
