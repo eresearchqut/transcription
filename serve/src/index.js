@@ -3,7 +3,7 @@ const hasExtension = /^\/.*\..+$/;
 /** @type {import ("aws-lambda").CloudFrontRequestHandler} */
 const handler = async (event) => {
   const { request } = event.Records[0].cf;
-  console.log(request.uri);
+  console.log(JSON.stringify(request));
   if (request.uri === '/') {
     request.uri = '/index.html';
   } else if (!request.uri.match(hasExtension)) {
