@@ -23,5 +23,8 @@
     "fmt:check": "pnpm recursive run fmt:check"
   },
   "author": "eResearch",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "rimraf": "^6.1.2"
+  }
 }
