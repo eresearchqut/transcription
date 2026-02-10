@@ -1,24 +1,15 @@
-const extension = /(.+)\.[a-zA-Z0-9]{2,5}$/;
-const slash = /\/$/;
-const nextStatic = /\/_next\/static\//;
+const hasExtension = /^\/.*\..+$/;
 
 /** @type {import ("aws-lambda").CloudFrontRequestHandler} */
 const handler = async (event) => {
   const { request } = event.Records[0].cf;
-  let { uri } = request;
-  if (uri) {
-    if (!uri.match(nextStatic)) {
-      if (!uri.match(extension) && !uri.match(slash)) {
-        uri = `${uri}.html`;
-      }
-      if (!(request.uri === uri)) {
-        console.log("Redirecting", request.uri, uri);
-        request.uri = uri;
-      }
-    }
+  console.log(JSON.stringify(request));
+  if (request.uri === '/') {
+    request.uri = '/index.html';
+  } else if (!request.uri.match(hasExtension)) {
+    request.uri = `${request.uri}.html`;
   }
   return request;
 };
-
 
 exports.handler = handler;
