@@ -30,6 +30,8 @@ interface EnvironmentConfig {
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
     UserPoolStackName: string;
+    UmamiWebsiteId: string;
+    UmamiUrl: string;
     VpcId: string;
   };
 }
