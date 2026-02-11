@@ -80,7 +80,6 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log("Auth Context State Changed:", JSON.stringify(state, null, 2));
     if (state.user?.id) {
       setAttributes({
         "auth.username": state.user?.username
