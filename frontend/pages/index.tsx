@@ -34,13 +34,13 @@ const Upload: NextPageWithLayout = () => {
     transcriptUrl: string,
     summary?: string,
   ) => {
-    track("player-open");
     setPlay({
       mediaUrl,
       transcriptUrl,
       summary,
     });
     setOpen(true);
+    track("open-player");
   };
 
   const [uploadProps, setUploadProps] = useState<Record<string, UploadProps>>(

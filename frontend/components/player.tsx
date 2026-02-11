@@ -16,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { InputGroup } from "./ui/input-group";
 import { MappedIcon } from "./mappedIcon";
+import { useAnalytics } from "../context/analytics-context";
 
 export interface PlayerProps {
   audio: string;
@@ -49,6 +50,15 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
     return `${minutes}:${seconds}`;
   };
 
+  const { track: trackEvent } = useAnalytics();
+
+  const handleSeek = (seconds: number) => {
+    trackEvent('track-seek', {
+      seconds
+    });
+    seek(seconds);
+  };
+
   if (track?.cues !== null) {
     return (
       <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
@@ -62,8 +72,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
             <Fragment key={index}>
               <GridItem
                 colSpan={2}
-                onClick={() => seek(cue.startTime)}
-                data-umami-event={"track-seek"}
+                onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
               >
                 <Text as={isCurrent ? "u" : undefined}>

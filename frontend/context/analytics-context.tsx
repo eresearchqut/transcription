@@ -20,7 +20,10 @@ export interface AnalyticsContextOperations {
 }
 
 const AnalyticsContext: Context<AnalyticsContextOperations> = createContext(
-  {} as AnalyticsContextOperations,
+  {
+    track: () => undefined,
+    identify: () => undefined
+  } as AnalyticsContextOperations,
 );
 
 export const useAnalytics = (): AnalyticsContextOperations => {
