@@ -55,9 +55,7 @@ Amplify.configure({
 });
 
 export const handleLogin = async () => {
-  await signInWithRedirect({ provider: { custom: "QUT" } }).catch((e) => {
-    console.error(e);
-  });
+  await signInWithRedirect({ provider: { custom: "QUT" } });
 };
 
 const queryClient = new QueryClient();

@@ -15,13 +15,23 @@ import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
 import { handleLogin, NextPageWithLayout } from "@/pages/_app";
 import Layout from "../layout/layout";
+import { useAuth } from "../context/auth-context";
+import { useRouter } from "next/router";
 
 const Login: NextPageWithLayout = () => {
+  const { authenticated } = useAuth();
+  const router = useRouter();
+
   const styles = {
     root: {
       bgColor: { base: "gray.100", _dark: "gray.700" },
     },
   };
+
+  if (authenticated) {
+    router.push("/").then(() => console.log("Logged in routing to home."));
+  }
+
   return (
     <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
       <Card.Root
