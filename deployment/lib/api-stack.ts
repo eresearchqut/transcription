@@ -42,6 +42,8 @@ export interface ApiStackProps extends cdk.StackProps {
     SplunkRumAccessToken: string;
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
+    UmamiWebsiteId: string;
+    UmamiUrl: string;
     UserPoolStackName: string;
     VpcId: string;
   };
@@ -457,6 +459,8 @@ export class ApiStack extends cdk.Stack {
         NEXT_PUBLIC_AUTH_DOMAIN: cdk.Fn.importValue(`${props.parameters.UserPoolStackName}-DomainName`),
         NEXT_PUBLIC_TRANSCRIPTION_BUCKET: dataBucket.bucketName,
         NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN: props.parameters.SplunkRumAccessToken,
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: props.parameters.UmamiWebsiteId,
+        NEXT_PUBLIC_UMAMI_URL: props.parameters.UmamiUrl,
       })
     });
   }
