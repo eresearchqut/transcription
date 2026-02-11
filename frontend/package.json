@@ -9,6 +9,7 @@
     "clean": "rimraf dist && rimraf node_modules",
     "dev": "next dev",
     "build": "next build",
+    "serve": "http-server -a localhost -p 3000 -c-1 ./out",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -64,6 +65,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-storybook": "^10.1.9",
+    "http-server": "^14.1.1",
     "prettier": "^3.3.3",
     "storybook": "^10.2.8",
     "typescript": "^5.9.3"

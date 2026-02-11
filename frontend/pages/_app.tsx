@@ -12,6 +12,7 @@ import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { AsyncErrorBoundary } from "@/components/errorBoundary";
 import { AnalyticsProvider } from "../context/analytics-context";
 import { AuthProvider } from "../context/auth-context";
+import { signInWithRedirect } from "aws-amplify/auth";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -53,6 +54,12 @@ Amplify.configure({
   },
 });
 
+export const handleLogin = async () => {
+  await signInWithRedirect({ provider: { custom: "QUT" } }).catch((e) => {
+    console.error(e);
+  });
+};
+
 const queryClient = new QueryClient();
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
@@ -64,6 +71,7 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
         isLanding={isLanding}
         isAuthenticated={false}
         pageTitle={pageTitle}
+        onLogin={handleLogin}
       >
         {page}
       </Layout>

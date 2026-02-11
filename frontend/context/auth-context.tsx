@@ -44,7 +44,7 @@ export interface AuthContextOperations {
 const AuthContext = createContext<AuthContextState & AuthContextOperations>({
   ...DefaultAuthContextState,
   getCurrentSession: () =>
-    Promise.reject(new Error("Invalid State: Session Not Initialised"))
+    Promise.reject(new Error("Invalid State: Session Not Initialised")),
 });
 
 export const useAuth = (): AuthContextState & AuthContextOperations => {

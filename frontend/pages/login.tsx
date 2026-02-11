@@ -13,13 +13,8 @@ import { Quotas } from "../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "model";
 import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
-import { NextPageWithLayout } from "@/pages/_app";
+import { handleLogin, NextPageWithLayout } from "@/pages/_app";
 import Layout from "../layout/layout";
-import { signInWithRedirect } from "aws-amplify/auth";
-
-export const handleLogin = async () => {
-  await signInWithRedirect({ provider: { custom: "QUT" } });
-};
 
 const Login: NextPageWithLayout = () => {
   const styles = {
