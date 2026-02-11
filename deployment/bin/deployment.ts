@@ -26,12 +26,12 @@ interface EnvironmentConfig {
     LogBucketSuffix: string;
     RegionalCertificateArn: string;
     RegionalWafArn: string;
-    SplunkRumAccessToken: string;
+    SplunkRumAccessToken?: string;
     SubnetIds: string[];
     SupportedIdentityProviders: string[];
     UserPoolStackName: string;
-    UmamiWebsiteId: string;
-    UmamiUrl: string;
+    UmamiWebsiteId?: string;
+    UmamiUrl?: string;
     VpcId: string;
   };
 }
