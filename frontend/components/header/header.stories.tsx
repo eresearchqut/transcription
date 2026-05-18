@@ -9,11 +9,20 @@ export default {
 
 type Story = StoryObj<typeof Header>;
 
-export const Primary: Story = {
+export const LoggedIn: Story = {
   args: {},
   render: () => (
     <Box bgColor={"brand.900"} justifyContent={"stretch"}>
-      <Header />
+      <Header isAuthenticated={true} onLogin={() => {}} onLogout={() => {}} />
+    </Box>
+  ),
+};
+
+export const LoggedOut: Story = {
+  args: {},
+  render: () => (
+    <Box bgColor={"brand.900"} justifyContent={"stretch"}>
+      <Header isAuthenticated={false} onLogin={() => {}} onLogout={() => {}} />
     </Box>
   ),
 };

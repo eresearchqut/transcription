@@ -17,6 +17,7 @@
     "dev": "pnpm --filter frontend dev",
     "test": "pnpm recursive run test",
     "lint": "pnpm recursive run lint",
+    "lint:fix": "pnpm recursive run lint:fix",
     "lint:check": "pnpm recursive run lint:check",
     "fmt": "pnpm recursive run fmt",
     "fmt:check": "pnpm recursive run fmt:check"
@@ -24,6 +25,6 @@
   "author": "eResearch",
   "license": "MIT",
   "devDependencies": {
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.1.2"
   }
 }

@@ -7,6 +7,7 @@ import { Packer } from "docx";
 import srtConvert from "aws-transcription-to-srt";
 import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
+import { useAnalytics } from "../context/analytics-context";
 
 export interface DownloadProps {
   filename: string;
@@ -20,6 +21,7 @@ export interface DownloadTranscriptProps extends DownloadProps {
 
 export const useDownload = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { track } = useAnalytics();
   const { getCurrentSession } = useAuth();
 
   const handleDownload = (fileName: string, url: string) => {
@@ -96,6 +98,7 @@ export const useDownload = () => {
     filename,
     format,
   }: DownloadTranscriptProps) => {
+    track("download-transcript", { format });
     download({
       downloadUrl: fetchTranscriptUrl(objectKey, format),
       filename,

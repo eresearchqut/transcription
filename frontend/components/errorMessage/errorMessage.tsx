@@ -35,20 +35,25 @@ const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
 }) => {
   const { resetBoundary } = useErrorBoundary();
   const [errorDetails, setErrorDetails] = useState<Array<ErrorDetail>>([]);
-
   useEffect(() => {
-    setErrorDetails(
-      Object.entries({
-        splunkSessionId: SplunkOtelWeb.getSessionId(),
-        timestamp: new Date().toISOString(),
-        detail:
-          error?.reason?.toString() ?? error?.message ?? error?.toString(),
-      })
-        .filter(([_key, value]) => !isEmpty(value))
-        .map(([key, value]) => {
-          return { label: words(key)?.map(capitalize)?.join(" "), value };
-        }),
-    );
+    if (error) {
+      const errorDetail = error as Error & { reason?: string };
+      setErrorDetails(
+        () =>
+          Object.entries({
+            splunkSessionId: SplunkOtelWeb.getSessionId(),
+            timestamp: new Date().toISOString(),
+            detail:
+              errorDetail?.reason?.toString() ??
+              errorDetail?.message ??
+              error?.toString(),
+          })
+            .filter(([_key, value]) => !isEmpty(value))
+            .map(([key, value]) => {
+              return { label: words(key)?.map(capitalize)?.join(" "), value };
+            }) as Array<ErrorDetail>,
+      );
+    }
   }, [error]);
 
   return (

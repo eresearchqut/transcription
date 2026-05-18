@@ -9,22 +9,29 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useLogin } from "../context/auth-context";
 import { Quotas } from "../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "model";
 import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
-import { NextPageWithLayout } from "@/pages/_app";
-import { LoginLayout } from "../layout/layout";
+import { handleLogin, NextPageWithLayout } from "@/pages/_app";
+import Layout from "../layout/layout";
+import { useAuth } from "../context/auth-context";
+import { useRouter } from "next/router";
 
 const Login: NextPageWithLayout = () => {
+  const { authenticated } = useAuth();
+  const router = useRouter();
+
   const styles = {
     root: {
       bgColor: { base: "gray.100", _dark: "gray.700" },
     },
   };
 
-  const { handleLogin } = useLogin();
+  if (authenticated) {
+    router.push("/").then(() => console.log("Logged in routing to home."));
+  }
+
   return (
     <Stack align={"start"} gap={{ base: 4, lg: 10 }}>
       <Card.Root
@@ -185,16 +192,12 @@ const Login: NextPageWithLayout = () => {
   );
 };
 
-export const getStaticProps = () => {
-  return {
-    props: {
-      isLanding: true,
-    },
-  };
-};
-
 Login.getLayout = (page) => {
-  return <LoginLayout isLanding={true}>{page}</LoginLayout>;
+  return (
+    <Layout isLanding={true} isAuthenticated={false} onLogin={handleLogin}>
+      {page}
+    </Layout>
+  );
 };
 
 export default Login;
