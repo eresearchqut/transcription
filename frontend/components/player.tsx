@@ -53,8 +53,8 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
   const { track: trackEvent } = useAnalytics();
 
   const handleSeek = (seconds: number) => {
-    trackEvent('track-seek', {
-      seconds
+    trackEvent("track-seek", {
+      seconds,
     });
     seek(seconds);
   };
