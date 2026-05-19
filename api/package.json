@@ -22,12 +22,13 @@
         "@aws-sdk/util-dynamodb": "^3.741.0",
         "@codegenie/serverless-express": "^4.17.1",
         "aws-xray-sdk": "^3.5.1",
-        "body-parser": "^1.20.3",
+        "body-parser": "^1.20.4",
         "cors": "^2.8.5",
         "express": "^4.21.1",
         "model": "workspace:1.0.0"
     },
     "devDependencies": {
+        "aws-lambda": "^1.0.7",
         "@smithy/util-stream": "^4.0.2",
         "@trivago/prettier-plugin-sort-imports": "^4.3.0",
         "@types/aws-lambda": "^8.10.119",

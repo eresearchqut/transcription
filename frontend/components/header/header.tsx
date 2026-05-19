@@ -10,17 +10,21 @@ import {
 } from "@chakra-ui/react";
 import { MappedIcon } from "@/components/mappedIcon";
 import { ColorModeButton } from "@/components/ui/color-mode";
-import { useAuth, useLogin } from "../../context/auth-context";
 
 import logo from "@/public/logo.png";
 import { ButtonProps } from "@/components/ui/button";
-import { signOut } from "aws-amplify/auth";
 
-export const Header: FunctionComponent = () => {
-  const {
-    state: { isAuthenticated },
-  } = useAuth();
-  const { handleLogin } = useLogin();
+export interface HeaderProps {
+  isAuthenticated: boolean;
+  onLogin: () => void;
+  onLogout: () => void;
+}
+
+export const Header: FunctionComponent<HeaderProps> = ({
+  isAuthenticated,
+  onLogin,
+  onLogout,
+}) => {
   const buttonProps: ButtonProps = {
     colorPalette: "blue",
     variant: "outline",
@@ -42,17 +46,12 @@ export const Header: FunctionComponent = () => {
       </HStack>
       <Spacer />
       {!isAuthenticated && (
-        <Button onClick={handleLogin} {...buttonProps}>
+        <Button onClick={onLogin} {...buttonProps} data-umami-event={"login"}>
           <MappedIcon icon={"enter-outline"} /> Log in
         </Button>
       )}
       {isAuthenticated && (
-        <Button
-          onClick={() => {
-            signOut().then();
-          }}
-          {...buttonProps}
-        >
+        <Button onClick={onLogout} {...buttonProps} data-umami-event={"logout"}>
           <MappedIcon icon={"exit-outline"} />
           Log out
         </Button>

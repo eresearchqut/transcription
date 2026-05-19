@@ -46,7 +46,11 @@ export const Footer: FunctionComponent = () => {
         }
         withIcon={false}
       >
-        <Button colorPalette={"blue"} variant={"solid"}>
+        <Button
+          colorPalette={"blue"}
+          variant={"solid"}
+          data-umami-event={"contact-eresearch"}
+        >
           Contact eResearch{" "}
           <MappedIcon icon={"external-link"} width={"1em"} height={"1em"} />
         </Button>

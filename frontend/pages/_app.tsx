@@ -1,16 +1,18 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { AuthProvider } from "../context/auth-context";
-import { AppInitProvider } from "../context/app-init-context";
+import { MonitoringProvider } from "../context/monitoring-context";
 import { Amplify } from "aws-amplify";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "@/components/ui/provider";
 import Layout from "../layout/layout";
-import { ReactElement, ReactNode } from "react";
+import React, { ReactElement, ReactNode } from "react";
 import { NextPage } from "next";
 import { ErrorMessage } from "@/components/errorMessage";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { AsyncErrorBoundary } from "@/components/errorBoundary";
+import { AnalyticsProvider } from "../context/analytics-context";
+import { AuthProvider } from "../context/auth-context";
+import { signInWithRedirect } from "aws-amplify/auth";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -52,6 +54,10 @@ Amplify.configure({
   },
 });
 
+export const handleLogin = async () => {
+  await signInWithRedirect({ provider: { custom: "QUT" } });
+};
+
 const queryClient = new QueryClient();
 
 function App({ Component, pageProps }: AppPropsWithLayout) {
@@ -59,24 +65,31 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
   const getLayout =
     Component.getLayout ??
     ((page) => (
-      <Layout isLanding={isLanding} pageTitle={pageTitle}>
+      <Layout
+        isLanding={isLanding}
+        isAuthenticated={false}
+        pageTitle={pageTitle}
+        onLogin={handleLogin}
+      >
         {page}
       </Layout>
     ));
   return (
-    <Provider>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <AppInitProvider>
-            <ReactErrorBoundary FallbackComponent={ErrorMessage}>
-              <AsyncErrorBoundary>
-                {getLayout(<Component {...componentProps} />)}
-              </AsyncErrorBoundary>
-            </ReactErrorBoundary>
-          </AppInitProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider>
+        <AnalyticsProvider>
+          <MonitoringProvider>
+            <AuthProvider>
+              <ReactErrorBoundary FallbackComponent={ErrorMessage}>
+                <AsyncErrorBoundary>
+                  {getLayout(<Component {...componentProps} />)}
+                </AsyncErrorBoundary>
+              </ReactErrorBoundary>
+            </AuthProvider>
+          </MonitoringProvider>
+        </AnalyticsProvider>
+      </Provider>
+    </QueryClientProvider>
   );
 }
 
