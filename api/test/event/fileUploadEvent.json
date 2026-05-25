@@ -27,7 +27,7 @@
           "arn": "arn:aws:s3:::dev-transcription-ap-southeast-2-854640616043"
         },
         "object": {
-          "key": "private/ap-southeast-2%3Abcb38797-8e6a-43ea-9844-d8505927785a/76c65a59-1c57-489b-be96-020ceaa9675a/2e9b38b5-1df0-4841-8308-f174fb88aac7.upload",
+          "key": "users/76c65a59-1c57-489b-be96-020ceaa9675a/2e9b38b5-1df0-4841-8308-f174fb88aac7.upload",
           "size": 1292288,
           "eTag": "c2ee56cbea8c6d3d694042bd4f5439fe",
           "sequencer": "0060FF5FCCD239203C"

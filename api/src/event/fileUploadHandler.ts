@@ -15,7 +15,7 @@ import { jobStarted } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
-const uploadPattern = /private\/(.*)\/(.*)\/(.*)\.upload/gm;
+const uploadPattern = /users\/(.*)\/(.*)\.upload/gm;
 
 const transcribeClient = new TranscribeClient({ region });
 const s3client = new S3Client({ region: process.env.AWS_REGION });
@@ -30,7 +30,7 @@ export const handler = async (event: S3Event) => {
       const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
       const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
       const bucketName = record["s3"]["bucket"]["name"];
-      const [matchedKey, cognitoId, identityId, jobId] = [
+      const [matchedKey, identityId, jobId] = [
         ...key.matchAll(uploadPattern),
       ][0];
 
@@ -85,10 +85,8 @@ export const handler = async (event: S3Event) => {
             : {}),
         };
 
-        const cognitoGuid = cognitoId.split("%3A")[1];
-
         // Member must satisfy regular expression pattern: [a-zA-Z0-9-_.!*'()/]{1,1024}$, i.e. no colons or escaped colons
-        const outputKey = `transcription/${cognitoGuid}/${identityId}/${jobId}.json`;
+        const outputKey = `transcription/${identityId}/${jobId}.json`;
         const params = {
           TranscriptionJobName: `${identityId}_${jobId}`,
           ...languageParams,

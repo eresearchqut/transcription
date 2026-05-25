@@ -210,6 +210,12 @@ export class ApiStack extends cdk.Stack {
       { prefix: "private" },
       { suffix: ".upload" }
     );
+    dataBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(jobStartFunction),
+      { prefix: "users" },
+      { suffix: ".upload" }
+    );
 
     const jobStateChangeFunction = new NodejsFunction(this, "TranscriptionJobStateChangeFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
@@ -341,6 +347,12 @@ export class ApiStack extends cdk.Stack {
       { prefix: "private" },
       { suffix: ".json" }
     );
+    dataBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(summariseTranscriptionFunction),
+      { prefix: "users" },
+      { suffix: ".json" }
+    );
 
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders: props.parameters.SupportedIdentityProviders.map(provider => cognito.UserPoolClientIdentityProvider.custom(provider)),
@@ -378,7 +390,7 @@ export class ApiStack extends cdk.Stack {
         "ForAnyValue:StringLike": {
           "cognito-identity.amazonaws.com:amr": "authenticated"
         }
-      }, "sts:AssumeRoleWithWebIdentity"),
+      }, "sts:AssumeRoleWithWebIdentity").withSessionTags(),
       inlinePolicies: {
         "cognito-authorized-policy": new iam.PolicyDocument({
           statements: [
@@ -399,6 +411,7 @@ export class ApiStack extends cdk.Stack {
         }),
         "s3-authorized-policy": new iam.PolicyDocument({
           statements: [
+            // Legacy: access existing files stored under the Cognito Identity ID prefix
             new iam.PolicyStatement({
               actions: [
                 "s3:ListBucket"
@@ -420,6 +433,29 @@ export class ApiStack extends cdk.Stack {
                 "s3:DeleteObject"
               ],
               resources: [`${dataBucket.bucketArn}/private/\${cognito-identity.amazonaws.com:sub}/*`]
+            }),
+            // New: access files stored under the stable qutIdentityId prefix
+            new iam.PolicyStatement({
+              actions: [
+                "s3:ListBucket"
+              ],
+              resources: [dataBucket.bucketArn],
+              conditions: {
+                "StringLike": {
+                  "s3:prefix": [
+                    "users/${aws:PrincipalTag/qutIdentityId}/",
+                    "users/${aws:PrincipalTag/qutIdentityId}/*"
+                  ]
+                }
+              }
+            }),
+            new iam.PolicyStatement({
+              actions: [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+              ],
+              resources: [`${dataBucket.bucketArn}/users/\${aws:PrincipalTag/qutIdentityId}/*`]
             })
           ]
         })
@@ -442,6 +478,15 @@ export class ApiStack extends cdk.Stack {
       roles: {
         "authenticated": amplifyAuthorizedRole.roleArn,
         "unauthenticated": amplifyUnAuthorizedRole.roleArn
+      }
+    });
+
+    new cognito.CfnIdentityPoolPrincipalTag(this, "IdentityPoolPrincipalTag", {
+      identityPoolId: identityPool.ref,
+      identityProviderName: providerName,
+      useDefaults: false,
+      principalTags: {
+        "qutIdentityId": "custom:qutIdentityId"
       }
     });
 

@@ -17,7 +17,8 @@ import {
 } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
-const outputPattern = /private\/(.*)\/(.*)\/(.*)/gm;
+const legacyOutputPattern = /private\/(.*)\/(.*)\/(.*)/gm;
+const outputPattern = /users\/(.*)\/([^/]+)$/;
 
 const s3Client = new S3Client({ region });
 const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
@@ -40,61 +41,82 @@ export const handler = async (event: S3Event) => {
   for (const record of event["Records"]) {
     const key = decodeURIComponent(record["s3"]["object"]["key"]);
     const bucketName = record["s3"]["bucket"]["name"];
-    const [matchedKey, cognitoId, identityId, fileName] = [
-      ...key.matchAll(outputPattern),
-    ][0];
-    if (matchedKey) {
-      const jobId = normaliseJobId(fileName.split(".")[0]);
-      const summaryKey = `${identityId}/summary/${jobId}`;
-      const privateSummaryKey = `private/${cognitoId}/${summaryKey}`;
-      promises.push(
-        getTranscription(identityId, jobId)
-          .then((transcriptionRecord) => {
-            return transcriptionRecord as Transcription;
-          })
-          .then(
-            ({
-              metadata: { generatesummary: generateSummary },
-            }: Transcription) => JSON.parse(generateSummary?.toLowerCase()),
-          )
-          .then(async (generateSummary: boolean) => {
-            if (generateSummary) {
-              summaryCount += 1;
-              return s3Client
-                .send(new GetObjectCommand({ Bucket: bucketName, Key: key }))
-                .then((result) => result.Body?.transformToString())
-                .then(
-                  (rawTranscription) =>
-                    rawTranscription && JSON.parse(rawTranscription),
-                )
-                .then(
-                  (transcription) =>
-                    transcription?.results.transcripts.at(0)?.transcript,
-                )
-                .then((transcript: string) =>
-                  invokeModel(
-                    bedrockClient,
-                    `${GENERATE_SUMMARY_PROMPT} <transcript>${transcript}</transcript> ${NO_PREAMBLE_PROMPT}`,
-                  ),
-                )
-                .then((summary: string) =>
-                  s3Client.send(
-                    new PutObjectCommand({
-                      Bucket: bucketName,
-                      Key: privateSummaryKey,
-                      Body: summary,
-                    }),
-                  ),
-                )
-                .then(() => updateSummaryKey(identityId, jobId, summaryKey));
-            } else {
-              return Promise.resolve({});
-            }
-          }),
-      );
+
+    let identityId: string;
+    let fileName: string;
+    let privateSummaryKey: string;
+    let summaryKey: string;
+
+    if (key.startsWith("users/")) {
+      // New format: users/{identityId}/{fileName}
+      const match = key.match(outputPattern);
+      if (!match) {
+        console.error("Unexpected key: ", key);
+        continue;
+      }
+      [, identityId, fileName] = match;
+      summaryKey = `users/${identityId}/summary/${normaliseJobId(fileName.split(".")[0])}`;
+      privateSummaryKey = summaryKey;
     } else {
-      console.error("Unexpected key: ", key);
+      // Legacy format: private/{cognitoId}/{identityId}/{fileName}
+      const legacyMatch = [...key.matchAll(legacyOutputPattern)][0];
+      if (!legacyMatch) {
+        console.error("Unexpected key: ", key);
+        continue;
+      }
+      const [, cognitoId, legacyIdentityId, legacyFileName] = legacyMatch;
+      identityId = legacyIdentityId;
+      fileName = legacyFileName;
+      summaryKey = `${identityId}/summary/${normaliseJobId(fileName.split(".")[0])}`;
+      privateSummaryKey = `private/${cognitoId}/${summaryKey}`;
     }
+
+    const jobId = normaliseJobId(fileName.split(".")[0]);
+    promises.push(
+      getTranscription(identityId, jobId)
+        .then((transcriptionRecord) => {
+          return transcriptionRecord as Transcription;
+        })
+        .then(
+          ({
+            metadata: { generatesummary: generateSummary },
+          }: Transcription) => JSON.parse(generateSummary?.toLowerCase()),
+        )
+        .then(async (generateSummary: boolean) => {
+          if (generateSummary) {
+            summaryCount += 1;
+            return s3Client
+              .send(new GetObjectCommand({ Bucket: bucketName, Key: key }))
+              .then((result) => result.Body?.transformToString())
+              .then(
+                (rawTranscription) =>
+                  rawTranscription && JSON.parse(rawTranscription),
+              )
+              .then(
+                (transcription) =>
+                  transcription?.results.transcripts.at(0)?.transcript,
+              )
+              .then((transcript: string) =>
+                invokeModel(
+                  bedrockClient,
+                  `${GENERATE_SUMMARY_PROMPT} <transcript>${transcript}</transcript> ${NO_PREAMBLE_PROMPT}`,
+                ),
+              )
+              .then((summary: string) =>
+                s3Client.send(
+                  new PutObjectCommand({
+                    Bucket: bucketName,
+                    Key: privateSummaryKey,
+                    Body: summary,
+                  }),
+                ),
+              )
+              .then(() => updateSummaryKey(identityId, jobId, summaryKey));
+          } else {
+            return Promise.resolve({});
+          }
+        }),
+    );
   }
 
   await Promise.all(promises);
