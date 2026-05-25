@@ -213,7 +213,7 @@ export class ApiStack extends cdk.Stack {
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),
-      { prefix: "users" },
+      { prefix: "users/" },
       { suffix: ".upload" }
     );
 
@@ -350,7 +350,7 @@ export class ApiStack extends cdk.Stack {
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(summariseTranscriptionFunction),
-      { prefix: "users" },
+      { prefix: "users/" },
       { suffix: ".json" }
     );
 
