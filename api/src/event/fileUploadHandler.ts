@@ -15,7 +15,8 @@ import { jobStarted } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
-const uploadPattern = /users\/(.*)\/(.*)\.upload/gm;
+const uploadPattern = /^users\/([^/]+)\/([^/]+)\.upload$/;
+const legacyUploadPattern = /^private\/[^/]+\/([^/]+)\/([^/]+)\.upload$/;
 
 const transcribeClient = new TranscribeClient({ region });
 const s3client = new S3Client({ region: process.env.AWS_REGION });
@@ -30,97 +31,98 @@ export const handler = async (event: S3Event) => {
       const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
       const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
       const bucketName = record["s3"]["bucket"]["name"];
-      const [matchedKey, identityId, jobId] = [
-        ...key.matchAll(uploadPattern),
-      ][0];
+      const match = uploadPattern.exec(key) ?? legacyUploadPattern.exec(key);
 
-      if (matchedKey) {
-        const headResponse = await s3client.send(
-          new HeadObjectCommand({
-            Bucket: record["s3"]["bucket"]["name"],
-            Key: objectKey,
-          }),
-        );
-
-        if (headResponse.Metadata === undefined) {
-          continue;
-        }
-
-        const languages: string[] =
-          headResponse.Metadata["languages"].split(/,\s?/);
-        const enablePiiRedaction: boolean = JSON.parse(
-          headResponse.Metadata["enablePiiRedaction".toLowerCase()],
-        );
-
-        const languageParams = {
-          ...(enablePiiRedaction
-            ? {
-                LanguageCode: LanguageCode.EN_US,
-              }
-            : languages.length > 1
-              ? {
-                  IdentifyMultipleLanguages: true,
-                  LanguageOptions: languages.map(
-                    (language) => language as LanguageCode,
-                  ),
-                }
-              : languages.length > 0
-                ? {
-                    LanguageCode: languages.at(0) as LanguageCode,
-                  }
-                : {
-                    IdentifyLanguage: true,
-                  }),
-        };
-
-        const piiParams = {
-          ...(enablePiiRedaction
-            ? {
-                ContentRedaction: {
-                  RedactionOutput: RedactionOutput.REDACTED,
-                  RedactionType: RedactionType.PII,
-                  PiiEntityTypes: [PiiEntityType.ALL],
-                },
-              }
-            : {}),
-        };
-
-        // Member must satisfy regular expression pattern: [a-zA-Z0-9-_.!*'()/]{1,1024}$, i.e. no colons or escaped colons
-        const outputKey = `transcription/${identityId}/${jobId}.json`;
-        const params = {
-          TranscriptionJobName: `${identityId}_${jobId}`,
-          ...languageParams,
-          ...piiParams,
-          Media: {
-            MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
-          },
-          OutputBucketName: transcribeBucket,
-          OutputKey: outputKey,
-          Settings: {
-            ShowSpeakerLabels: true,
-            ShowAlternatives: true,
-            MaxAlternatives: 10,
-            MaxSpeakerLabels: 10,
-          },
-        };
-        console.log("transcription params", params);
-        const transcriptionResponse = await transcribeClient.send(
-          new StartTranscriptionJobCommand(params),
-        );
-        try {
-          await jobStarted(
-            identityId,
-            jobId,
-            outputKey,
-            record["s3"],
-            transcriptionResponse,
-            headResponse.Metadata,
-          ).then(() => uploadsCount++);
-        } catch (error) {
-          console.error("Failed to save job details", error);
-        }
-      } else {
+      if (!match) {
         console.error("Unexpected key: ", key);
+        continue;
+      }
+
+      const [, identityId, jobId] = match;
+
+      const headResponse = await s3client.send(
+        new HeadObjectCommand({
+          Bucket: record["s3"]["bucket"]["name"],
+          Key: objectKey,
+        }),
+      );
+
+      if (headResponse.Metadata === undefined) {
+        continue;
+      }
+
+      const languages: string[] =
+        headResponse.Metadata["languages"].split(/,\s?/);
+      const enablePiiRedaction: boolean = JSON.parse(
+        headResponse.Metadata["enablePiiRedaction".toLowerCase()],
+      );
+
+      const languageParams = {
+        ...(enablePiiRedaction
+          ? {
+              LanguageCode: LanguageCode.EN_US,
+            }
+          : languages.length > 1
+            ? {
+                IdentifyMultipleLanguages: true,
+                LanguageOptions: languages.map(
+                  (language) => language as LanguageCode,
+                ),
+              }
+            : languages.length > 0
+              ? {
+                  LanguageCode: languages.at(0) as LanguageCode,
+                }
+              : {
+                  IdentifyLanguage: true,
+                }),
+      };
+
+      const piiParams = {
+        ...(enablePiiRedaction
+          ? {
+              ContentRedaction: {
+                RedactionOutput: RedactionOutput.REDACTED,
+                RedactionType: RedactionType.PII,
+                PiiEntityTypes: [PiiEntityType.ALL],
+              },
+            }
+          : {}),
+      };
+
+      // Member must satisfy regular expression pattern: [a-zA-Z0-9-_.!*'()/]{1,1024}$, i.e. no colons or escaped colons
+      const outputKey = `transcription/${identityId}/${jobId}.json`;
+      const params = {
+        TranscriptionJobName: `${identityId}_${jobId}`,
+        ...languageParams,
+        ...piiParams,
+        Media: {
+          MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
+        },
+        OutputBucketName: transcribeBucket,
+        OutputKey: outputKey,
+        Settings: {
+          ShowSpeakerLabels: true,
+          ShowAlternatives: true,
+          MaxAlternatives: 10,
+          MaxSpeakerLabels: 10,
+        },
+      };
+      console.log("transcription params", params);
+      const transcriptionResponse = await transcribeClient.send(
+        new StartTranscriptionJobCommand(params),
+      );
+      try {
+        await jobStarted(
+          identityId,
+          jobId,
+          outputKey,
+          record["s3"],
+          transcriptionResponse,
+          headResponse.Metadata,
+        ).then(() => uploadsCount++);
+      } catch (error) {
+        console.error("Failed to save job details", error);
       }
     } catch (e) {
       console.error(e);
