@@ -19,8 +19,10 @@ import {
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
 
-const mediaKey = (transcription: Transcription): string =>
-  transcription.uploadEvent.object.key.split("/").slice(-2).join("/");
+const mediaKey = (transcription: Transcription): string => {
+  const key = transcription.uploadEvent.object.key;
+  return key.startsWith("users/") ? key : key.split("/").slice(-2).join("/");
+};
 
 export interface DownloadOptionsProps
   extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
