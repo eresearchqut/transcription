@@ -53,7 +53,7 @@ const Upload: NextPageWithLayout = () => {
       { languages, enablePiiRedaction, generateSummary }: TranscribeProps,
     ) => {
       const id = uuid();
-      const key = `${user?.id}/${id}.upload`;
+      const key = `users/${user!.id}/${id}.upload`;
       const metadata = {
         filename: encodeURIComponent(file.name),
         mimetype: file.type,
@@ -86,7 +86,7 @@ const Upload: NextPageWithLayout = () => {
 
       getCurrentSession().then(() =>
         uploadData({
-          path: ({ identityId }) => `private/${identityId}/${key}`,
+          path: key,
           data: file,
           options: {
             contentDisposition: `attachment; filename = ${metadata.filename}`,
