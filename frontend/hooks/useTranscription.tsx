@@ -71,12 +71,14 @@ export const useTranscription = ({
     queryFn: async (): Promise<string | undefined> => {
       return !isEmpty(transcription?.summaryKey)
         ? getCurrentSession()
-            .then(() =>
-              downloadData({
-                path: ({ identityId }) =>
-                  `private/${identityId}/${transcription!.summaryKey}`,
-              }),
-            )
+            .then(() => {
+              const summaryKey = transcription!.summaryKey!;
+              const path: string | (({ identityId }: { identityId?: string }) => string) =
+                summaryKey.startsWith("users/")
+                  ? summaryKey
+                  : ({ identityId }) => `private/${identityId}/${summaryKey}`;
+              return downloadData({ path });
+            })
             .then((downloadDataOutput) => downloadDataOutput.result)
             .then((downloadDataOutputResult) =>
               downloadDataOutputResult.body.text(),
