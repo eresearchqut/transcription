@@ -25,8 +25,9 @@ const mediaKey = (transcription: Transcription): string => {
   return key.startsWith("users/") ? key : key.split("/").slice(-2).join("/");
 };
 
-export interface DownloadOptionsProps
-  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
+export interface DownloadOptionsProps extends Required<
+  Pick<UseTranscriptionProps, "initialTranscription">
+> {
   handlePlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
@@ -91,7 +92,9 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   const loadTranslatedPlayer = () => {
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
-      fetchTranslatedTranscriptUrl(transcription.translationKey!, "vtt"),
+      fetchTranslatedTranscriptUrl(transcription.translationKey!, "vtt", {
+        includeSpeakers: false,
+      }),
     ]).then(([mediaUrl, transcriptUrl]) => {
       handlePlayClick(mediaUrl, transcriptUrl, summary);
     });
@@ -138,7 +141,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
           )}
           <MenuSeparator />
           {transcription.downloadKey && (
-            <MenuItemGroup title={"Transcription formats"}>
+            <MenuItemGroup title={"Transcription"}>
               <MenuItem
                 value={"json"}
                 onClick={() =>

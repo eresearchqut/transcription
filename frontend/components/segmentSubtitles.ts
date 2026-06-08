@@ -51,14 +51,19 @@ const speakerLabel = (
   return speakers[label] ?? label;
 };
 
-export const segmentsToSrt = (job: TranscriptJob): string =>
+export const segmentsToSrt = (
+  job: TranscriptJob,
+  { includeSpeakers = true }: { includeSpeakers?: boolean } = {},
+): string =>
   job.results.segments
     .map((segment, index) => {
-      const speaker = speakerLabel(
-        job.results.speaker_labels?.segments,
-        segment.start_time,
-        segment.end_time,
-      );
+      const speaker = includeSpeakers
+        ? speakerLabel(
+            job.results.speaker_labels?.segments,
+            segment.start_time,
+            segment.end_time,
+          )
+        : "";
       const transcript = segment.alternatives[0]?.transcript ?? "";
       const line = speaker ? `${speaker}: ${transcript}` : transcript;
       return [

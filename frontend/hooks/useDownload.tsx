@@ -102,6 +102,7 @@ export const useDownload = () => {
   const fetchTranslatedTranscriptUrl = async (
     objectKey: string,
     format: TranslatedTranscriptFormat,
+    { includeSpeakers = true }: { includeSpeakers?: boolean } = {},
   ): Promise<string> => {
     return getCurrentSession()
       .then(() =>
@@ -123,9 +124,12 @@ export const useDownload = () => {
               type: "text/plain",
             });
           default:
-            return new Blob([segmentsToSrt(transcriptJob)], {
-              type: "text/plain",
-            });
+            return new Blob(
+              [segmentsToSrt(transcriptJob, { includeSpeakers })],
+              {
+                type: "text/plain",
+              },
+            );
         }
       })
       .then((blob) =>

@@ -20,21 +20,27 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
   jobId,
   initialTranscription,
 }) => {
-  const { transcription } = useTranscription({
+  const { transcription, isPipelineCompleted } = useTranscription({
     jobId,
     initialTranscription,
   });
-  const [status, setStatus] = useState(
-    transcription
-      ? mapTranscriptionStatus(transcription as Transcription)
-      : "Pending",
-  );
+
+  const displayStatus = (transcription?: Transcription): Status | "Pending" => {
+    if (!transcription) return "Pending";
+    const rawStatus = mapTranscriptionStatus(transcription);
+    // The transcribe job can be COMPLETED while summarisation/translation are
+    // still running. Keep showing IN_PROGRESS until the whole pipeline is done.
+    return rawStatus === Status.COMPLETED && !isPipelineCompleted
+      ? Status.IN_PROGRESS
+      : rawStatus;
+  };
+
+  const [status, setStatus] = useState(displayStatus(transcription));
 
   useEffect(() => {
-    if (transcription) {
-      setStatus(mapTranscriptionStatus(transcription));
-    }
-  }, [transcription]);
+    setStatus(displayStatus(transcription));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transcription, isPipelineCompleted]);
 
   const colorPalette =
     status === Status.FAILED
