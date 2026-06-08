@@ -51,6 +51,18 @@ export const summaryKey = (
 ) =>
   updateResource(identityId, normaliseJobId(jobId), "summaryKey", summaryKey);
 
+export const translationKey = (
+  identityId: string,
+  jobId: string,
+  translationKey: string,
+) =>
+  updateResource(
+    identityId,
+    normaliseJobId(jobId),
+    "translationKey",
+    translationKey,
+  );
+
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);
 

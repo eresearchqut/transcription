@@ -15,10 +15,12 @@ export interface Transcription {
     filename: string;
     generatesummary: string;
     enablepiiredaction: string;
+    targetlanguage?: string;
   };
   date: string;
   downloadKey?: string;
   summaryKey?: string;
+  translationKey?: string;
   ttl: number;
   jobStatusUpdated?: {
     detail: {
@@ -56,3 +58,26 @@ export const mapTranscriptionStatus = (
 export const enableGenerateSummary = (transcription: Transcription): boolean =>
   transcription.metadata.generatesummary &&
   JSON.parse(transcription.metadata.generatesummary);
+
+export const enableTranslation = (transcription: Transcription): boolean =>
+  !!transcription.metadata.targetlanguage &&
+  transcription.metadata.targetlanguage.length > 0;
+
+/**
+ * Amazon Transcribe locales (e.g. "en-US") map onto Amazon Translate source
+ * language codes, which are mostly the 2-letter ISO prefix but with a handful
+ * of region-specific exceptions. Anything not listed falls back to the locale's
+ * 2-letter prefix.
+ */
+const TRANSCRIBE_TO_TRANSLATE_SOURCE: Record<string, string> = {
+  "zh-CN": "zh",
+  "zh-TW": "zh-TW",
+  "pt-BR": "pt",
+  "pt-PT": "pt-PT",
+  "fr-CA": "fr-CA",
+  "es-MX": "es-MX",
+};
+
+export const toTranslateSourceCode = (transcribeLocale: string): string =>
+  TRANSCRIBE_TO_TRANSLATE_SOURCE[transcribeLocale] ??
+  transcribeLocale.split("-")[0];

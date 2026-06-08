@@ -354,6 +354,77 @@ export class ApiStack extends cdk.Stack {
       { suffix: ".json" }
     );
 
+    const translateTranscriptionFunction = new NodejsFunction(this, "TranslateTranscriptionFunction", {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      description: "Translates the transcription output into a target language",
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 1024,
+      entry: "../api/src/event/translateTranscriptionHandler.ts",
+      handler: "handler",
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: "es2020"
+      },
+      environment: {
+        TABLE_NAME: dataTable.tableName,
+        BUCKET_NAME: dataBucket.bucketName,
+        APPLICATION_NAME: props.parameters.ApplicationName,
+        ENVIRONMENT: props.parameters.Environment
+      }
+    });
+    translateTranscriptionFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["translate:TranslateText"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW
+    }));
+    translateTranscriptionFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["transcribe:GetTranscriptionJob"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW
+    }));
+    translateTranscriptionFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: [
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:GetObjectAcl",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "s3:PutObjectAcl"
+      ],
+      resources: [
+        `${dataBucket.bucketArn}/*`
+      ],
+      effect: iam.Effect.ALLOW
+    }));
+    dataTable.grantReadWriteData(translateTranscriptionFunction);
+
+    // Triggered off the same Transcribe "COMPLETED" event as the state-change
+    // handler. EventBridge (rather than an S3 notification) is used because the
+    // summarise function already owns the users/*.json OBJECT_CREATED filter and
+    // S3 rejects overlapping notification configurations.
+    const translateRule = new events.Rule(this, "TranslateTranscriptionRule", {
+      eventPattern: {
+        source: [
+          "aws.transcribe"
+        ],
+        detailType: [
+          "Transcribe Job State Change"
+        ],
+        detail: {
+          "TranscriptionJobStatus": [
+            "COMPLETED"
+          ]
+        }
+      }
+    });
+    translateRule.addTarget(new targets.LambdaFunction(translateTranscriptionFunction));
+    translateTranscriptionFunction.addPermission("TranslateTranscriptionFunctionPermission", {
+      action: "lambda:InvokeFunction",
+      principal: new iam.ServicePrincipal("events.amazonaws.com"),
+      sourceArn: translateRule.ruleArn
+    });
+
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders: props.parameters.SupportedIdentityProviders.map(provider => cognito.UserPoolClientIdentityProvider.custom(provider)),
       oAuth: {

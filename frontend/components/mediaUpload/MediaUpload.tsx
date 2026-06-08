@@ -11,6 +11,7 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { LanguageInput } from "../../inputs/languageInput";
+import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
 import { isArray } from "lodash";
 import { TRANSCRIBE_QUOTAS } from "model";
 import { HelpPopover } from "@/components/helpPopover";
@@ -26,6 +27,7 @@ export interface TranscribeProps {
   languages: string[];
   enablePiiRedaction: boolean;
   generateSummary: boolean;
+  targetLanguage?: string;
 }
 
 export interface MediaUploadProps {
@@ -40,6 +42,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const [languages, setLanguages] = useState<string[]>(["en-AU"]);
   const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
+  const [enableTranslation, setEnableTranslation] = useState<boolean>(false);
+  const [targetLanguage, setTargetLanguage] = useState<string | undefined>();
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -64,8 +68,23 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     setGenerateSummary(d.checked);
   };
 
+  const onEnableTranslationChange = (d: CheckedChangeDetails) => {
+    setEnableTranslation(d.checked);
+    if (!d.checked) {
+      setTargetLanguage(undefined);
+    }
+  };
+
   const onFilesPicked = (files: File[]) => {
-    onSubmit({ languages, enablePiiRedaction, generateSummary }, files);
+    onSubmit(
+      {
+        languages,
+        enablePiiRedaction,
+        generateSummary,
+        targetLanguage: enableTranslation ? targetLanguage : undefined,
+      },
+      files,
+    );
   };
 
   const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_QUOTAS;
@@ -199,8 +218,61 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             </ChakraField.HelperText>
           )}
         </Field>
+        <Field
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          minWidth={"max-content"}
+          label={
+            <Box as={"span"} whiteSpace={"nowrap"}>
+              Translate
+            </Box>
+          }
+        >
+          <Switch
+            checked={enableTranslation}
+            onCheckedChange={onEnableTranslationChange}
+          />
+          <HelpPopover ariaLabel={"Help with Translate"} header={"Translate"}>
+            <VStack gap={3}>
+              <Text>
+                This feature is powered by{" "}
+                <ExternalLink href={"https://aws.amazon.com/translate/"}>
+                  Amazon Translate
+                </ExternalLink>
+                . Once your media is transcribed, the transcript can be
+                automatically translated into another language, with timed
+                subtitles (SRT/VTT), a document (DOCX) and plain text available
+                to download.
+              </Text>
+              <Text>
+                Please be aware that machine translations may contain
+                inaccuracies and should be reviewed before being relied upon.
+              </Text>
+            </VStack>
+          </HelpPopover>
+          {enableTranslation && (
+            <Box minWidth={"15rem"}>
+              <TranslationLanguageInput
+                value={targetLanguage}
+                onChange={(value) => setTargetLanguage(value)}
+                placeholder={"Select a language..."}
+              />
+            </Box>
+          )}
+          {enableTranslation && !targetLanguage && (
+            <ChakraField.HelperText whiteSpace={"nowrap"}>
+              Select a language to translate into.
+            </ChakraField.HelperText>
+          )}
+        </Field>
       </Stack>
-      <FilePicker {...filePickerProps} disabled={languageSizeLimitExceeded} />
+      <FilePicker
+        {...filePickerProps}
+        disabled={
+          languageSizeLimitExceeded || (enableTranslation && !targetLanguage)
+        }
+      />
     </VStack>
   );
 };

@@ -5,6 +5,7 @@ import { lowerCase } from "lodash";
 import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import {
   enableGenerateSummary,
+  enableTranslation,
   mapTranscriptionStatus,
   TranscriptionJobStatus,
 } from "model";
@@ -15,6 +16,7 @@ import {
 import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 import { MappedIcon } from "../mappedIcon";
 import { Alert } from "../ui/alert";
+import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
@@ -105,6 +107,38 @@ const GenerateSummaryStatus = ({
   );
 };
 
+const TranslationStatus = ({
+  targetLanguage,
+  translationKey,
+}: {
+  targetLanguage: string | undefined;
+  translationKey: string | undefined;
+}) => {
+  const iconProps = { mr: 2, mb: 1 };
+  const languageName =
+    (supportedTranslationLanguages as Record<string, string>)[
+      targetLanguage ?? ""
+    ] ?? targetLanguage;
+  return (
+    <Box>
+      {!translationKey ? (
+        <>
+          <Spinner size={"sm"} mr={1} /> Translating to {languageName}
+        </>
+      ) : (
+        <>
+          <MappedIcon
+            icon={"check-circle"}
+            {...iconProps}
+            color={"green.600"}
+          />
+          Translation ready
+        </>
+      )}
+    </Box>
+  );
+};
+
 export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
 > = ({ jobId, filename, uploadProgress, onPlayClick }) => {
@@ -161,6 +195,12 @@ export const TranscriptionProgress: FunctionComponent<
             enableGenerateSummary(transcription!) && (
               <GenerateSummaryStatus summaryKey={transcription?.summaryKey} />
             )}
+          {isTranscribeJobCompleted && enableTranslation(transcription!) && (
+            <TranslationStatus
+              targetLanguage={transcription?.metadata.targetlanguage}
+              translationKey={transcription?.translationKey}
+            />
+          )}
         </VStack>
         {isTranscribeCompleted && (
           <TranscriptionDownloadOptions

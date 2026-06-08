@@ -50,7 +50,12 @@ const Upload: NextPageWithLayout = () => {
   const uploadFiles = (transcribeProps: TranscribeProps, files: File[]) => {
     const uploadFile = (
       file: File,
-      { languages, enablePiiRedaction, generateSummary }: TranscribeProps,
+      {
+        languages,
+        enablePiiRedaction,
+        generateSummary,
+        targetLanguage,
+      }: TranscribeProps,
     ) => {
       const id = uuid();
       const key = `users/${user!.id}/${id}.upload`;
@@ -61,6 +66,7 @@ const Upload: NextPageWithLayout = () => {
         languages: languages.join(","),
         enablePiiRedaction: JSON.stringify(enablePiiRedaction),
         generateSummary: JSON.stringify(generateSummary),
+        targetLanguage: targetLanguage ?? "",
       };
 
       track(
@@ -70,6 +76,7 @@ const Upload: NextPageWithLayout = () => {
           "languages",
           "enablePiiRedaction",
           "generateSummary",
+          "targetLanguage",
         ]),
       );
 

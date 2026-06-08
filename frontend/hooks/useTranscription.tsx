@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   enableGenerateSummary,
+  enableTranslation,
   mapTranscriptionStatus,
   Transcription,
   TranscriptionJobStatus,
@@ -52,6 +53,9 @@ export const useTranscription = ({
       isTranscribeCompleted &&
       (enableGenerateSummary(transcription)
         ? !isEmpty(transcription?.summaryKey)
+        : true) &&
+      (enableTranslation(transcription)
+        ? !isEmpty(transcription?.translationKey)
         : true));
   const { data } = useQuery({
     enabled: !isPipelineCompleted,

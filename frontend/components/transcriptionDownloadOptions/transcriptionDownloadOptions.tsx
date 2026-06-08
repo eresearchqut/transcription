@@ -18,6 +18,7 @@ import {
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
+import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
 
 const mediaKey = (transcription: Transcription): string => {
   const key = transcription.uploadEvent.object.key;
@@ -36,6 +37,9 @@ export interface DownloadOptionsProps
 const filenameFromFormat = (transcription: Transcription, format: string) =>
   [transcription.metadata.filename.split(".")[0], format].join(".");
 
+const languageDisplayName = (code: string) =>
+  (supportedTranslationLanguages as Record<string, string>)[code] ?? code;
+
 const transcriptProps = (
   transcription: Transcription,
   format: TranscriptFormat,
@@ -51,7 +55,9 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   const {
     fetchMediaUrl,
     fetchTranscriptUrl,
+    fetchTranslatedTranscriptUrl,
     downloadTranscript,
+    downloadTranslatedTranscript,
     downloadFile,
   } = useDownload();
   const { transcription, summary } = useTranscription({
@@ -61,11 +67,31 @@ export const TranscriptionDownloadOptions: FunctionComponent<
 
   if (!transcription) return undefined;
 
+  const targetLanguage = transcription.metadata.targetlanguage;
+  const translationLanguageName = targetLanguage
+    ? languageDisplayName(targetLanguage)
+    : undefined;
+  const translatedFilename = (format: string) =>
+    [
+      transcription.metadata.filename.split(".")[0],
+      targetLanguage,
+      format,
+    ].join(".");
+
   const loadPlayer = () => {
     const { objectKey, format } = transcriptProps(transcription, "vtt");
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
       fetchTranscriptUrl(objectKey, format),
+    ]).then(([mediaUrl, transcriptUrl]) => {
+      handlePlayClick(mediaUrl, transcriptUrl, summary);
+    });
+  };
+
+  const loadTranslatedPlayer = () => {
+    Promise.all([
+      fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
+      fetchTranslatedTranscriptUrl(transcription.translationKey!, "vtt"),
     ]).then(([mediaUrl, transcriptUrl]) => {
       handlePlayClick(mediaUrl, transcriptUrl, summary);
     });
@@ -156,6 +182,61 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               </MenuItem>
             </MenuItemGroup>
           )}
+          {transcription.translationKey && (
+            <>
+              <MenuSeparator />
+              <MenuItemGroup title={`Translation (${translationLanguageName})`}>
+                <MenuItem
+                  value={"translation-txt"}
+                  onClick={() =>
+                    downloadTranslatedTranscript({
+                      objectKey: transcription.translationKey!,
+                      filename: translatedFilename("txt"),
+                      format: "txt",
+                    })
+                  }
+                >
+                  <MappedIcon icon={"readme"} /> Text (.txt)
+                </MenuItem>
+                <MenuItem
+                  value={"translation-srt"}
+                  onClick={() =>
+                    downloadTranslatedTranscript({
+                      objectKey: transcription.translationKey!,
+                      filename: translatedFilename("srt"),
+                      format: "srt",
+                    })
+                  }
+                >
+                  <MappedIcon icon={"subtitle"} /> SRT
+                </MenuItem>
+                <MenuItem
+                  value={"translation-vtt"}
+                  onClick={() =>
+                    downloadTranslatedTranscript({
+                      objectKey: transcription.translationKey!,
+                      filename: translatedFilename("vtt"),
+                      format: "vtt",
+                    })
+                  }
+                >
+                  <MappedIcon icon={"subtitle"} /> VTT
+                </MenuItem>
+                <MenuItem
+                  value={"translation-docx"}
+                  onClick={() =>
+                    downloadTranslatedTranscript({
+                      objectKey: transcription.translationKey!,
+                      filename: translatedFilename("docx"),
+                      format: "docx",
+                    })
+                  }
+                >
+                  <MappedIcon icon={"subtitle"} /> DOCX
+                </MenuItem>
+              </MenuItemGroup>
+            </>
+          )}
         </MenuContent>
       </MenuRoot>
       <Tooltip
@@ -176,6 +257,16 @@ export const TranscriptionDownloadOptions: FunctionComponent<
           Play
         </Button>
       </Tooltip>
+      {transcription.translationKey && (
+        <Button
+          onClick={() => loadTranslatedPlayer()}
+          variant={"outline"}
+          colorPalette={"blue"}
+        >
+          <MappedIcon icon={"play-outline-square"} />
+          Play ({translationLanguageName})
+        </Button>
+      )}
     </Stack>
   );
 };
