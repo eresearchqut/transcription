@@ -6,6 +6,7 @@ import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/tr
 import {
   enableGenerateSummary,
   enableTranslation,
+  isTranslationFailed,
   mapTranscriptionStatus,
   TranscriptionJobStatus,
 } from "model";
@@ -110,15 +111,29 @@ const GenerateSummaryStatus = ({
 const TranslationStatus = ({
   targetLanguage,
   translationKey,
+  failed,
 }: {
   targetLanguage: string | undefined;
   translationKey: string | undefined;
+  failed: boolean;
 }) => {
   const iconProps = { mr: 2, mb: 1 };
   const languageName =
     (supportedTranslationLanguages as Record<string, string>)[
       targetLanguage ?? ""
     ] ?? targetLanguage;
+  if (failed) {
+    return (
+      <Box>
+        <MappedIcon
+          icon={"exclamation-circle"}
+          {...iconProps}
+          color={"red.600"}
+        />
+        Translation to {languageName} failed
+      </Box>
+    );
+  }
   return (
     <Box>
       {!translationKey ? (
@@ -199,6 +214,7 @@ export const TranscriptionProgress: FunctionComponent<
             <TranslationStatus
               targetLanguage={transcription?.metadata.targetlanguage}
               translationKey={transcription?.translationKey}
+              failed={isTranslationFailed(transcription!)}
             />
           )}
         </VStack>

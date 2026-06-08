@@ -63,6 +63,18 @@ export const translationKey = (
     translationKey,
   );
 
+export const translationJob = (
+  identityId: string,
+  jobId: string,
+  translationJob: { jobId: string; status: string; message?: string },
+) =>
+  updateResource(
+    identityId,
+    normaliseJobId(jobId),
+    "translationJob",
+    translationJob,
+  );
+
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);
 

@@ -21,6 +21,11 @@ export interface Transcription {
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
+  translationJob?: {
+    jobId: string;
+    status: string;
+    message?: string;
+  };
   ttl: number;
   jobStatusUpdated?: {
     detail: {
@@ -81,3 +86,22 @@ const TRANSCRIBE_TO_TRANSLATE_SOURCE: Record<string, string> = {
 export const toTranslateSourceCode = (transcribeLocale: string): string =>
   TRANSCRIBE_TO_TRANSLATE_SOURCE[transcribeLocale] ??
   transcribeLocale.split("-")[0];
+
+export const translationStatus = (
+  transcription: Transcription,
+): string | undefined => transcription.translationJob?.status;
+
+/**
+ * Terminal Amazon Translate batch job states that mean no translation artifact
+ * will be produced.
+ */
+const FAILED_TRANSLATION_STATUSES = [
+  "FAILED",
+  "STOPPED",
+  "COMPLETED_WITH_ERROR",
+];
+
+export const isTranslationFailed = (transcription: Transcription): boolean => {
+  const status = translationStatus(transcription);
+  return !!status && FAILED_TRANSLATION_STATUSES.includes(status);
+};
