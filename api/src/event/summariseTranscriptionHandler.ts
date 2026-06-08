@@ -78,9 +78,8 @@ export const handler = async (event: S3Event) => {
           return transcriptionRecord as Transcription;
         })
         .then(
-          ({
-            metadata: { generatesummary: generateSummary },
-          }: Transcription) => JSON.parse(generateSummary?.toLowerCase()),
+          ({ metadata: { generatesummary: generateSummary } }: Transcription) =>
+            JSON.parse(generateSummary?.toLowerCase()),
         )
         .then(async (generateSummary: boolean) => {
           if (generateSummary) {
