@@ -20,6 +20,7 @@ export interface LayoutProps {
   pageTitle?: string;
   isLanding?: boolean;
   isAuthenticated?: boolean;
+  contentMaxWidth?: string;
   onLogin?: () => void | Promise<void>;
   onLogout?: () => void | Promise<void>;
 }
@@ -29,6 +30,7 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   pageTitle,
   isLanding,
   isAuthenticated,
+  contentMaxWidth,
   onLogin,
   onLogout
 }: any) => {
@@ -46,6 +48,10 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   const templateAreas = `"header" "navigation" "main" "footer"`;
   const gridTemplateRows = "auto auto 1fr auto";
   const containerProps = { maxWidth: "1576px", margin: "0 auto" };
+  const mainContainerProps = {
+    ...containerProps,
+    maxWidth: contentMaxWidth ?? containerProps.maxWidth,
+  };
 
   const landingBackgroundProps = {
     backgroundImage: { base: undefined, sm: `url(${loginImage.src})` },
@@ -92,7 +98,7 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
       )}
       <Box id={"main"} p={3} pt={30}>
         <chakra.main>
-          <Box {...containerProps}>
+          <Box {...mainContainerProps}>
             {isLanding ? (
               children
             ) : (

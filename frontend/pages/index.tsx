@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { v4 as uuid } from "uuid";
 import { useAuth } from "../context/auth-context";
-import { VStack } from "@chakra-ui/react";
+import { VStack, Text } from "@chakra-ui/react";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
@@ -124,18 +124,25 @@ const Upload: NextPageWithLayout = () => {
   return (
     <>
       <VStack gap={4} align="stretch">
-        {Object.entries(uploadProps).map(
-          ([key, { filename, uploadProgressPercent }]) => (
-            <TranscriptionProgress
-              key={key}
-              jobId={key}
-              filename={filename}
-              uploadProgress={uploadProgressPercent}
-              onPlayClick={onPlayClick}
-            />
-          ),
-        )}
-        <MediaUpload onSubmit={uploadFiles} />
+        <MediaUpload onSubmit={uploadFiles}>
+          {Object.entries(uploadProps).length > 0 ? (
+            Object.entries(uploadProps).map(
+              ([key, { filename, uploadProgressPercent }]) => (
+                <TranscriptionProgress
+                  key={key}
+                  jobId={key}
+                  filename={filename}
+                  uploadProgress={uploadProgressPercent}
+                  onPlayClick={onPlayClick}
+                />
+              ),
+            )
+          ) : (
+            <Text>
+              Your files are uploading. Their progress will appear here.
+            </Text>
+          )}
+        </MediaUpload>
       </VStack>
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
@@ -150,7 +157,11 @@ const Upload: NextPageWithLayout = () => {
 
 Upload.getLayout = (page) => {
   return (
-    <AuthenticatedLayout isLanding={false} pageTitle={"Upload Media"}>
+    <AuthenticatedLayout
+      isLanding={false}
+      pageTitle={"Upload Media"}
+      contentMaxWidth={"4xl"}
+    >
       {page}
     </AuthenticatedLayout>
   );

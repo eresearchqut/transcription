@@ -25,9 +25,8 @@ const mediaKey = (transcription: Transcription): string => {
   return key.startsWith("users/") ? key : key.split("/").slice(-2).join("/");
 };
 
-export interface DownloadOptionsProps extends Required<
-  Pick<UseTranscriptionProps, "initialTranscription">
-> {
+export interface DownloadOptionsProps
+  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
   handlePlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
