@@ -1,6 +1,14 @@
-import { FunctionComponent, useCallback, useState } from "react";
+import { FunctionComponent, ReactNode, useCallback, useState } from "react";
 import { DropzoneOptions, FileRejection, useDropzone } from "react-dropzone";
-import { Box, Button, Heading, Input, Stack, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Heading,
+  Input,
+  Stack,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { Quotas } from "../../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "model";
 import { Alert } from "@/components/ui/alert";
@@ -12,6 +20,8 @@ export interface FilePickerProps
     "accept" | "maxFiles" | "maxSize" | "validator" | "disabled"
   > {
   onFilesPicked(files: File[]): void;
+  heading?: ReactNode;
+  description?: ReactNode;
 }
 
 export const bytesToSize = (bytes: number, precision = 0): string => {
@@ -47,7 +57,12 @@ interface UploadStatus {
 }
 
 export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
-  const { disabled, onFilesPicked } = props;
+  const {
+    disabled,
+    onFilesPicked,
+    heading = "Drag and drop files here or select files to upload",
+    description,
+  } = props;
 
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>({
     accepted: [],
@@ -97,9 +112,14 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
         <Input {...chakraInputProps} />
         <VStack gap={8}>
           <MappedIcon icon={"upload"} boxSize={[10, 20]} />
-          <Heading>Drag and drop files here or select files to upload</Heading>
+          <Heading>{heading}</Heading>
+          {description && <Text textAlign={"center"}>{description}</Text>}
           <Stack gap={0} alignItems={"center"}>
-            <Quotas asTextOnly={true} {...TRANSCRIBE_QUOTAS} />
+            <Quotas
+              asTextOnly={true}
+              showSupportedFormats={false}
+              {...TRANSCRIBE_QUOTAS}
+            />
           </Stack>
           <Button
             onClick={open}

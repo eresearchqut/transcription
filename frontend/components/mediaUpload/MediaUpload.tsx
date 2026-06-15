@@ -1,6 +1,7 @@
 "use client";
 
 import { FunctionComponent, ReactNode, useState } from "react";
+import NextLink from "next/link";
 import { Box, Button, Group, Stack, Text, VStack } from "@chakra-ui/react";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import { TRANSCRIBE_QUOTAS } from "model";
@@ -9,6 +10,8 @@ import {
   TranscriptionOptions,
   TranscriptionOptionsValue,
 } from "./transcriptionOptions";
+import { OptionsSummary } from "./optionsSummary";
+import { supportedFileFormatsText } from "@/components/quotas/quotas";
 import {
   StepsContent,
   StepsItem,
@@ -18,6 +21,16 @@ import {
 import { MappedIcon } from "@/components/mappedIcon";
 
 export type { TranscribeProps };
+
+const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
+  props: {
+    languages: ["en-AU"],
+    enablePiiRedaction: false,
+    generateSummary: true,
+    targetLanguage: undefined,
+  },
+  valid: true,
+};
 
 export interface MediaUploadProps {
   onSubmit: (transcribeProps: TranscribeProps, files: File[]) => void;
@@ -31,22 +44,25 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   children,
 }) => {
   const [step, setStep] = useState<number>(0);
-  const [optionsValue, setOptionsValue] = useState<TranscriptionOptionsValue>({
-    props: {
-      languages: ["en-AU"],
-      enablePiiRedaction: false,
-      generateSummary: true,
-      targetLanguage: undefined,
-    },
-    valid: true,
-  });
+  const [optionsValue, setOptionsValue] =
+    useState<TranscriptionOptionsValue>(DEFAULT_OPTIONS);
 
   const onFilesPicked = (files: File[]) => {
     onSubmit(optionsValue.props, files);
     setStep(3);
   };
 
-  const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_QUOTAS;
+  const onStartAgain = () => {
+    setOptionsValue(DEFAULT_OPTIONS);
+    setStep(0);
+  };
+
+  const {
+    accept,
+    maximumFileSizeBytes,
+    maximumFilesCount,
+    supportedFileFormats,
+  } = TRANSCRIBE_QUOTAS;
 
   const filePickerProps: FilePickerProps = {
     accept,
@@ -127,7 +143,18 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
       <StepsContent index={2}>
         <VStack align={"stretch"} gap={4} pt={4}>
-          <FilePicker {...filePickerProps} disabled={!optionsValue.valid} />
+          <OptionsSummary options={optionsValue.props} />
+          <FilePicker
+            {...filePickerProps}
+            disabled={!optionsValue.valid}
+            description={
+              <>
+                Select the audio or video files you want to transcribe. You can
+                choose multiple files at once, or drag and drop several files
+                together. {supportedFileFormatsText(supportedFileFormats)}
+              </>
+            }
+          />
           <Group justifyContent={"flex-start"}>
             <Button variant={"outline"} onClick={() => setStep(1)}>
               <MappedIcon icon={"chevron-left"} size={"xs"} />
@@ -139,6 +166,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
       <StepsContent index={3}>
         <VStack align={"stretch"} gap={4} pt={4}>
+          <OptionsSummary options={optionsValue.props} />
           {children ?? (
             <Box>
               <Text>
@@ -147,9 +175,17 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               </Text>
             </Box>
           )}
-          <Group justifyContent={"flex-start"}>
-            <Button variant={"outline"} onClick={() => setStep(1)}>
-              Upload more files
+          <Group justifyContent={"space-between"}>
+            <Group>
+              <Button variant={"outline"} onClick={() => setStep(1)}>
+                Upload more files
+              </Button>
+              <Button variant={"outline"} onClick={onStartAgain}>
+                Start again
+              </Button>
+            </Group>
+            <Button colorPalette={"blue"} asChild>
+              <NextLink href={"/transcriptions"}>My transcriptions</NextLink>
             </Button>
           </Group>
         </VStack>

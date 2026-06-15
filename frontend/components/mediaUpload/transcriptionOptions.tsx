@@ -3,8 +3,10 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import {
   Box,
+  Button,
   Field as ChakraField,
   Code,
+  Heading,
   HStack,
   Stack,
   StackProps,
@@ -15,6 +17,7 @@ import { LanguageInput } from "../../inputs/languageInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
+import { Alert } from "@/components/ui/alert";
 import { CheckedChangeDetails } from "@zag-js/switch";
 import { ExternalLink } from "@/components/externalLink";
 import { NewFeature } from "@/components/newFeature";
@@ -48,7 +51,9 @@ export const TranscriptionOptions: FunctionComponent<
   const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
   const [enableTranslation, setEnableTranslation] = useState<boolean>(false);
-  const [targetLanguage, setTargetLanguage] = useState<string | undefined>();
+  const [targetLanguage, setTargetLanguage] = useState<string | undefined>(
+    "en",
+  );
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -62,11 +67,7 @@ export const TranscriptionOptions: FunctionComponent<
   };
 
   const onEnablePiiRedactionChange = (d: CheckedChangeDetails) => {
-    const isChecked = d.checked;
-    if (isChecked) {
-      setLanguages(["en-US"]);
-    }
-    setEnablePiiRedaction(isChecked);
+    setEnablePiiRedaction(d.checked);
   };
 
   const onGenerateSummaryChange = (d: CheckedChangeDetails) => {
@@ -82,10 +83,13 @@ export const TranscriptionOptions: FunctionComponent<
 
   const languageSizeLimitAchieved = languages.length === MAX_LANGUAGE_LIMIT;
   const languageSizeLimitExceeded = languages.length > MAX_LANGUAGE_LIMIT;
+  const piiLanguageValid = languages.length === 1 && languages[0] === "en-US";
 
   useEffect(() => {
     const valid =
-      !languageSizeLimitExceeded && !(enableTranslation && !targetLanguage);
+      !languageSizeLimitExceeded &&
+      !(enableTranslation && !targetLanguage) &&
+      !(enablePiiRedaction && !piiLanguageValid);
     onChange({
       props: {
         languages,
@@ -108,10 +112,12 @@ export const TranscriptionOptions: FunctionComponent<
     <Stack direction={direction} gap={6} alignSelf={"stretch"}>
       <Field
         invalid={languageSizeLimitExceeded}
-        label={"Source Languages"}
         alignItems={"flex-start"}
         gap={1.5}
       >
+        <Heading as={"h3"} size={"md"}>
+          Source Languages
+        </Heading>
         <Text fontSize={"sm"} color={"fg.muted"}>
           Specify up to five (5) languages spoken in your audio files.
         </Text>
@@ -122,24 +128,21 @@ export const TranscriptionOptions: FunctionComponent<
           <LanguageInput
             isMulti={true}
             value={languages}
-            disabled={enablePiiRedaction}
             onChange={onLanguageChange}
             maxSize={MAX_LANGUAGE_LIMIT}
             invalid={languageSizeLimitExceeded}
           />
         </HStack>
-        {enablePiiRedaction && (
-          <ChakraField.HelperText whiteSpace={"nowrap"}>
-            PII Redaction only available for English, US.
-          </ChakraField.HelperText>
-        )}
         {languageSizeLimitAchieved && (
           <ChakraField.HelperText whiteSpace={"nowrap"}>
             A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
           </ChakraField.HelperText>
         )}
       </Field>
-      <Field label={"Translation"} alignItems={"flex-start"} gap={1.5}>
+      <Field alignItems={"flex-start"} gap={1.5}>
+        <Heading as={"h3"} size={"md"}>
+          Translation Language
+        </Heading>
         <Text fontSize={"sm"} color={"fg.muted"}>
           This feature is powered by{" "}
           <ExternalLink href={"https://aws.amazon.com/translate/"}>
@@ -151,20 +154,32 @@ export const TranscriptionOptions: FunctionComponent<
           that machine translations may contain inaccuracies and should be
           reviewed before being relied upon.
         </Text>
+        <Text fontSize={"sm"} color={"fg.muted"}>
+          Translation runs after transcription has finished, so it takes longer
+          than transcription alone. Allow at least 15 minutes for translated
+          results to be ready.
+        </Text>
         <Switch
           checked={enableTranslation}
           onCheckedChange={onEnableTranslationChange}
+          flexDirection={"row-reverse"}
+          justifyContent={"flex-end"}
         >
           Translate
         </Switch>
         {enableTranslation && (
-          <Box minWidth={"15rem"}>
-            <TranslationLanguageInput
-              value={targetLanguage}
-              onChange={(value) => setTargetLanguage(value)}
-              placeholder={"Select a language..."}
-            />
-          </Box>
+          <HStack gap={3} align={"center"}>
+            <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
+              Target language
+            </Text>
+            <Box minWidth={"15rem"}>
+              <TranslationLanguageInput
+                value={targetLanguage}
+                onChange={(value) => setTargetLanguage(value)}
+                placeholder={"Select a language..."}
+              />
+            </Box>
+          </HStack>
         )}
         {enableTranslation && !targetLanguage && (
           <ChakraField.HelperText whiteSpace={"nowrap"}>
@@ -172,7 +187,10 @@ export const TranscriptionOptions: FunctionComponent<
           </ChakraField.HelperText>
         )}
       </Field>
-      <Field label={"PII Redaction"} alignItems={"flex-start"} gap={1.5}>
+      <Field alignItems={"flex-start"} gap={1.5}>
+        <Heading as={"h3"} size={"md"}>
+          PII Redaction
+        </Heading>
         <Text fontSize={"sm"} color={"fg.muted"}>
           PII includes names, addresses, phone numbers, and credit card
           information. When PII redaction is enabled, identified instances of
@@ -181,12 +199,36 @@ export const TranscriptionOptions: FunctionComponent<
         <Switch
           checked={enablePiiRedaction}
           onCheckedChange={onEnablePiiRedactionChange}
+          flexDirection={"row-reverse"}
+          justifyContent={"flex-end"}
         >
           Redact <abbr title={"Personally Identifiable Information"}>PII</abbr>
         </Switch>
+        {enablePiiRedaction && !piiLanguageValid && (
+          <Alert
+            status={"warning"}
+            title={
+              <>
+                PII Redaction is only available for <q>English, US</q>.
+              </>
+            }
+          >
+            <Button
+              size={"xs"}
+              colorPalette={"blue"}
+              mt={2}
+              onClick={() => setLanguages(["en-US"])}
+            >
+              Use <q>English, US</q>
+            </Button>
+          </Alert>
+        )}
       </Field>
       <NewFeature show={showNewFeature("ERP-2764")}>
-        <Field label={"AI Summary"} alignItems={"flex-start"} gap={1.5}>
+        <Field alignItems={"flex-start"} gap={1.5}>
+          <Heading as={"h3"} size={"md"}>
+            AI Summary
+          </Heading>
           <Text fontSize={"sm"} color={"fg.muted"}>
             This service is powered by{" "}
             <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
@@ -216,6 +258,8 @@ export const TranscriptionOptions: FunctionComponent<
           <Switch
             checked={generateSummary}
             onCheckedChange={onGenerateSummaryChange}
+            flexDirection={"row-reverse"}
+            justifyContent={"flex-end"}
           >
             Generate Summary
           </Switch>
