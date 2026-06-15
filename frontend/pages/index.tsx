@@ -17,6 +17,7 @@ import AuthenticatedLayout from "../layout/authenticatedLayout";
 interface UploadProps {
   filename: string;
   uploadProgressPercent: number;
+  uploaded: boolean;
   transcriptionProgress: any;
 }
 
@@ -86,6 +87,7 @@ const Upload: NextPageWithLayout = () => {
           [id]: {
             filename: file.name,
             uploadProgressPercent: 0,
+            uploaded: false,
             transcriptionProgress: undefined,
           },
         };
@@ -108,12 +110,24 @@ const Upload: NextPageWithLayout = () => {
                   [id]: {
                     filename: file.name,
                     uploadProgressPercent: progressPercent,
+                    uploaded: false,
                     transcriptionProgress: undefined,
                   },
                 };
               });
             },
           },
+        }).result.then(() => {
+          setUploadProps((current) => {
+            return {
+              ...current,
+              [id]: {
+                ...current[id],
+                uploadProgressPercent: 100,
+                uploaded: true,
+              },
+            };
+          });
         }),
       );
     };
@@ -121,22 +135,28 @@ const Upload: NextPageWithLayout = () => {
     files.forEach((file) => uploadFile(file, transcribeProps));
   };
 
+  const uploadEntries = Object.entries(uploadProps);
+  const uploadsComplete =
+    uploadEntries.length > 0 && uploadEntries.every(([, p]) => p.uploaded);
+
   return (
     <>
       <VStack gap={4} align="stretch">
-        <MediaUpload onSubmit={uploadFiles}>
-          {Object.entries(uploadProps).length > 0 ? (
-            Object.entries(uploadProps).map(
-              ([key, { filename, uploadProgressPercent }]) => (
-                <TranscriptionProgress
-                  key={key}
-                  jobId={key}
-                  filename={filename}
-                  uploadProgress={uploadProgressPercent}
-                  onPlayClick={onPlayClick}
-                />
-              ),
-            )
+        <MediaUpload
+          onSubmit={uploadFiles}
+          uploadsComplete={uploadsComplete}
+          onClearUploads={() => setUploadProps({})}
+        >
+          {uploadEntries.length > 0 ? (
+            uploadEntries.map(([key, { filename, uploadProgressPercent }]) => (
+              <TranscriptionProgress
+                key={key}
+                jobId={key}
+                filename={filename}
+                uploadProgress={uploadProgressPercent}
+                onPlayClick={onPlayClick}
+              />
+            ))
           ) : (
             <Text>
               Your files are uploading. Their progress will appear here.

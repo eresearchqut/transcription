@@ -35,26 +35,54 @@ const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
 export interface MediaUploadProps {
   onSubmit: (transcribeProps: TranscribeProps, files: File[]) => void;
   identityId?: string;
+  uploadsComplete?: boolean;
+  onClearUploads?: () => void;
   children?: ReactNode;
 }
 
 export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   onSubmit,
   identityId,
+  uploadsComplete = false,
+  onClearUploads,
   children,
 }) => {
   const [step, setStep] = useState<number>(0);
+  const [filePickerKey, setFilePickerKey] = useState<number>(0);
+  const [uploadStarted, setUploadStarted] = useState<boolean>(false);
   const [optionsValue, setOptionsValue] =
     useState<TranscriptionOptionsValue>(DEFAULT_OPTIONS);
 
   const onFilesPicked = (files: File[]) => {
     onSubmit(optionsValue.props, files);
+    setUploadStarted(true);
     setStep(3);
   };
 
+  const onUploadMore = () => {
+    onClearUploads?.();
+    setUploadStarted(false);
+    setFilePickerKey((key) => key + 1);
+    setStep(1);
+  };
+
   const onStartAgain = () => {
+    onClearUploads?.();
+    setUploadStarted(false);
     setOptionsValue(DEFAULT_OPTIONS);
+    setFilePickerKey((key) => key + 1);
     setStep(0);
+  };
+
+  const isStepValid = (index: number) => {
+    switch (index) {
+      case 1:
+        return optionsValue.valid;
+      case 2:
+        return uploadStarted;
+      default:
+        return true;
+    }
   };
 
   const {
@@ -76,6 +104,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
       step={step}
       onStepChange={(details) => setStep(details.step)}
       count={4}
+      linear
+      isStepValid={isStepValid}
       colorPalette={"blue"}
     >
       <StepsList>
@@ -145,6 +175,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
         <VStack align={"stretch"} gap={4} pt={4}>
           <OptionsSummary options={optionsValue.props} />
           <FilePicker
+            key={filePickerKey}
             {...filePickerProps}
             disabled={!optionsValue.valid}
             description={
@@ -177,15 +208,27 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
           )}
           <Group justifyContent={"space-between"}>
             <Group>
-              <Button variant={"outline"} onClick={() => setStep(1)}>
+              <Button
+                variant={"outline"}
+                disabled={!uploadsComplete}
+                onClick={onUploadMore}
+              >
                 Upload more files
               </Button>
-              <Button variant={"outline"} onClick={onStartAgain}>
+              <Button
+                variant={"outline"}
+                disabled={!uploadsComplete}
+                onClick={onStartAgain}
+              >
                 Start again
               </Button>
             </Group>
-            <Button colorPalette={"blue"} asChild>
-              <NextLink href={"/transcriptions"}>My transcriptions</NextLink>
+            <Button colorPalette={"blue"} disabled={!uploadsComplete} asChild>
+              {uploadsComplete ? (
+                <NextLink href={"/transcriptions"}>My transcriptions</NextLink>
+              ) : (
+                <span>My transcriptions</span>
+              )}
             </Button>
           </Group>
         </VStack>
