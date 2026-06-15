@@ -1,4 +1,10 @@
-import { FunctionComponent, ReactNode, useCallback, useState } from "react";
+import {
+  FunctionComponent,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import { DropzoneOptions, FileRejection, useDropzone } from "react-dropzone";
 import {
   Box,
@@ -23,6 +29,8 @@ export interface FilePickerProps
     "accept" | "maxFiles" | "maxSize" | "validator" | "disabled"
   > {
   onFilesPicked(files: File[]): void;
+  onSelectionChange?(files: File[]): void;
+  hideUploadButton?: boolean;
   heading?: ReactNode;
   description?: ReactNode;
 }
@@ -61,6 +69,8 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
   const {
     disabled,
     onFilesPicked,
+    onSelectionChange,
+    hideUploadButton,
     maxFiles,
     heading = "Drag and drop files here or select files to upload",
     description,
@@ -68,6 +78,10 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [rejected, setRejected] = useState<FileMeta[]>([]);
+
+  useEffect(() => {
+    onSelectionChange?.(selectedFiles);
+  }, [selectedFiles, onSelectionChange]);
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
@@ -163,9 +177,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
       {selectedFiles.length > 0 && (
         <Stack gap={2}>
-          <Heading size={"sm"}>
-            Selected files ({selectedFiles.length})
-          </Heading>
+          <Heading size={"sm"}>Selected files ({selectedFiles.length})</Heading>
           <Stack gap={2}>
             {selectedFiles.map((file) => (
               <HStack
@@ -195,16 +207,18 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
               </HStack>
             ))}
           </Stack>
-          <Group justifyContent={"flex-end"}>
-            <Button
-              onClick={onUpload}
-              colorPalette={"blue"}
-              variant={"solid"}
-              disabled={disabled || selectedFiles.length === 0}
-            >
-              Upload <MappedIcon icon={"upload"} />
-            </Button>
-          </Group>
+          {!hideUploadButton && (
+            <Group justifyContent={"flex-end"}>
+              <Button
+                onClick={onUpload}
+                colorPalette={"blue"}
+                variant={"solid"}
+                disabled={disabled || selectedFiles.length === 0}
+              >
+                Upload <MappedIcon icon={"upload"} />
+              </Button>
+            </Group>
+          )}
         </Stack>
       )}
     </Stack>

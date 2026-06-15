@@ -50,6 +50,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const [step, setStep] = useState<number>(0);
   const [filePickerKey, setFilePickerKey] = useState<number>(0);
   const [uploadStarted, setUploadStarted] = useState<boolean>(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [optionsValue, setOptionsValue] =
     useState<TranscriptionOptionsValue>(DEFAULT_OPTIONS);
 
@@ -62,6 +63,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const onUploadMore = () => {
     onClearUploads?.();
     setUploadStarted(false);
+    setSelectedFiles([]);
     setFilePickerKey((key) => key + 1);
     setStep(1);
   };
@@ -69,6 +71,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const onStartAgain = () => {
     onClearUploads?.();
     setUploadStarted(false);
+    setSelectedFiles([]);
     setOptionsValue(DEFAULT_OPTIONS);
     setFilePickerKey((key) => key + 1);
     setStep(0);
@@ -178,6 +181,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             key={filePickerKey}
             {...filePickerProps}
             disabled={!optionsValue.valid}
+            onSelectionChange={setSelectedFiles}
+            hideUploadButton
             description={
               <>
                 Select the audio or video files you want to transcribe. You can
@@ -186,10 +191,18 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               </>
             }
           />
-          <Group justifyContent={"flex-start"}>
+          <Group justifyContent={"space-between"}>
             <Button variant={"outline"} onClick={() => setStep(1)}>
               <MappedIcon icon={"chevron-left"} size={"xs"} />
               Back
+            </Button>
+            <Button
+              colorPalette={"blue"}
+              disabled={!optionsValue.valid || selectedFiles.length === 0}
+              onClick={() => onFilesPicked(selectedFiles)}
+            >
+              Upload
+              <MappedIcon icon={"upload"} size={"xs"} />
             </Button>
           </Group>
         </VStack>
