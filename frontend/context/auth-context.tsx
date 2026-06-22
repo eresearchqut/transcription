@@ -96,6 +96,7 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
       switch (event) {
         case "tokenRefresh_failure":
         case "signedOut":
+          setState({ loading: false, authenticated: false, user: undefined });
           await router.push("/login");
           break;
         default:

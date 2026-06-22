@@ -32,9 +32,13 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   isAuthenticated,
   contentMaxWidth,
   onLogin,
-  onLogout
+  onLogout,
 }: any) => {
   const navigationItems = {
+    Home: {
+      icon: <MappedIcon icon={"home"} />,
+      url: "/login",
+    },
     "Upload Media": {
       icon: <MappedIcon icon={"upload"} />,
       url: "/",
@@ -78,7 +82,11 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
         justifyContent={"stretch"}
       >
         <chakra.header>
-          <Header isAuthenticated={isAuthenticated} onLogin={onLogin} onLogout={onLogout} />
+          <Header
+            isAuthenticated={isAuthenticated}
+            onLogin={onLogin}
+            onLogout={onLogout}
+          />
         </chakra.header>
       </GridItem>
       {isAuthenticated && (

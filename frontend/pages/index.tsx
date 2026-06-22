@@ -144,6 +144,7 @@ const Upload: NextPageWithLayout = () => {
       <VStack gap={4} align="stretch">
         <MediaUpload
           onSubmit={uploadFiles}
+          identityId={user?.id}
           uploadsComplete={uploadsComplete}
           onClearUploads={() => setUploadProps({})}
         >

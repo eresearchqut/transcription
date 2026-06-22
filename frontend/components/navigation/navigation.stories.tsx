@@ -14,6 +14,10 @@ type Story = StoryObj<typeof meta>;
 export const Primary: Story = {
   args: {
     items: {
+      Home: {
+        icon: <MappedIcon icon={"home"} />,
+        url: "/login",
+      },
       "Upload Media": {
         icon: <MappedIcon icon={"upload"} />,
         url: "/",
