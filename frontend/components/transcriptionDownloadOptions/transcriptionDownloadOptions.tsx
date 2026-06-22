@@ -84,6 +84,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
       targetLanguage,
       format,
     ].join(".");
+  const playUnavailable = isUndefined(transcription.downloadKey);
 
   const loadPlayer = (transcriptUrl: Promise<string>) => {
     Promise.all([
@@ -277,10 +278,10 @@ export const TranscriptionDownloadOptions: FunctionComponent<
         </MenuRoot>
       ) : (
         <Tooltip
-          content={
-            isUndefined(transcription.downloadKey) &&
-            "This action is available once your transcription job has completed."
-          }
+          content="This action is available once your transcription job has completed."
+          disabled={!playUnavailable}
+          positioning={{ placement: "left" }}
+          portalled
         >
           <Button
             onClick={() =>
@@ -288,7 +289,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
             }
             variant={"solid"}
             colorPalette={"blue"}
-            aria-disabled={isUndefined(transcription?.downloadKey)}
+            aria-disabled={playUnavailable}
           >
             <MappedIcon icon={"play-outline-square"} />
             Play
