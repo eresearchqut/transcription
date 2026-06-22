@@ -176,7 +176,9 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
       jobId: "",
       status: "FAILED",
       message:
-        error instanceof Error ? error.message : "Failed to start translation job",
+        error instanceof Error
+          ? error.message
+          : "Failed to start translation job",
     });
     return "Failed to start translation job";
   }

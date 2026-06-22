@@ -1,3 +1,6 @@
+import supportedTranscriptionLanguagesJson from "./supported_transcription_languages.json";
+import supportedTranslationLanguagesJson from "./supported_translation_languages.json";
+
 export enum TranscriptionJobStatus {
   QUEUED = "QUEUED",
   IN_PROGRESS = "IN_PROGRESS",
@@ -67,9 +70,6 @@ export const enableGenerateSummary = (transcription: Transcription): boolean =>
 export const enableTranslation = (transcription: Transcription): boolean =>
   !!transcription.metadata.targetlanguage &&
   transcription.metadata.targetlanguage.length > 0;
-
-import supportedTranslationLanguagesJson from "./supported_translation_languages.json";
-import supportedTranscriptionLanguagesJson from "./supported_transcription_languages.json";
 
 /**
  * All Amazon Translate source language codes, keyed by language code with the
