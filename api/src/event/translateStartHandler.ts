@@ -85,6 +85,18 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
     return "No source language";
   }
   const sourceLanguage = toTranslateSourceCode(transcribeLanguage);
+  if (!sourceLanguage) {
+    console.error("Unsupported Translate source language", {
+      transcribeLanguage,
+      transcriptionJobName,
+    });
+    await updateTranslationJob(identityId, jobId, {
+      jobId: "",
+      status: "FAILED",
+      message: `Amazon Translate does not support source language ${transcribeLanguage}`,
+    });
+    return `Unsupported Translate source language: ${transcribeLanguage}`;
+  }
   const isRedacted = job?.ContentRedaction != null;
 
   // Read the canonical Transcribe output (redaction prepends "redacted-").
@@ -136,22 +148,38 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
     }),
   );
 
-  const startResponse = await translateClient.send(
-    new StartTextTranslationJobCommand({
-      JobName: `${identityId}_${jobId}`,
-      InputDataConfig: {
-        S3Uri: `s3://${transcribeBucket}/${inputPrefix}`,
-        ContentType: "application/x-xliff+xml",
-      },
-      OutputDataConfig: {
-        S3Uri: `s3://${transcribeBucket}/translations/output/${identityId}/${jobId}/`,
-      },
-      DataAccessRoleArn: dataAccessRoleArn,
-      SourceLanguageCode: sourceLanguage,
-      TargetLanguageCodes: [targetLanguage],
-      ClientToken: `${jobId}-${targetLanguage}`,
-    }),
-  );
+  let startResponse;
+  try {
+    startResponse = await translateClient.send(
+      new StartTextTranslationJobCommand({
+        JobName: `${identityId}_${jobId}`,
+        InputDataConfig: {
+          S3Uri: `s3://${transcribeBucket}/${inputPrefix}`,
+          ContentType: "application/x-xliff+xml",
+        },
+        OutputDataConfig: {
+          S3Uri: `s3://${transcribeBucket}/translations/output/${identityId}/${jobId}/`,
+        },
+        DataAccessRoleArn: dataAccessRoleArn,
+        SourceLanguageCode: sourceLanguage,
+        TargetLanguageCodes: [targetLanguage],
+        ClientToken: `${jobId}-${targetLanguage}`,
+      }),
+    );
+  } catch (error) {
+    console.error("Failed to start translation job", {
+      error,
+      sourceLanguage,
+      targetLanguage,
+    });
+    await updateTranslationJob(identityId, jobId, {
+      jobId: "",
+      status: "FAILED",
+      message:
+        error instanceof Error ? error.message : "Failed to start translation job",
+    });
+    return "Failed to start translation job";
+  }
 
   await updateTranslationJob(identityId, jobId, {
     jobId: startResponse.JobId ?? "",

@@ -146,6 +146,42 @@ describe("translateStartHandler", () => {
     expect(record.translationJob?.status).toEqual("COMPLETED");
   });
 
+  test("persists FAILED when the source language is not supported by Translate", async () => {
+    await putRecord({ targetlanguage: "es" });
+    transcribeClientMock
+      .on(GetTranscriptionJobCommand)
+      .resolves({ TranscriptionJob: { LanguageCode: "ab-GE" } }); // Abkhazian — not in Translate
+
+    const result = await handler({ detail: { TranscriptionJobName: jobName } });
+
+    expect(result).toContain("Unsupported Translate source language");
+    expect(translateClientMock).not.toHaveReceivedCommand(
+      StartTextTranslationJobCommand,
+    );
+    const record = (await getResource(identityId, jobId)) as Transcription;
+    expect(record.translationJob?.status).toEqual("FAILED");
+    expect(record.translationJob?.message).toContain("ab-GE");
+  });
+
+  test("persists FAILED when Translate rejects the start request", async () => {
+    await putRecord({ targetlanguage: "es" });
+    transcribeClientMock
+      .on(GetTranscriptionJobCommand)
+      .resolves({ TranscriptionJob: { LanguageCode: "en-US" } });
+    translateClientMock
+      .on(StartTextTranslationJobCommand)
+      .rejects(new Error("UnsupportedLanguagePairException: en -> es"));
+
+    const result = await handler({ detail: { TranscriptionJobName: jobName } });
+
+    expect(result).toContain("Failed to start translation job");
+    const record = (await getResource(identityId, jobId)) as Transcription;
+    expect(record.translationJob?.status).toEqual("FAILED");
+    expect(record.translationJob?.message).toContain(
+      "UnsupportedLanguagePairException",
+    );
+  });
+
   test("does nothing when no target language is requested", async () => {
     await putRecord({ targetlanguage: "" });
 

@@ -167,6 +167,27 @@ describe("translateJobStateChangeHandler", () => {
     });
   });
 
+  test("records STOPPED status without writing an artifact when the job is stopped", async () => {
+    await putRecord({ targetlanguage: "es" });
+    translateClientMock.on(DescribeTextTranslationJobCommand).resolves({
+      TextTranslationJobProperties: {
+        JobName: jobName,
+        JobStatus: "STOPPED",
+        Message: "manually stopped",
+      },
+    });
+
+    const result = await handler({
+      detail: { jobId: translateJobId, jobStatus: "STOPPED" },
+    });
+
+    expect(result).toContain("STOPPED");
+    expect(s3ClientMock).not.toHaveReceivedCommand(PutObjectCommand);
+    const record = (await getResource(identityId, jobId)) as Transcription;
+    expect(record.translationJob?.status).toEqual("STOPPED");
+    expect(record.translationJob?.message).toEqual("manually stopped");
+  });
+
   test("records failure without writing an artifact when the job fails", async () => {
     await putRecord({ targetlanguage: "es" });
     translateClientMock.on(DescribeTextTranslationJobCommand).resolves({

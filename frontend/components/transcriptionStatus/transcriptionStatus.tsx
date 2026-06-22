@@ -1,6 +1,7 @@
 import * as React from "react";
 import { FunctionComponent, useEffect, useState } from "react";
 import {
+  isTranslationFailed,
   Transcription,
   mapTranscriptionStatus,
   TranscriptionJobStatus as Status,
@@ -26,11 +27,17 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
   const displayStatus = (transcription?: Transcription): Status | "Pending" => {
     if (!transcription) return "Pending";
     const rawStatus = mapTranscriptionStatus(transcription);
-    // The transcribe job can be COMPLETED while summarisation/translation are
-    // still running. Keep showing IN_PROGRESS until the whole pipeline is done.
-    return rawStatus === Status.COMPLETED && !isPipelineCompleted
-      ? Status.IN_PROGRESS
-      : rawStatus;
+    // Keep showing IN_PROGRESS while summarisation/translation are still running.
+    if (rawStatus === Status.COMPLETED && !isPipelineCompleted)
+      return Status.IN_PROGRESS;
+    // Transcribe succeeded but a post-processing step failed — show as failed.
+    if (
+      rawStatus === Status.COMPLETED &&
+      isPipelineCompleted &&
+      isTranslationFailed(transcription)
+    )
+      return Status.FAILED;
+    return rawStatus;
   };
 
   const [status, setStatus] = useState(displayStatus(transcription));

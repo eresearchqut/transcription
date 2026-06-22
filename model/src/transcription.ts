@@ -83,9 +83,48 @@ const TRANSCRIBE_TO_TRANSLATE_SOURCE: Record<string, string> = {
   "es-MX": "es-MX",
 };
 
-export const toTranslateSourceCode = (transcribeLocale: string): string =>
-  TRANSCRIBE_TO_TRANSLATE_SOURCE[transcribeLocale] ??
-  transcribeLocale.split("-")[0];
+/**
+ * All Amazon Translate source language codes. Transcribe supports several
+ * languages (e.g. ab, ckb, mi) that Translate does not. toTranslateSourceCode
+ * returns undefined for any locale that maps to an unsupported code.
+ */
+const TRANSLATE_SUPPORTED_SOURCE_CODES: ReadonlySet<string> = new Set([
+  "af", "sq", "am", "ar", "hy", "az",
+  "be", "bn", "bs", "bg",
+  "ca", "zh", "zh-TW", "hr", "cs",
+  "da", "nl",
+  "en", "et",
+  "fa", "fa-AF", "fi", "fr", "fr-CA",
+  "ka", "de", "el", "gu",
+  "ht", "ha", "he", "hi", "hu",
+  "is", "id", "it",
+  "ja",
+  "kn", "kk", "ko",
+  "lv", "lt",
+  "mk", "ms", "ml", "mt", "mn",
+  "no",
+  "or",
+  "ps", "pl", "pt", "pt-PT", "pa",
+  "ro", "ru", "rw",
+  "sr", "si", "sk", "sl", "so", "es", "es-MX", "sw", "sv",
+  "tl", "ta", "te", "th", "tr",
+  "uk", "ur", "uz",
+  "vi",
+  "cy",
+]);
+
+/**
+ * Returns the Amazon Translate source language code for a Transcribe locale,
+ * or undefined if the locale maps to a language Translate does not support.
+ */
+export const toTranslateSourceCode = (
+  transcribeLocale: string,
+): string | undefined => {
+  const code =
+    TRANSCRIBE_TO_TRANSLATE_SOURCE[transcribeLocale] ??
+    transcribeLocale.split("-")[0];
+  return TRANSLATE_SUPPORTED_SOURCE_CODES.has(code) ? code : undefined;
+};
 
 export const translationStatus = (
   transcription: Transcription,

@@ -515,7 +515,8 @@ export class ApiStack extends cdk.Stack {
           "jobStatus": [
             "COMPLETED",
             "COMPLETED_WITH_ERROR",
-            "FAILED"
+            "FAILED",
+            "STOPPED"
           ]
         }
       }
