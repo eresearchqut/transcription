@@ -427,20 +427,7 @@ export class ApiStack extends cdk.Stack {
       resources: [translateDataAccessRole.roleArn],
       effect: iam.Effect.ALLOW
     }));
-    translateStartFunction.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "s3:GetObject",
-        "s3:GetObjectTagging",
-        "s3:GetObjectAcl",
-        "s3:PutObject",
-        "s3:PutObjectTagging",
-        "s3:PutObjectAcl"
-      ],
-      resources: [
-        `${dataBucket.bucketArn}/*`
-      ],
-      effect: iam.Effect.ALLOW
-    }));
+    dataBucket.grantReadWrite(translateStartFunction);
     dataTable.grantReadWriteData(translateStartFunction);
 
     const translateStartRule = new events.Rule(this, "TranslateStartRule", {
@@ -492,20 +479,7 @@ export class ApiStack extends cdk.Stack {
       resources: ["*"],
       effect: iam.Effect.ALLOW
     }));
-    translateJobStateChangeFunction.addToRolePolicy(new iam.PolicyStatement({
-      actions: [
-        "s3:GetObject",
-        "s3:GetObjectTagging",
-        "s3:GetObjectAcl",
-        "s3:PutObject",
-        "s3:PutObjectTagging",
-        "s3:PutObjectAcl"
-      ],
-      resources: [
-        `${dataBucket.bucketArn}/*`
-      ],
-      effect: iam.Effect.ALLOW
-    }));
+    dataBucket.grantReadWrite(translateJobStateChangeFunction);
     dataTable.grantReadWriteData(translateJobStateChangeFunction);
 
     const translateJobStateChangeRule = new events.Rule(this, "TranslateJobStateChangeRule", {
