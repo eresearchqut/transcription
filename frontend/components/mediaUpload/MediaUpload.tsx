@@ -241,9 +241,9 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             </Group>
             <Button colorPalette={"blue"} disabled={!uploadsComplete} asChild>
               {uploadsComplete ? (
-                <NextLink href={"/transcriptions"}>My transcriptions</NextLink>
+                <NextLink href={"/transcriptions"}>View transcriptions</NextLink>
               ) : (
-                <span>My transcriptions</span>
+                <span>View transcriptions</span>
               )}
             </Button>
           </Group>
