@@ -26,15 +26,13 @@ const pad = (value: number, length: number) =>
 
 /** Format seconds as an SRT timestamp: HH:MM:SS,mmm */
 const formatSrtTime = (time: string): string => {
-  const total = parseFloat(time) || 0;
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = Math.floor(total % 60);
-  const milliseconds = Math.round((total - Math.floor(total)) * 1000);
-  return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)},${pad(
-    milliseconds,
-    3,
-  )}`;
+  const totalSeconds = Math.max(0, Number.parseFloat(time) || 0);
+  const totalMs = Math.round(totalSeconds * 1000);
+  const hours = Math.floor(totalMs / 3_600_000);
+  const minutes = Math.floor((totalMs % 3_600_000) / 60_000);
+  const seconds = Math.floor((totalMs % 60_000) / 1000);
+  const milliseconds = totalMs % 1000;
+  return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)},${pad(milliseconds, 3)}`;
 };
 
 const speakerLabel = (
