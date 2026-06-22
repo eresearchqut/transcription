@@ -379,7 +379,12 @@ export class ApiStack extends cdk.Stack {
     }));
     translateDataAccessRole.addToPolicy(new iam.PolicyStatement({
       actions: ["s3:ListBucket"],
-      resources: [dataBucket.bucketArn]
+      resources: [dataBucket.bucketArn],
+      conditions: {
+        StringLike: {
+          "s3:prefix": ["translations/input/*", "translations/output/*"],
+        },
+      },
     }));
 
     // Starts an Amazon Translate asynchronous batch job once a transcription
