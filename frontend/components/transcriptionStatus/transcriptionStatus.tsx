@@ -5,13 +5,11 @@ import {
   mapTranscriptionStatus,
   TranscriptionJobStatus as Status,
 } from "model";
-import { isUndefined } from "lodash";
-import { Spinner } from "@chakra-ui/react";
+import { Badge, Spinner } from "@chakra-ui/react";
 import {
   useTranscription,
   UseTranscriptionProps,
 } from "../../hooks/useTranscription";
-import { Tag } from "../ui/tag";
 
 const formatStatus = (status: string) =>
   (status ?? "PENDING")?.split("_").join(" ");
@@ -49,12 +47,21 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
         ? "green"
         : "yellow";
 
+  const inProgress = status === Status.IN_PROGRESS;
+  const statusLabel = formatStatus(status ?? "PENDING");
+
   return (
-    <Tag colorPalette={colorPalette}>
-      {isUndefined(status) ||
-        (status === Status.IN_PROGRESS && <Spinner size={"sm"} mr={1} />)}
-      {status && formatStatus(status)}
-    </Tag>
+    <Badge
+      colorPalette={colorPalette}
+      minW={"max-content"}
+      variant={"surface"}
+      whiteSpace={"nowrap"}
+    >
+      {inProgress && (
+        <Spinner boxSize={3} color={"currentColor"} display={"block"} />
+      )}
+      {statusLabel}
+    </Badge>
   );
 };
 
