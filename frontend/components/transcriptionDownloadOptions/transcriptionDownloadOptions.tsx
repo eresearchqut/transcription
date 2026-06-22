@@ -131,7 +131,9 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               <MappedIcon icon={"movie"} /> Media file
             </MenuItem>
           </MenuItemGroup>
-          <MenuSeparator />
+          {(transcription.summaryKey || transcription.downloadKey) && (
+            <MenuSeparator />
+          )}
           {transcription.summaryKey && (
             <MenuItemGroup>
               <MenuItem
@@ -147,7 +149,9 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               </MenuItem>
             </MenuItemGroup>
           )}
-          <MenuSeparator />
+          {transcription.summaryKey && transcription.downloadKey && (
+            <MenuSeparator />
+          )}
           {transcription.downloadKey && (
             <MenuItemGroup title={"Transcription"}>
               <MenuItem
