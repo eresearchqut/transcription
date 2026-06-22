@@ -123,7 +123,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
     disabled,
     ...props,
   });
-  const { size: nativeSize, ...chakraInputProps } = getInputProps();
+  const { size: _nativeSize, ...chakraInputProps } = getInputProps();
 
   const removeFile = (file: File) => {
     setSelectedFiles((current) =>
