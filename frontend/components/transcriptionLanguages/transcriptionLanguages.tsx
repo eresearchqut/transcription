@@ -5,7 +5,7 @@ import {
 } from "../../hooks/useTranscription";
 import { List, ListItem } from "@chakra-ui/react";
 import { get, isUndefined } from "lodash";
-import supportedLanguages from "@/public/supported_languages.json";
+import supportedLanguages from "@/public/supported_transcription_languages.json";
 import { Transcription } from "model";
 import { Tag } from "../ui/tag";
 

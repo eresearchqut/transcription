@@ -3,7 +3,7 @@
 import { FunctionComponent } from "react";
 import { Badge, Flex, Group, Text, Wrap } from "@chakra-ui/react";
 import { get } from "lodash";
-import supportedLanguages from "@/public/supported_languages.json";
+import supportedLanguages from "@/public/supported_transcription_languages.json";
 import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
 import { TranscribeProps } from "./transcriptionOptions";
 

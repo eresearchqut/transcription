@@ -13,7 +13,7 @@ import { TRANSCRIBE_QUOTAS } from "model";
 import { formatDuration } from "date-fns";
 import { ExternalLink } from "@/components/externalLink";
 import { handleLogin, NextPageWithLayout } from "@/pages/_app";
-import SUPPORTED_LANGUAGES_SOURCE from "@/public/supported_languages.json";
+import SUPPORTED_LANGUAGES_SOURCE from "@/public/supported_transcription_languages.json";
 import SUPPORTED_TRANSLATION_LANGUAGES_SOURCE from "@/public/supported_translation_languages.json";
 import { signOut } from "aws-amplify/auth";
 import { FunctionComponent, PropsWithChildren } from "react";
