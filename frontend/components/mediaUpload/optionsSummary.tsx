@@ -3,8 +3,8 @@
 import { FunctionComponent } from "react";
 import { Badge, Flex, Group, Text, Wrap } from "@chakra-ui/react";
 import { get } from "lodash";
-import supportedLanguages from "@/public/supported_transcription_languages.json";
-import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
+import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
+import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 import { TranscribeProps } from "./transcriptionOptions";
 
 const languageName = (code: string): string =>

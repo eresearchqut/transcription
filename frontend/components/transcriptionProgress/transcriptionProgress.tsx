@@ -17,7 +17,7 @@ import {
 import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 import { MappedIcon } from "../mappedIcon";
 import { Alert } from "../ui/alert";
-import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
+import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;

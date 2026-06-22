@@ -19,7 +19,7 @@ import {
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
-import supportedTranslationLanguages from "@/public/supported_translation_languages.json";
+import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
 const mediaKey = (transcription: Transcription): string => {
   const key = transcription.uploadEvent.object.key;

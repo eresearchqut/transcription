@@ -68,6 +68,24 @@ export const enableTranslation = (transcription: Transcription): boolean =>
   !!transcription.metadata.targetlanguage &&
   transcription.metadata.targetlanguage.length > 0;
 
+import supportedTranslationLanguagesJson from "./supported_translation_languages.json";
+import supportedTranscriptionLanguagesJson from "./supported_transcription_languages.json";
+
+/**
+ * All Amazon Translate source language codes, keyed by language code with the
+ * human-readable name as the value. This is the single source of truth for
+ * which languages are supported as translation targets (and sources).
+ */
+export const SUPPORTED_TRANSLATION_LANGUAGES: Record<string, string> =
+  supportedTranslationLanguagesJson;
+
+/**
+ * All Amazon Transcribe locale codes, keyed by locale with the human-readable
+ * name as the value.
+ */
+export const SUPPORTED_TRANSCRIPTION_LANGUAGES: Record<string, string> =
+  supportedTranscriptionLanguagesJson;
+
 /**
  * Amazon Transcribe locales (e.g. "en-US") map onto Amazon Translate source
  * language codes, which are mostly the 2-letter ISO prefix but with a handful
@@ -83,35 +101,9 @@ const TRANSCRIBE_TO_TRANSLATE_SOURCE: Record<string, string> = {
   "es-MX": "es-MX",
 };
 
-/**
- * All Amazon Translate source language codes. Transcribe supports several
- * languages (e.g. ab, ckb, mi) that Translate does not. toTranslateSourceCode
- * returns undefined for any locale that maps to an unsupported code.
- */
-const TRANSLATE_SUPPORTED_SOURCE_CODES: ReadonlySet<string> = new Set([
-  "af", "sq", "am", "ar", "hy", "az",
-  "be", "bn", "bs", "bg",
-  "ca", "zh", "zh-TW", "hr", "cs",
-  "da", "nl",
-  "en", "et",
-  "fa", "fa-AF", "fi", "fr", "fr-CA",
-  "ka", "de", "el", "gu",
-  "ht", "ha", "he", "hi", "hu",
-  "is", "id", "it",
-  "ja",
-  "kn", "kk", "ko",
-  "lv", "lt",
-  "mk", "ms", "ml", "mt", "mn",
-  "no",
-  "or",
-  "ps", "pl", "pt", "pt-PT", "pa",
-  "ro", "ru", "rw",
-  "sr", "si", "sk", "sl", "so", "es", "es-MX", "sw", "sv",
-  "tl", "ta", "te", "th", "tr",
-  "uk", "ur", "uz",
-  "vi",
-  "cy",
-]);
+const TRANSLATE_SUPPORTED_SOURCE_CODES: ReadonlySet<string> = new Set(
+  Object.keys(SUPPORTED_TRANSLATION_LANGUAGES),
+);
 
 /**
  * Returns the Amazon Translate source language code for a Transcribe locale,

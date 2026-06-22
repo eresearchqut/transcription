@@ -5,7 +5,7 @@ import {
 } from "../../hooks/useTranscription";
 import { Badge, List, ListItem } from "@chakra-ui/react";
 import { get, isUndefined } from "lodash";
-import supportedLanguages from "@/public/supported_transcription_languages.json";
+import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
 import { Transcription } from "model";
 
 export const languagesFromTranscription = (
