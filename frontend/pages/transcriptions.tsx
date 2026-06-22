@@ -82,18 +82,23 @@ const Transcriptions: NextPageWithLayout = () => {
     });
     return estimatedDateExpiry < expiringSoonBoundary;
   };
+  const fitColumn = {
+    cellProps: { w: "1%", whiteSpace: "nowrap" },
+    headerProps: { w: "1%", whiteSpace: "nowrap" },
+  };
 
   const columns: ColumnDef<Transcription>[] = [
     {
       id: "dateUploaded",
       header: "Date Uploaded",
       accessorFn: (transcription) => transcription.date,
+      meta: fitColumn,
       cell: (props) => {
         const ttl = new Date(props.row.original.ttl * 1000);
         const formattedTtl = formatDate(ttl.toISOString());
         return (
-          <HStack wrap={"wrap"}>
-            <Flex align={"flex-start"}>
+          <HStack wrap={"nowrap"}>
+            <Flex align={"flex-start"} whiteSpace={"nowrap"}>
               {formatDate(props.row.original.date)}
             </Flex>
             {isExpiringSoon(props.row.original.date) && (
@@ -118,25 +123,38 @@ const Transcriptions: NextPageWithLayout = () => {
     {
       header: "File Name",
       accessorFn: (transcription) => transcription.metadata.filename,
+      meta: {
+        cellProps: { whiteSpace: "normal", w: "auto" },
+        headerProps: { whiteSpace: "nowrap", w: "auto" },
+      },
       cell: (props) => {
         const transcription = props.row.original as Transcription;
         const filename = formatFilename(transcription.metadata.filename);
 
+        return <Text>{filename}</Text>;
+      },
+    },
+    {
+      id: "summary",
+      header: "Summary",
+      enableSorting: false,
+      meta: fitColumn,
+      cell: (props) => {
+        const transcription = props.row.original as Transcription;
+
         return (
-          <HStack>
-            <Text>{filename}</Text>
-            <TranscriptionSummary
-              jobId={transcription.sk}
-              initialTranscription={transcription}
-            />
-          </HStack>
+          <TranscriptionSummary
+            jobId={transcription.sk}
+            initialTranscription={transcription}
+          />
         );
       },
     },
     {
       id: "language",
-      header: "Language",
+      header: "Source Language",
       accessorFn: (transcription) => languagesFromTranscription(transcription),
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.row.original as Transcription;
         return (
@@ -150,6 +168,7 @@ const Transcriptions: NextPageWithLayout = () => {
     {
       header: "Status",
       accessorFn: (transcription) => transcription,
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.getValue() as Transcription;
         return (
@@ -164,6 +183,7 @@ const Transcriptions: NextPageWithLayout = () => {
       id: "actions",
       header: "Transcription Actions",
       enableSorting: false,
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.row.original;
 

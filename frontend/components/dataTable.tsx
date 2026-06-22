@@ -39,6 +39,14 @@ import { ValueChangeDetails } from "@zag-js/select";
 
 export type Column = ColumnDef<any>;
 
+interface ColumnMeta {
+  cellProps?: React.ComponentProps<typeof Table.Cell>;
+  headerProps?: React.ComponentProps<typeof Table.ColumnHeader>;
+}
+
+const columnMeta = (column: ColumnDef<any>): ColumnMeta =>
+  (column.meta as ColumnMeta | undefined) ?? {};
+
 export interface DataTableProps {
   columns: Column[];
   data: any[];
@@ -126,50 +134,55 @@ export const DataTable = (props: DataTableProps) => {
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.Row key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Table.ColumnHeader
-                  pl={0}
-                  textTransform={"revert"}
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  cursor={header.column.getCanSort() ? "pointer" : "none"}
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  {!header.isPlaceholder && header.column.getCanSort() && (
-                    <Flex>
-                      <chakra.span>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </chakra.span>
-                      <Spacer />
-                      <chakra.span>
-                        {{
-                          asc: (
-                            <MappedIcon
-                              icon={"triangle-up"}
-                              aria-label="sorted ascending"
-                            />
-                          ),
-                          desc: (
-                            <MappedIcon
-                              icon={"triangle-down"}
-                              aria-label="sorted descending"
-                            />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </chakra.span>
-                    </Flex>
-                  )}
-                  {!header.isPlaceholder &&
-                    !header.column.getCanSort() &&
-                    flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
+              {headerGroup.headers.map((header) => {
+                const { headerProps } = columnMeta(header.column.columnDef);
+
+                return (
+                  <Table.ColumnHeader
+                    pl={0}
+                    textTransform={"revert"}
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    cursor={header.column.getCanSort() ? "pointer" : "none"}
+                    onClick={header.column.getToggleSortingHandler()}
+                    {...headerProps}
+                  >
+                    {!header.isPlaceholder && header.column.getCanSort() && (
+                      <Flex>
+                        <chakra.span>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </chakra.span>
+                        <Spacer />
+                        <chakra.span>
+                          {{
+                            asc: (
+                              <MappedIcon
+                                icon={"triangle-up"}
+                                aria-label="sorted ascending"
+                              />
+                            ),
+                            desc: (
+                              <MappedIcon
+                                icon={"triangle-down"}
+                                aria-label="sorted descending"
+                              />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </chakra.span>
+                      </Flex>
                     )}
-                </Table.ColumnHeader>
-              ))}
+                    {!header.isPlaceholder &&
+                      !header.column.getCanSort() &&
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                  </Table.ColumnHeader>
+                );
+              })}
             </Table.Row>
           ))}
         </Table.Header>
@@ -178,8 +191,10 @@ export const DataTable = (props: DataTableProps) => {
             return (
               <Table.Row key={row.id}>
                 {row.getVisibleCells().map((cell) => {
+                  const { cellProps } = columnMeta(cell.column.columnDef);
+
                   return (
-                    <Table.Cell pl={0} key={cell.id}>
+                    <Table.Cell pl={0} key={cell.id} {...cellProps}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
