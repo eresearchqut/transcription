@@ -57,6 +57,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const onFilesPicked = (files: File[]) => {
     onSubmit(optionsValue.props, files);
     setUploadStarted(true);
+    setSelectedFiles([]);
+    setFilePickerKey((key) => key + 1);
     setStep(3);
   };
 

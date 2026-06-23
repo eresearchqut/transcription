@@ -136,6 +136,8 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
       return;
     }
     onFilesPicked(selectedFiles);
+    setSelectedFiles([]);
+    setRejected([]);
   };
 
   return (

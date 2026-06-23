@@ -130,7 +130,7 @@ export const DataTable = (props: DataTableProps) => {
           })}
         </Grid>
       ))}
-      <Table.Root hideBelow={"xl"}>
+      <Table.Root hideBelow={"xl"} bg="inherit">
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
             <Table.Row key={headerGroup.id}>
