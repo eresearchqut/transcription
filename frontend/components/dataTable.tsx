@@ -133,7 +133,7 @@ export const DataTable = (props: DataTableProps) => {
       <Table.Root hideBelow={"xl"} bg="inherit">
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
-            <Table.Row key={headerGroup.id}>
+            <Table.Row key={headerGroup.id} bg="inherit">
               {headerGroup.headers.map((header) => {
                 const { headerProps } = columnMeta(header.column.columnDef);
 
@@ -189,7 +189,7 @@ export const DataTable = (props: DataTableProps) => {
         <Table.Body>
           {table.getRowModel().rows.map((row) => {
             return (
-              <Table.Row key={row.id}>
+              <Table.Row key={row.id} bg="inherit">
                 {row.getVisibleCells().map((cell) => {
                   const { cellProps } = columnMeta(cell.column.columnDef);
 
