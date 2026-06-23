@@ -50,6 +50,16 @@ const transcriptProps = (
   format,
 });
 
+const MenuChevron = () => <MappedIcon icon={"chevron-down"} size={"xs"} />;
+
+const PlayButtonContent = () => (
+  <>
+    <MappedIcon icon={"play-outline-square"} />
+    Play
+    <MenuChevron />
+  </>
+);
+
 export const TranscriptionDownloadOptions: FunctionComponent<
   DownloadOptionsProps
 > = ({ initialTranscription, handlePlayClick }) => {
@@ -113,8 +123,8 @@ export const TranscriptionDownloadOptions: FunctionComponent<
       <MenuRoot>
         <MenuTrigger asChild>
           <Button variant={"outline"} colorPalette={"blue"}>
-            <MappedIcon icon={"chevron-down"} size={"xs"} />
             Download
+            <MenuChevron />
           </Button>
         </MenuTrigger>
         <MenuContent>
@@ -256,14 +266,11 @@ export const TranscriptionDownloadOptions: FunctionComponent<
           )}
         </MenuContent>
       </MenuRoot>
-      {transcription.translationKey &&
-      !isUndefined(transcription.downloadKey) ? (
+      {!playUnavailable ? (
         <MenuRoot>
           <MenuTrigger asChild>
             <Button variant={"solid"} colorPalette={"blue"}>
-              <MappedIcon icon={"play-outline-square"} />
-              Play
-              <MappedIcon icon={"chevron-down"} size={"xs"} />
+              <PlayButtonContent />
             </Button>
           </MenuTrigger>
           <MenuContent>
@@ -271,12 +278,14 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               <MenuItem value={"original"} onClick={() => loadOriginalPlayer()}>
                 <MappedIcon icon={"subtitle"} /> {originalLanguageLabel}
               </MenuItem>
-              <MenuItem
-                value={"translation"}
-                onClick={() => loadTranslatedPlayer()}
-              >
-                <MappedIcon icon={"subtitle"} /> {translationLanguageLabel}
-              </MenuItem>
+              {transcription.translationKey && (
+                <MenuItem
+                  value={"translation"}
+                  onClick={() => loadTranslatedPlayer()}
+                >
+                  <MappedIcon icon={"subtitle"} /> {translationLanguageLabel}
+                </MenuItem>
+              )}
             </MenuItemGroup>
           </MenuContent>
         </MenuRoot>
@@ -295,8 +304,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
             colorPalette={"blue"}
             aria-disabled={playUnavailable}
           >
-            <MappedIcon icon={"play-outline-square"} />
-            Play
+            <PlayButtonContent />
           </Button>
         </Tooltip>
       )}
