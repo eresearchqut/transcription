@@ -27,6 +27,7 @@ export interface FileTranscriptionProgressProps
   extends Pick<UseTranscriptionProps, "jobId"> {
   filename: string;
   uploadProgress: number;
+  isPreparingUpload?: boolean;
   onPlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
@@ -36,14 +37,25 @@ export interface FileTranscriptionProgressProps
 
 const isUploadComplete = (progress: number) => progress === 100;
 const UploadProgressStatus = ({
+  isPreparingUpload,
   progress,
   processingText,
   completedText,
 }: {
+  isPreparingUpload?: boolean;
   progress: number;
   processingText: string;
   completedText: string;
 }) => {
+  if (isPreparingUpload) {
+    return (
+      <Text>
+        <Spinner mr={2} size={"sm"} />
+        Preparing upload...
+      </Text>
+    );
+  }
+
   return progress < 100 ? (
     <ProgressRoot width={"full"} striped value={progress}>
       <ProgressLabel>{processingText}</ProgressLabel>
@@ -156,7 +168,7 @@ const TranslationStatus = ({
 
 export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
-> = ({ jobId, filename, uploadProgress, onPlayClick }) => {
+> = ({ jobId, filename, uploadProgress, isPreparingUpload, onPlayClick }) => {
   const { transcription, isTranscribeCompleted, isPipelineCompleted } =
     useTranscription({ jobId });
   const transcriptionStatus = mapTranscriptionStatus(transcription);
@@ -199,6 +211,7 @@ export const TranscriptionProgress: FunctionComponent<
       >
         <VStack align={"flex-start"} gap={0} flexGrow={2}>
           <UploadProgressStatus
+            isPreparingUpload={isPreparingUpload}
             progress={uploadProgress}
             processingText={"Uploading. Please do not close your browser..."}
             completedText={"Upload successful"}

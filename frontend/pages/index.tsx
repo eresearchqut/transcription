@@ -17,6 +17,7 @@ import AuthenticatedLayout from "../layout/authenticatedLayout";
 interface UploadProps {
   filename: string;
   uploadProgressPercent: number;
+  isPreparingUpload: boolean;
   uploaded: boolean;
   transcriptionProgress: any;
 }
@@ -87,6 +88,7 @@ const Upload: NextPageWithLayout = () => {
           [id]: {
             filename: file.name,
             uploadProgressPercent: 0,
+            isPreparingUpload: true,
             uploaded: false,
             transcriptionProgress: undefined,
           },
@@ -110,6 +112,7 @@ const Upload: NextPageWithLayout = () => {
                   [id]: {
                     filename: file.name,
                     uploadProgressPercent: progressPercent,
+                    isPreparingUpload: false,
                     uploaded: false,
                     transcriptionProgress: undefined,
                   },
@@ -124,6 +127,7 @@ const Upload: NextPageWithLayout = () => {
               [id]: {
                 ...current[id],
                 uploadProgressPercent: 100,
+                isPreparingUpload: false,
                 uploaded: true,
               },
             };
@@ -149,15 +153,21 @@ const Upload: NextPageWithLayout = () => {
           onClearUploads={() => setUploadProps({})}
         >
           {uploadEntries.length > 0 ? (
-            uploadEntries.map(([key, { filename, uploadProgressPercent }]) => (
-              <TranscriptionProgress
-                key={key}
-                jobId={key}
-                filename={filename}
-                uploadProgress={uploadProgressPercent}
-                onPlayClick={onPlayClick}
-              />
-            ))
+            uploadEntries.map(
+              ([
+                key,
+                { filename, uploadProgressPercent, isPreparingUpload },
+              ]) => (
+                <TranscriptionProgress
+                  key={key}
+                  jobId={key}
+                  filename={filename}
+                  uploadProgress={uploadProgressPercent}
+                  isPreparingUpload={isPreparingUpload}
+                  onPlayClick={onPlayClick}
+                />
+              ),
+            )
           ) : (
             <Text>
               Your files are uploading. Their progress will appear here.

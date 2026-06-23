@@ -18,6 +18,7 @@ import AuthenticatedLayout from "../layout/authenticatedLayout";
 interface UploadProps {
   filename: string;
   uploadProgressPercent: number;
+  isPreparingUpload: boolean;
   transcriptionProgress: any;
 }
 
@@ -87,6 +88,7 @@ const ClassicUpload: NextPageWithLayout = () => {
           [id]: {
             filename: file.name,
             uploadProgressPercent: 0,
+            isPreparingUpload: true,
             transcriptionProgress: undefined,
           },
         };
@@ -109,12 +111,24 @@ const ClassicUpload: NextPageWithLayout = () => {
                   [id]: {
                     filename: file.name,
                     uploadProgressPercent: progressPercent,
+                    isPreparingUpload: false,
                     transcriptionProgress: undefined,
                   },
                 };
               });
             },
           },
+        }).result.then(() => {
+          setUploadProps((current) => {
+            return {
+              ...current,
+              [id]: {
+                ...current[id],
+                uploadProgressPercent: 100,
+                isPreparingUpload: false,
+              },
+            };
+          });
         }),
       );
     };
@@ -133,12 +147,13 @@ const ClassicUpload: NextPageWithLayout = () => {
           .
         </Text>
         {Object.entries(uploadProps).map(
-          ([key, { filename, uploadProgressPercent }]) => (
+          ([key, { filename, uploadProgressPercent, isPreparingUpload }]) => (
             <TranscriptionProgress
               key={key}
               jobId={key}
               filename={filename}
               uploadProgress={uploadProgressPercent}
+              isPreparingUpload={isPreparingUpload}
               onPlayClick={onPlayClick}
             />
           ),
