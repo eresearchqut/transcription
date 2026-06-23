@@ -142,7 +142,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             </Stack>
           </Box>
           <Group justifyContent={"space-between"} alignItems={"center"}>
-            <Button colorPalette={"gray"} variant={"solid"} size={"xs"} asChild>
+            <Button colorPalette={"gray"} variant={"solid"} asChild>
               <NextLink href={"/classic"}>Revert to classic view</NextLink>
             </Button>
             <Button colorPalette={"blue"} onClick={() => setStep(1)}>
