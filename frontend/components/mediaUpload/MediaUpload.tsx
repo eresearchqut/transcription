@@ -116,7 +116,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
       <StepsList>
         <StepsItem index={0} title={"Overview"} />
         <StepsItem index={1} title={"Choose options"} />
-        <StepsItem index={2} title={"Upload files"} />
+        <StepsItem index={2} title={"Choose files"} />
         <StepsItem index={3} title={"Track progress"} />
       </StepsList>
 
