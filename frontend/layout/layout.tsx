@@ -20,6 +20,7 @@ export interface LayoutProps {
   pageTitle?: string;
   isLanding?: boolean;
   isAuthenticated?: boolean;
+  contentMaxWidth?: string;
   onLogin?: () => void | Promise<void>;
   onLogout?: () => void | Promise<void>;
 }
@@ -29,10 +30,15 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   pageTitle,
   isLanding,
   isAuthenticated,
+  contentMaxWidth,
   onLogin,
-  onLogout
+  onLogout,
 }: any) => {
   const navigationItems = {
+    Home: {
+      icon: <MappedIcon icon={"home"} />,
+      url: "/login",
+    },
     "Upload Media": {
       icon: <MappedIcon icon={"upload"} />,
       url: "/",
@@ -46,6 +52,10 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   const templateAreas = `"header" "navigation" "main" "footer"`;
   const gridTemplateRows = "auto auto 1fr auto";
   const containerProps = { maxWidth: "1576px", margin: "0 auto" };
+  const mainContainerProps = {
+    ...containerProps,
+    maxWidth: contentMaxWidth ?? containerProps.maxWidth,
+  };
 
   const landingBackgroundProps = {
     backgroundImage: { base: undefined, sm: `url(${loginImage.src})` },
@@ -72,7 +82,11 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
         justifyContent={"stretch"}
       >
         <chakra.header>
-          <Header isAuthenticated={isAuthenticated} onLogin={onLogin} onLogout={onLogout} />
+          <Header
+            isAuthenticated={isAuthenticated}
+            onLogin={onLogin}
+            onLogout={onLogout}
+          />
         </chakra.header>
       </GridItem>
       {isAuthenticated && (
@@ -92,7 +106,7 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
       )}
       <Box id={"main"} p={3} pt={30}>
         <chakra.main>
-          <Box {...containerProps}>
+          <Box {...mainContainerProps}>
             {isLanding ? (
               children
             ) : (

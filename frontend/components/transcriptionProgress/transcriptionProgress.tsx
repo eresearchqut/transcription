@@ -5,6 +5,8 @@ import { lowerCase } from "lodash";
 import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import {
   enableGenerateSummary,
+  enableTranslation,
+  isTranslationFailed,
   mapTranscriptionStatus,
   TranscriptionJobStatus,
 } from "model";
@@ -15,6 +17,7 @@ import {
 import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 import { MappedIcon } from "../mappedIcon";
 import { Alert } from "../ui/alert";
+import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
@@ -24,6 +27,7 @@ export interface FileTranscriptionProgressProps
   extends Pick<UseTranscriptionProps, "jobId"> {
   filename: string;
   uploadProgress: number;
+  isPreparingUpload?: boolean;
   onPlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
@@ -33,14 +37,25 @@ export interface FileTranscriptionProgressProps
 
 const isUploadComplete = (progress: number) => progress === 100;
 const UploadProgressStatus = ({
+  isPreparingUpload,
   progress,
   processingText,
   completedText,
 }: {
+  isPreparingUpload?: boolean;
   progress: number;
   processingText: string;
   completedText: string;
 }) => {
+  if (isPreparingUpload) {
+    return (
+      <Text>
+        <Spinner mr={2} size={"sm"} />
+        Preparing upload...
+      </Text>
+    );
+  }
+
   return progress < 100 ? (
     <ProgressRoot width={"full"} striped value={progress}>
       <ProgressLabel>{processingText}</ProgressLabel>
@@ -105,9 +120,55 @@ const GenerateSummaryStatus = ({
   );
 };
 
+const TranslationStatus = ({
+  targetLanguage,
+  translationKey,
+  failed,
+}: {
+  targetLanguage: string | undefined;
+  translationKey: string | undefined;
+  failed: boolean;
+}) => {
+  const iconProps = { mr: 2, mb: 1 };
+  const languageName =
+    (supportedTranslationLanguages as Record<string, string>)[
+      targetLanguage ?? ""
+    ] ?? targetLanguage;
+  if (failed) {
+    return (
+      <Box>
+        <MappedIcon
+          icon={"exclamation-circle"}
+          {...iconProps}
+          color={"red.600"}
+        />
+        Translation to {languageName} failed
+      </Box>
+    );
+  }
+  return (
+    <Box>
+      {!translationKey ? (
+        <>
+          <Spinner size={"sm"} mr={1} /> Translating to {languageName}
+        </>
+      ) : (
+        <>
+          <MappedIcon
+            icon={"check-circle"}
+            {...iconProps}
+            color={"green.600"}
+          />
+          Translation ready
+        </>
+      )}
+    </Box>
+  );
+};
+
 export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
-> = ({ jobId, filename, uploadProgress, onPlayClick }) => {
+> = ({ jobId, filename, uploadProgress, isPreparingUpload, onPlayClick }) => {
   const { transcription, isTranscribeCompleted, isPipelineCompleted } =
     useTranscription({ jobId });
   const transcriptionStatus = mapTranscriptionStatus(transcription);
@@ -150,6 +211,7 @@ export const TranscriptionProgress: FunctionComponent<
       >
         <VStack align={"flex-start"} gap={0} flexGrow={2}>
           <UploadProgressStatus
+            isPreparingUpload={isPreparingUpload}
             progress={uploadProgress}
             processingText={"Uploading. Please do not close your browser..."}
             completedText={"Upload successful"}
@@ -161,6 +223,13 @@ export const TranscriptionProgress: FunctionComponent<
             enableGenerateSummary(transcription!) && (
               <GenerateSummaryStatus summaryKey={transcription?.summaryKey} />
             )}
+          {isTranscribeJobCompleted && enableTranslation(transcription!) && (
+            <TranslationStatus
+              targetLanguage={transcription?.metadata.targetlanguage}
+              translationKey={transcription?.translationKey}
+              failed={isTranslationFailed(transcription!)}
+            />
+          )}
         </VStack>
         {isTranscribeCompleted && (
           <TranscriptionDownloadOptions

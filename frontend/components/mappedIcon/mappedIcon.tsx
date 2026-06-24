@@ -11,6 +11,7 @@ import {
   FaChevronRight,
   FaExclamationCircle,
   FaExternalLinkAlt,
+  FaHome,
   FaPhotoVideo,
   FaQuestion,
   FaReadme,
@@ -34,7 +35,7 @@ import {
 } from "react-icons/md";
 import { GoTriangleDown, GoTriangleUp } from "react-icons/go";
 import { LuUpload } from "react-icons/lu";
-import { FiPlus } from "react-icons/fi";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 import { RiPlayList2Fill } from "react-icons/ri";
 import { VscJson } from "react-icons/vsc";
@@ -57,6 +58,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "file-check": TbFileCheck,
   "file-alert": TbFileAlert,
   generated: MdChecklist,
+  home: FaHome,
   json: VscJson,
   movie: FaPhotoVideo,
   "play-outline-square": AiOutlinePlaySquare,
@@ -67,6 +69,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   search: MdOutlineSearch,
   sparkle: HiMiniSparkles,
   subtitle: MdOutlineSubtitles,
+  trash: FiTrash2,
   "triangle-down": GoTriangleDown,
   "triangle-up": GoTriangleUp,
   upload: LuUpload,

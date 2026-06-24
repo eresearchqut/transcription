@@ -1,13 +1,14 @@
 import { NextPageWithLayout } from "@/pages/_app";
 import { useState } from "react";
 
+import NextLink from "next/link";
 import { v4 as uuid } from "uuid";
 import { useAuth } from "../context/auth-context";
-import { VStack, Text } from "@chakra-ui/react";
+import { Link, Text, VStack } from "@chakra-ui/react";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
-import { MediaUpload, TranscribeProps } from "@/components/mediaUpload";
+import { LegacyMediaUpload, TranscribeProps } from "@/components/mediaUpload";
 import { OpenChangeDetails } from "@zag-js/dialog";
 import { uploadData } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
@@ -18,11 +19,10 @@ interface UploadProps {
   filename: string;
   uploadProgressPercent: number;
   isPreparingUpload: boolean;
-  uploaded: boolean;
   transcriptionProgress: any;
 }
 
-const Upload: NextPageWithLayout = () => {
+const ClassicUpload: NextPageWithLayout = () => {
   const { user, getCurrentSession } = useAuth();
 
   const [play, setPlay] = useState<
@@ -89,7 +89,6 @@ const Upload: NextPageWithLayout = () => {
             filename: file.name,
             uploadProgressPercent: 0,
             isPreparingUpload: true,
-            uploaded: false,
             transcriptionProgress: undefined,
           },
         };
@@ -113,7 +112,6 @@ const Upload: NextPageWithLayout = () => {
                     filename: file.name,
                     uploadProgressPercent: progressPercent,
                     isPreparingUpload: false,
-                    uploaded: false,
                     transcriptionProgress: undefined,
                   },
                 };
@@ -128,7 +126,6 @@ const Upload: NextPageWithLayout = () => {
                 ...current[id],
                 uploadProgressPercent: 100,
                 isPreparingUpload: false,
-                uploaded: true,
               },
             };
           });
@@ -139,41 +136,29 @@ const Upload: NextPageWithLayout = () => {
     files.forEach((file) => uploadFile(file, transcribeProps));
   };
 
-  const uploadEntries = Object.entries(uploadProps);
-  const uploadsComplete =
-    uploadEntries.length > 0 && uploadEntries.every(([, p]) => p.uploaded);
-
   return (
     <>
       <VStack gap={4} align="stretch">
-        <MediaUpload
-          onSubmit={uploadFiles}
-          identityId={user?.id}
-          uploadsComplete={uploadsComplete}
-          onClearUploads={() => setUploadProps({})}
-        >
-          {uploadEntries.length > 0 ? (
-            uploadEntries.map(
-              ([
-                key,
-                { filename, uploadProgressPercent, isPreparingUpload },
-              ]) => (
-                <TranscriptionProgress
-                  key={key}
-                  jobId={key}
-                  filename={filename}
-                  uploadProgress={uploadProgressPercent}
-                  isPreparingUpload={isPreparingUpload}
-                  onPlayClick={onPlayClick}
-                />
-              ),
-            )
-          ) : (
-            <Text>
-              Your files are uploading. Their progress will appear here.
-            </Text>
-          )}
-        </MediaUpload>
+        <Text color={"fg.muted"}>
+          You&apos;re using the classic upload view.{" "}
+          <Link as={NextLink} href={"/"} colorPalette={"blue"}>
+            Switch to the guided view
+          </Link>
+          .
+        </Text>
+        {Object.entries(uploadProps).map(
+          ([key, { filename, uploadProgressPercent, isPreparingUpload }]) => (
+            <TranscriptionProgress
+              key={key}
+              jobId={key}
+              filename={filename}
+              uploadProgress={uploadProgressPercent}
+              isPreparingUpload={isPreparingUpload}
+              onPlayClick={onPlayClick}
+            />
+          ),
+        )}
+        <LegacyMediaUpload onSubmit={uploadFiles} identityId={user?.id} />
       </VStack>
       <MediaPlayerDrawer
         mediaUrl={play?.mediaUrl}
@@ -186,16 +171,12 @@ const Upload: NextPageWithLayout = () => {
   );
 };
 
-Upload.getLayout = (page) => {
+ClassicUpload.getLayout = (page) => {
   return (
-    <AuthenticatedLayout
-      isLanding={false}
-      pageTitle={"Upload Media"}
-      contentMaxWidth={"4xl"}
-    >
+    <AuthenticatedLayout isLanding={false} pageTitle={"Upload Media (Classic)"}>
       {page}
     </AuthenticatedLayout>
   );
 };
 
-export default Upload;
+export default ClassicUpload;

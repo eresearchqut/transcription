@@ -354,6 +354,159 @@ export class ApiStack extends cdk.Stack {
       { suffix: ".json" }
     );
 
+    // IAM role assumed by Amazon Translate to read batch input and write batch
+    // output in the data bucket. Trust is scoped to this account/region to avoid
+    // the confused-deputy problem.
+    const translateDataAccessRole = new iam.Role(this, "TranslateDataAccessRole", {
+      description: "Lets Amazon Translate read batch input and write batch output",
+      assumedBy: new iam.ServicePrincipal("translate.amazonaws.com", {
+        conditions: {
+          StringEquals: { "aws:SourceAccount": this.account },
+          ArnLike: { "aws:SourceArn": `arn:aws:translate:${this.region}:${this.account}:*` }
+        }
+      })
+    });
+    translateDataAccessRole.addToPolicy(new iam.PolicyStatement({
+      actions: ["s3:GetObject"],
+      resources: [
+        `${dataBucket.bucketArn}/translations/input/*`,
+        `${dataBucket.bucketArn}/translations/output/*`
+      ]
+    }));
+    translateDataAccessRole.addToPolicy(new iam.PolicyStatement({
+      actions: ["s3:PutObject"],
+      resources: [`${dataBucket.bucketArn}/translations/output/*`]
+    }));
+    translateDataAccessRole.addToPolicy(new iam.PolicyStatement({
+      actions: ["s3:ListBucket"],
+      resources: [dataBucket.bucketArn],
+      conditions: {
+        StringLike: {
+          "s3:prefix": ["translations/input/*", "translations/output/*"],
+        },
+      },
+    }));
+
+    // Starts an Amazon Translate asynchronous batch job once a transcription
+    // completes. Triggered off the same Transcribe "COMPLETED" event used to
+    // update job state. EventBridge (rather than an S3 notification) is used
+    // because the summarise function already owns the users/*.json
+    // OBJECT_CREATED filter and S3 rejects overlapping notification configs.
+    const translateStartFunction = new NodejsFunction(this, "TranslateStartFunction", {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      description: "Starts an Amazon Translate batch job for completed transcriptions",
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 1024,
+      entry: "../api/src/event/translateStartHandler.ts",
+      handler: "handler",
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: "es2020"
+      },
+      environment: {
+        TABLE_NAME: dataTable.tableName,
+        BUCKET_NAME: dataBucket.bucketName,
+        APPLICATION_NAME: props.parameters.ApplicationName,
+        ENVIRONMENT: props.parameters.Environment,
+        TRANSLATE_DATA_ACCESS_ROLE_ARN: translateDataAccessRole.roleArn
+      }
+    });
+    translateStartFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["translate:StartTextTranslationJob"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW
+    }));
+    translateStartFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["transcribe:GetTranscriptionJob"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW
+    }));
+    translateStartFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["iam:PassRole"],
+      resources: [translateDataAccessRole.roleArn],
+      effect: iam.Effect.ALLOW
+    }));
+    dataBucket.grantReadWrite(translateStartFunction);
+    dataTable.grantReadWriteData(translateStartFunction);
+
+    const translateStartRule = new events.Rule(this, "TranslateStartRule", {
+      eventPattern: {
+        source: [
+          "aws.transcribe"
+        ],
+        detailType: [
+          "Transcribe Job State Change"
+        ],
+        detail: {
+          "TranscriptionJobStatus": [
+            "COMPLETED"
+          ]
+        }
+      }
+    });
+    translateStartRule.addTarget(new targets.LambdaFunction(translateStartFunction));
+    translateStartFunction.addPermission("TranslateStartFunctionPermission", {
+      action: "lambda:InvokeFunction",
+      principal: new iam.ServicePrincipal("events.amazonaws.com"),
+      sourceArn: translateStartRule.ruleArn
+    });
+
+    // Reacts to Amazon Translate batch job state changes (the analogue of the
+    // Transcribe job-state-change rule): on COMPLETED it assembles the translated
+    // transcript artifact; on failure it records the failure on the job.
+    const translateJobStateChangeFunction = new NodejsFunction(this, "TranslateJobStateChangeFunction", {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      description: "Processes Amazon Translate batch job completion",
+      timeout: cdk.Duration.minutes(5),
+      memorySize: 1024,
+      entry: "../api/src/event/translateJobStateChangeHandler.ts",
+      handler: "handler",
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        target: "es2020"
+      },
+      environment: {
+        TABLE_NAME: dataTable.tableName,
+        BUCKET_NAME: dataBucket.bucketName,
+        APPLICATION_NAME: props.parameters.ApplicationName,
+        ENVIRONMENT: props.parameters.Environment
+      }
+    });
+    translateJobStateChangeFunction.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["translate:DescribeTextTranslationJob"],
+      resources: ["*"],
+      effect: iam.Effect.ALLOW
+    }));
+    dataBucket.grantReadWrite(translateJobStateChangeFunction);
+    dataTable.grantReadWriteData(translateJobStateChangeFunction);
+
+    const translateJobStateChangeRule = new events.Rule(this, "TranslateJobStateChangeRule", {
+      eventPattern: {
+        source: [
+          "aws.translate"
+        ],
+        detailType: [
+          "Translate TextTranslationJob State Change"
+        ],
+        detail: {
+          "jobStatus": [
+            "COMPLETED",
+            "COMPLETED_WITH_ERROR",
+            "FAILED",
+            "STOPPED"
+          ]
+        }
+      }
+    });
+    translateJobStateChangeRule.addTarget(new targets.LambdaFunction(translateJobStateChangeFunction));
+    translateJobStateChangeFunction.addPermission("TranslateJobStateChangeFunctionPermission", {
+      action: "lambda:InvokeFunction",
+      principal: new iam.ServicePrincipal("events.amazonaws.com"),
+      sourceArn: translateJobStateChangeRule.ruleArn
+    });
+
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders: props.parameters.SupportedIdentityProviders.map(provider => cognito.UserPoolClientIdentityProvider.custom(provider)),
       oAuth: {

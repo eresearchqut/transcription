@@ -19,7 +19,11 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      display={"inline"}
       color={{ base: "blue.600", _dark: "white" }}
+      textDecoration={"underline"}
+      textDecorationColor={{ base: "blue.200", _dark: "whiteAlpha.400" }}
+      _hover={{ textDecorationColor: "currentColor" }}
       {...rest}
     >
       {children}{" "}

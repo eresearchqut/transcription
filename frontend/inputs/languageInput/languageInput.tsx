@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 import { Props as SelectProps, Select } from "chakra-react-select";
-import SUPPORTED_LANGUAGES_SOURCE from "@/public/supported_languages.json";
+import { SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE } from "model";
 import { isArray } from "lodash";
 
 export interface LanguageInputProps

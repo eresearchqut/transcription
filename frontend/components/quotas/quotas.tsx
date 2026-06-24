@@ -7,7 +7,21 @@ import { TranscribeQuotaProps } from "model";
 
 export interface QuotasProps extends Omit<TranscribeQuotaProps, "accept"> {
   asTextOnly?: boolean;
+  showSupportedFormats?: boolean;
 }
+
+const readableJoin = (items: any[]) =>
+  (items.length > 1
+    ? [items.slice(0, -1).join(", "), ` and ${items.at(-1)}`]
+    : items
+  ).join("");
+
+export const supportedFileFormatsText = (
+  supportedFileFormats?: string[],
+): string | undefined =>
+  supportedFileFormats && !isEmpty(supportedFileFormats)
+    ? `You can upload ${readableJoin(supportedFileFormats)} files.`
+    : undefined;
 
 const QuotasAsText: FunctionComponent<Omit<QuotasProps, "asTextOnly">> = ({
   minimumDuration,
@@ -16,17 +30,11 @@ const QuotasAsText: FunctionComponent<Omit<QuotasProps, "asTextOnly">> = ({
   maximumFilesCount,
   storageDuration,
   supportedFileFormats,
+  showSupportedFormats = true,
 }) => {
-  const readableJoin = (items: any[]) =>
-    (items.length > 1
-      ? [items.slice(0, -1).join(", "), ` and ${items.at(-1)}`]
-      : items
-    ).join("");
-
-  const allowedFiles =
-    supportedFileFormats && !isEmpty(supportedFileFormats)
-      ? `You can upload ${readableJoin(supportedFileFormats)} files.`
-      : undefined;
+  const allowedFiles = showSupportedFormats
+    ? supportedFileFormatsText(supportedFileFormats)
+    : undefined;
 
   const quotas = [
     maximumFileSizeBytes &&
