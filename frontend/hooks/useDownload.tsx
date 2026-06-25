@@ -9,6 +9,7 @@ import srtConvert from "aws-transcription-to-srt";
 import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
+import { decodeFilename } from "../utils/filename";
 
 export interface DownloadProps {
   filename: string;
@@ -34,7 +35,7 @@ export const useDownload = () => {
     const link = document.createElement("a");
 
     link.href = url;
-    link.setAttribute("download", fileName);
+    link.setAttribute("download", decodeFilename(fileName));
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

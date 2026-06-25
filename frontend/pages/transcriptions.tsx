@@ -38,6 +38,7 @@ import {
 import { ToggleTip } from "@/components/ui/toggle-tip";
 import { TranscriptionSummary } from "@/components/transcriptionSummary";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
+import { decodeFilename } from "../utils/filename";
 
 const Transcriptions: NextPageWithLayout = () => {
   const [open, setOpen] = useState(false);
@@ -66,7 +67,6 @@ const Transcriptions: NextPageWithLayout = () => {
   const [filter, setFilter] = useState<string>("");
   const searchInputPlaceholder = "Search transcriptions";
 
-  const formatFilename = (filename: string) => decodeURIComponent(filename);
   const formatDate = (isoDateString: string) => {
     return new Date(isoDateString).toLocaleString("default");
   };
@@ -129,7 +129,7 @@ const Transcriptions: NextPageWithLayout = () => {
       },
       cell: (props) => {
         const transcription = props.row.original as Transcription;
-        const filename = formatFilename(transcription.metadata.filename);
+        const filename = decodeFilename(transcription.metadata.filename);
 
         return <Text>{filename}</Text>;
       },
