@@ -17,7 +17,7 @@ import {
 } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
-const outputPattern = /users\/(.*)\/([^/]+)$/;
+const outputPattern = /^users\/([^/]+)\/([^/]+)$/;
 
 const s3Client = new S3Client({ region });
 const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
