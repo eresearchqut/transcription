@@ -207,12 +207,6 @@ export class ApiStack extends cdk.Stack {
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),
-      { prefix: "private" },
-      { suffix: ".upload" }
-    );
-    dataBucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(jobStartFunction),
       { prefix: "users/" },
       { suffix: ".upload" }
     );
@@ -263,7 +257,7 @@ export class ApiStack extends cdk.Stack {
 
     const copyOutputFunction = new NodejsFunction(this, "CopyOutputFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
-      description: "Copies transcription job output to user's private folder",
+      description: "Copies transcription job output to the user's readable folder",
       timeout: cdk.Duration.seconds(15),
       memorySize: 1024,
       entry: "../api/src/event/copyOutputHandler.ts",
@@ -341,12 +335,6 @@ export class ApiStack extends cdk.Stack {
       resources: ["arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0"],
     }))
     dataTable.grantReadWriteData(summariseTranscriptionFunction);
-    dataBucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(summariseTranscriptionFunction),
-      { prefix: "private" },
-      { suffix: ".json" }
-    );
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(summariseTranscriptionFunction),
@@ -564,30 +552,7 @@ export class ApiStack extends cdk.Stack {
         }),
         "s3-authorized-policy": new iam.PolicyDocument({
           statements: [
-            // Legacy: access existing files stored under the Cognito Identity ID prefix
-            new iam.PolicyStatement({
-              actions: [
-                "s3:ListBucket"
-              ],
-              resources: [dataBucket.bucketArn],
-              conditions: {
-                "StringLike": {
-                  "s3:prefix": [
-                    "private/${cognito-identity.amazonaws.com:sub}/",
-                    "private/${cognito-identity.amazonaws.com:sub}/*"
-                  ]
-                }
-              }
-            }),
-            new iam.PolicyStatement({
-              actions: [
-                "s3:GetObject",
-                "s3:PutObject",
-                "s3:DeleteObject"
-              ],
-              resources: [`${dataBucket.bucketArn}/private/\${cognito-identity.amazonaws.com:sub}/*`]
-            }),
-            // New: access files stored under the stable qutIdentityId prefix
+            // Access files stored under the qutIdentityId prefix
             new iam.PolicyStatement({
               actions: [
                 "s3:ListBucket"

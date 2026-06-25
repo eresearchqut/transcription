@@ -79,11 +79,7 @@ export const useTranscription = ({
         ? getCurrentSession()
             .then(() => {
               const summaryKey = transcription!.summaryKey!;
-              const path: string | (({ identityId }: { identityId?: string }) => string) =
-                summaryKey.startsWith("users/")
-                  ? summaryKey
-                  : ({ identityId }) => `private/${identityId}/${summaryKey}`;
-              return downloadData({ path });
+              return downloadData({ path: summaryKey });
             })
             .then((downloadDataOutput) => downloadDataOutput.result)
             .then((downloadDataOutputResult) =>

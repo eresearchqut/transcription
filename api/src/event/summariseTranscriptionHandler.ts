@@ -17,7 +17,6 @@ import {
 } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
-const legacyOutputPattern = /private\/(.*)\/(.*)\/(.*)/gm;
 const outputPattern = /users\/(.*)\/([^/]+)$/;
 
 const s3Client = new S3Client({ region });
@@ -42,34 +41,14 @@ export const handler = async (event: S3Event) => {
     const key = decodeURIComponent(record["s3"]["object"]["key"]);
     const bucketName = record["s3"]["bucket"]["name"];
 
-    let identityId: string;
-    let fileName: string;
-    let privateSummaryKey: string;
-    let summaryKey: string;
-
-    if (key.startsWith("users/")) {
-      // New format: users/{identityId}/{fileName}
-      const match = key.match(outputPattern);
-      if (!match) {
-        console.error("Unexpected key: ", key);
-        continue;
-      }
-      [, identityId, fileName] = match;
-      summaryKey = `users/${identityId}/summary/${normaliseJobId(fileName.split(".")[0])}`;
-      privateSummaryKey = summaryKey;
-    } else {
-      // Legacy format: private/{cognitoId}/{identityId}/{fileName}
-      const legacyMatch = [...key.matchAll(legacyOutputPattern)][0];
-      if (!legacyMatch) {
-        console.error("Unexpected key: ", key);
-        continue;
-      }
-      const [, cognitoId, legacyIdentityId, legacyFileName] = legacyMatch;
-      identityId = legacyIdentityId;
-      fileName = legacyFileName;
-      summaryKey = `${identityId}/summary/${normaliseJobId(fileName.split(".")[0])}`;
-      privateSummaryKey = `private/${cognitoId}/${summaryKey}`;
+    // users/{identityId}/{fileName}
+    const match = key.match(outputPattern);
+    if (!match) {
+      console.error("Unexpected key: ", key);
+      continue;
     }
+    const [, identityId, fileName] = match;
+    const summaryKey = `users/${identityId}/summary/${normaliseJobId(fileName.split(".")[0])}`;
 
     const jobId = normaliseJobId(fileName.split(".")[0]);
     promises.push(
@@ -105,7 +84,7 @@ export const handler = async (event: S3Event) => {
                 s3Client.send(
                   new PutObjectCommand({
                     Bucket: bucketName,
-                    Key: privateSummaryKey,
+                    Key: summaryKey,
                     Body: summary,
                   }),
                 ),
