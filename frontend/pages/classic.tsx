@@ -14,6 +14,7 @@ import { uploadData } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
 import { pick } from "lodash";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
+import { encodeFilename } from "../utils/filename";
 
 interface UploadProps {
   filename: string;
@@ -62,7 +63,7 @@ const ClassicUpload: NextPageWithLayout = () => {
       const id = uuid();
       const key = `users/${user!.id}/${id}.upload`;
       const metadata = {
-        filename: encodeURIComponent(file.name),
+        filename: encodeFilename(file.name),
         mimetype: file.type,
         filetype: "userUploadedFile",
         languages: languages.join(","),
