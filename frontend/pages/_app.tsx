@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
+import Head from "next/head";
 import { MonitoringProvider } from "../context/monitoring-context";
 import { Amplify } from "aws-amplify";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -76,6 +77,9 @@ function App({ Component, pageProps }: AppPropsWithLayout) {
     ));
   return (
     <QueryClientProvider client={queryClient}>
+      <Head>
+        <title>QUT Transcribe</title>
+      </Head>
       <Provider>
         <AnalyticsProvider>
           <MonitoringProvider>
