@@ -8,6 +8,7 @@ import React, {
 
 import {
   Badge,
+  Box,
   Grid,
   GridItem,
   Highlight,
@@ -171,9 +172,9 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
   }, [tries]);
 
   return (
-    <VStack align="stretch" gap={2}>
+    <VStack align="stretch" gap={2} h="100%" minH={0}>
       <audio
-        style={{ width: "100%" }}
+        style={{ width: "100%", flexShrink: 0 }}
         controls
         crossOrigin="anonymous"
         preload={`${props.preload}`}
@@ -186,6 +187,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
 
       <InputGroup
         mt={2}
+        flexShrink={0}
         startElement={<MappedIcon icon={"search"} color={"gray.300"} />}
       >
         <Input
@@ -194,15 +196,17 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
           onChange={(e) => setQuery(e.target.value)}
         />
       </InputGroup>
-      {transcriptLoaded && (
-        <Transcription
-          track={track.current?.track}
-          seek={seek}
-          query={query}
-          currentTime={currentTime}
-          languages={props.languages}
-        />
-      )}
+      <Box flex="1" minH={0} overflowY="auto">
+        {transcriptLoaded && (
+          <Transcription
+            track={track.current?.track}
+            seek={seek}
+            query={query}
+            currentTime={currentTime}
+            languages={props.languages}
+          />
+        )}
+      </Box>
     </VStack>
   );
 };

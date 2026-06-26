@@ -56,9 +56,14 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
           </Box>
         </Alert>
 
-        <DrawerBody>
+        <DrawerBody display="flex" flexDirection="column" overflow="hidden">
           {summary && (
-            <AccordionRoot collapsible variant={"enclosed"} mb={4}>
+            <AccordionRoot
+              collapsible
+              variant={"enclosed"}
+              mb={4}
+              flexShrink={0}
+            >
               <AccordionItem value={"summary"}>
                 <AccordionItemTrigger>
                   Summary of transcript
@@ -68,11 +73,13 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
             </AccordionRoot>
           )}
           {mediaUrl && transcriptUrl && (
-            <Player
-              audio={mediaUrl}
-              transcript={transcriptUrl}
-              languages={languages}
-            />
+            <Box flex="1" minH={0} display="flex" flexDirection="column">
+              <Player
+                audio={mediaUrl}
+                transcript={transcriptUrl}
+                languages={languages}
+              />
+            </Box>
           )}
         </DrawerBody>
 
