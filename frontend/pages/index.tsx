@@ -7,7 +7,7 @@ import { VStack, Text } from "@chakra-ui/react";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
-import { LanguageSpan } from "@/components/transcriptLanguages";
+import type { LanguageSpan } from "@/components/transcriptLanguages";
 import { MediaUpload, TranscribeProps } from "@/components/mediaUpload";
 import { OpenChangeDetails } from "@zag-js/dialog";
 import { uploadData } from "aws-amplify/storage";

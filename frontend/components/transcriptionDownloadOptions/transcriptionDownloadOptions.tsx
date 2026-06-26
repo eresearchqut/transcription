@@ -18,7 +18,7 @@ import {
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
-import { LanguageSpan } from "../transcriptLanguages";
+import type { LanguageSpan } from "../transcriptLanguages";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
 import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 

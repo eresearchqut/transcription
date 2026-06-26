@@ -19,7 +19,7 @@ import { TRANSCRIBE_QUOTAS, Transcription } from "model";
 import { TranscriptionStatus } from "@/components/transcriptionStatus";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
-import { LanguageSpan } from "@/components/transcriptLanguages";
+import type { LanguageSpan } from "@/components/transcriptLanguages";
 import NextLink from "next/link";
 import { add, set } from "date-fns";
 import {

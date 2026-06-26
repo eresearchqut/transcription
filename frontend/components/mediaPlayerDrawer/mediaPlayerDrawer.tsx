@@ -2,7 +2,7 @@ import * as React from "react";
 import { FunctionComponent } from "react";
 import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
 import Player from "../player";
-import { LanguageSpan } from "../transcriptLanguages";
+import type { LanguageSpan } from "../transcriptLanguages";
 import {
   DrawerBackdrop,
   DrawerBody,
