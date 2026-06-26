@@ -10,6 +10,10 @@ import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
 import { decodeFilename } from "../utils/filename";
+import {
+  LanguageSpan,
+  languageSpansFromTranscript,
+} from "../components/transcriptLanguages";
 
 export interface DownloadProps {
   filename: string;
@@ -97,6 +101,24 @@ export const useDownload = () => {
       );
   };
 
+  const fetchTranscriptLanguages = async (
+    objectKey: string,
+  ): Promise<LanguageSpan[]> => {
+    return getCurrentSession()
+      .then(() =>
+        downloadData({
+          path: objectKey.startsWith("users/")
+            ? objectKey
+            : ({ identityId }) => `private/${identityId}/${objectKey}`,
+        }),
+      )
+      .then((downloadDataOutput) => downloadDataOutput.result)
+      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
+      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
+      .then((transcriptJob) => languageSpansFromTranscript(transcriptJob))
+      .catch(() => []);
+  };
+
   // Translations are stored as a Transcribe-shaped JSON with translated SEGMENTS
   // (no word-level items), so subtitles are rebuilt from segment timings rather
   // than via the word-based `srtConvert` used for the original transcript.
@@ -172,6 +194,7 @@ export const useDownload = () => {
   return {
     fetchMediaUrl,
     fetchTranscriptUrl,
+    fetchTranscriptLanguages,
     fetchTranslatedTranscriptUrl,
     downloadFile,
     downloadTranscript,

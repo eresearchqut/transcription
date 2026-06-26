@@ -18,6 +18,7 @@ import {
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
+import { LanguageSpan } from "../transcriptLanguages";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
 import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
@@ -32,6 +33,7 @@ export interface DownloadOptionsProps
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
+    languages?: LanguageSpan[],
   ) => void;
 }
 
@@ -66,6 +68,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   const {
     fetchMediaUrl,
     fetchTranscriptUrl,
+    fetchTranscriptLanguages,
     fetchTranslatedTranscriptUrl,
     downloadTranscript,
     downloadTranslatedTranscript,
@@ -96,18 +99,25 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     ].join(".");
   const playUnavailable = isUndefined(transcription.downloadKey);
 
-  const loadPlayer = (transcriptUrl: Promise<string>) => {
+  const loadPlayer = (
+    transcriptUrl: Promise<string>,
+    languages?: Promise<LanguageSpan[]>,
+  ) => {
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
       transcriptUrl,
-    ]).then(([mediaUrl, transcriptUrl]) => {
-      handlePlayClick(mediaUrl, transcriptUrl, summary);
+      languages ?? Promise.resolve<LanguageSpan[]>([]),
+    ]).then(([mediaUrl, transcriptUrl, languageSpans]) => {
+      handlePlayClick(mediaUrl, transcriptUrl, summary, languageSpans);
     });
   };
 
   const loadOriginalPlayer = () => {
     const { objectKey, format } = transcriptProps(transcription, "vtt");
-    loadPlayer(fetchTranscriptUrl(objectKey, format));
+    loadPlayer(
+      fetchTranscriptUrl(objectKey, format),
+      fetchTranscriptLanguages(objectKey),
+    );
   };
 
   const loadTranslatedPlayer = () => {

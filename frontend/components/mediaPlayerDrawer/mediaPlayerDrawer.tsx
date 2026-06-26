@@ -2,6 +2,7 @@ import * as React from "react";
 import { FunctionComponent } from "react";
 import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
 import Player from "../player";
+import { LanguageSpan } from "../transcriptLanguages";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -23,12 +24,14 @@ export interface MediaPlayerDrawerProps
   mediaUrl: string;
   transcriptUrl: string;
   summary?: string;
+  languages?: LanguageSpan[];
 }
 
 const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   mediaUrl,
   transcriptUrl,
   summary,
+  languages,
   open,
   onOpenChange,
   ...drawerProps
@@ -65,7 +68,11 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
             </AccordionRoot>
           )}
           {mediaUrl && transcriptUrl && (
-            <Player audio={mediaUrl} transcript={transcriptUrl} />
+            <Player
+              audio={mediaUrl}
+              transcript={transcriptUrl}
+              languages={languages}
+            />
           )}
         </DrawerBody>
 

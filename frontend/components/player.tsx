@@ -7,6 +7,7 @@ import React, {
 } from "react";
 
 import {
+  Badge,
   Grid,
   GridItem,
   Highlight,
@@ -15,14 +16,22 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { InputGroup } from "./ui/input-group";
+import { Tooltip } from "./ui/tooltip";
 import { MappedIcon } from "./mappedIcon";
 import { useAnalytics } from "../context/analytics-context";
+import {
+  LanguageSpan,
+  isMultilingual,
+  languageCodeAt,
+  languageName,
+} from "./transcriptLanguages";
 
 export interface PlayerProps {
   audio: string;
   transcript: string;
   preload?: boolean;
   query?: string;
+  languages?: LanguageSpan[];
 }
 
 export interface TranscriptionProps {
@@ -30,6 +39,7 @@ export interface TranscriptionProps {
   seek: (seconds: number) => void;
   currentTime: number;
   query?: string;
+  languages?: LanguageSpan[];
 }
 
 export const Transcription: FunctionComponent<TranscriptionProps> = ({
@@ -37,6 +47,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
   seek,
   currentTime,
   query,
+  languages,
 }) => {
   const formatTime = (t: number): string => {
     let minutes: string | number = Math.floor(t / 60);
@@ -59,6 +70,9 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
     seek(seconds);
   };
 
+  const languageSpans = languages ?? [];
+  const showLanguages = isMultilingual(languageSpans);
+
   if (track?.cues !== null) {
     return (
       <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
@@ -67,6 +81,9 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
           const cue = cues[index] as TextTrackCue & { text: string };
           const isCurrent =
             currentTime >= cue.startTime && currentTime < cue.endTime;
+          const languageCode = showLanguages
+            ? languageCodeAt(languageSpans, cue.startTime)
+            : undefined;
 
           return (
             <Fragment key={index}>
@@ -75,9 +92,25 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                 onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
               >
-                <Text as={isCurrent ? "u" : undefined}>
+                <Text
+                  as={"span"}
+                  textDecoration={isCurrent ? "underline" : undefined}
+                >
                   {formatTime(cue.startTime)} - {formatTime(cue.endTime)}
                 </Text>
+                {languageCode && (
+                  <Tooltip content={languageName(languageCode)} portalled>
+                    <Badge
+                      ml={2}
+                      size={"sm"}
+                      variant={"surface"}
+                      colorPalette={"blue"}
+                      minW={"max-content"}
+                    >
+                      {languageCode.toUpperCase()}
+                    </Badge>
+                  </Tooltip>
+                )}
               </GridItem>
               <GridItem
                 colSpan={4}
@@ -167,6 +200,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
           seek={seek}
           query={query}
           currentTime={currentTime}
+          languages={props.languages}
         />
       )}
     </VStack>
