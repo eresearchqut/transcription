@@ -1,6 +1,6 @@
 import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
 
-import { AudioSegment, Item, TranscriptJob } from "./transcriptDocument";
+import type { AudioSegment, Item, TranscriptJob } from "./transcriptDocument";
 
 export interface LanguageSpan {
   startTime: number;
