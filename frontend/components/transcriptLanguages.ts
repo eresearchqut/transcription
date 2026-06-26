@@ -66,18 +66,11 @@ export const languageCodeAt = (
   spans: LanguageSpan[],
   time: number,
 ): string | undefined => {
-  const containing = spans.find(
-    (span) => time >= span.startTime && time <= span.endTime,
-  );
-  if (containing) return containing.languageCode;
-
   let preceding: LanguageSpan | undefined;
   for (const span of spans) {
-    if (span.startTime <= time) {
-      preceding = span;
-    } else {
-      break;
-    }
+    if (span.startTime > time) break;
+    if (time <= span.endTime) return span.languageCode;
+    preceding = span;
   }
   return (preceding ?? spans[0])?.languageCode;
 };

@@ -74,7 +74,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
   const languageSpans = languages ?? [];
   const showLanguages = isMultilingual(languageSpans);
 
-  if (track?.cues !== null) {
+  if (track?.cues) {
     return (
       <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
         {Array.from(Array(track?.cues.length).keys()).map((index) => {
