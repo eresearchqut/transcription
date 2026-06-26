@@ -26,7 +26,11 @@ const spansFromItems = (items: Item[]): LanguageSpan[] => {
   const spans: LanguageSpan[] = [];
   for (const item of items) {
     const languageCode = item.language_code;
-    if (!languageCode || item.start_time === undefined) {
+    if (
+      !languageCode ||
+      item.start_time === undefined ||
+      item.end_time === undefined
+    ) {
       continue;
     }
     const previous = spans[spans.length - 1];

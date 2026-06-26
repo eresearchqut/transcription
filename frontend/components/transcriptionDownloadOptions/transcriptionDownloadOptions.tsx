@@ -67,8 +67,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
 > = ({ initialTranscription, handlePlayClick }) => {
   const {
     fetchMediaUrl,
-    fetchTranscriptUrl,
-    fetchTranscriptLanguages,
+    fetchTranscriptForPlayer,
     fetchTranslatedTranscriptUrl,
     downloadTranscript,
     downloadTranslatedTranscript,
@@ -100,31 +99,26 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   const playUnavailable = isUndefined(transcription.downloadKey);
 
   const loadPlayer = (
-    transcriptUrl: Promise<string>,
-    languages?: Promise<LanguageSpan[]>,
+    transcript: Promise<{ url: string; languages?: LanguageSpan[] }>,
   ) => {
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
-      transcriptUrl,
-      languages ?? Promise.resolve<LanguageSpan[]>([]),
-    ]).then(([mediaUrl, transcriptUrl, languageSpans]) => {
-      handlePlayClick(mediaUrl, transcriptUrl, summary, languageSpans);
+      transcript,
+    ]).then(([mediaUrl, { url, languages }]) => {
+      handlePlayClick(mediaUrl, url, summary, languages ?? []);
     });
   };
 
   const loadOriginalPlayer = () => {
-    const { objectKey, format } = transcriptProps(transcription, "vtt");
-    loadPlayer(
-      fetchTranscriptUrl(objectKey, format),
-      fetchTranscriptLanguages(objectKey),
-    );
+    const { objectKey } = transcriptProps(transcription, "vtt");
+    loadPlayer(fetchTranscriptForPlayer(objectKey));
   };
 
   const loadTranslatedPlayer = () => {
     loadPlayer(
       fetchTranslatedTranscriptUrl(transcription.translationKey!, "vtt", {
         includeSpeakers: false,
-      }),
+      }).then((url) => ({ url })),
     );
   };
 

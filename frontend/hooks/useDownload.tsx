@@ -76,11 +76,8 @@ export const useDownload = () => {
       }).then((output) => output.url.href),
     );
 
-  const fetchTranscriptUrl = async (
-    objectKey: string,
-    format: "srt" | "vtt" | "docx",
-  ): Promise<string> => {
-    return getCurrentSession()
+  const downloadTranscriptJob = (objectKey: string): Promise<TranscriptJob> =>
+    getCurrentSession()
       .then(() =>
         downloadData({
           path: objectKey.startsWith("users/")
@@ -90,7 +87,13 @@ export const useDownload = () => {
       )
       .then((downloadDataOutput) => downloadDataOutput.result)
       .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
-      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
+      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob);
+
+  const fetchTranscriptUrl = async (
+    objectKey: string,
+    format: "srt" | "vtt" | "docx",
+  ): Promise<string> => {
+    return downloadTranscriptJob(objectKey)
       .then((transcriptJob) =>
         format === "docx"
           ? Packer.toBlob(transcriptDocument(transcriptJob))
@@ -101,22 +104,18 @@ export const useDownload = () => {
       );
   };
 
-  const fetchTranscriptLanguages = async (
+  const fetchTranscriptForPlayer = async (
     objectKey: string,
-  ): Promise<LanguageSpan[]> => {
-    return getCurrentSession()
-      .then(() =>
-        downloadData({
-          path: objectKey.startsWith("users/")
-            ? objectKey
-            : ({ identityId }) => `private/${identityId}/${objectKey}`,
-        }),
-      )
-      .then((downloadDataOutput) => downloadDataOutput.result)
-      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
-      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
-      .then((transcriptJob) => languageSpansFromTranscript(transcriptJob))
-      .catch(() => []);
+  ): Promise<{ url: string; languages: LanguageSpan[] }> => {
+    return downloadTranscriptJob(objectKey).then(async (transcriptJob) => {
+      const blob = new Blob([srtConvert(transcriptJob)], {
+        type: "text/plain",
+      });
+      return {
+        url: await toWebVTT(blob),
+        languages: languageSpansFromTranscript(transcriptJob),
+      };
+    });
   };
 
   // Translations are stored as a Transcribe-shaped JSON with translated SEGMENTS
@@ -194,7 +193,7 @@ export const useDownload = () => {
   return {
     fetchMediaUrl,
     fetchTranscriptUrl,
-    fetchTranscriptLanguages,
+    fetchTranscriptForPlayer,
     fetchTranslatedTranscriptUrl,
     downloadFile,
     downloadTranscript,
