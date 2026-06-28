@@ -1,16 +1,9 @@
-import React, {
-  Fragment,
-  FunctionComponent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { FunctionComponent, useEffect, useRef, useState } from "react";
 
 import {
   Badge,
   Box,
-  Grid,
-  GridItem,
+  Flex,
   Highlight,
   Input,
   Text,
@@ -76,7 +69,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
 
   if (track?.cues) {
     return (
-      <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
+      <VStack align="stretch" gap={2} mt={6}>
         {Array.from(Array(track?.cues.length).keys()).map((index) => {
           const cues = track?.cues as TextTrackCueList;
           const cue = cues[index] as TextTrackCue & { text: string };
@@ -87,14 +80,17 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
             : undefined;
 
           return (
-            <Fragment key={index}>
-              <GridItem
-                colSpan={2}
+            <Flex key={index} gap={2} align="start">
+              <Flex
+                flexShrink={0}
+                gap={2}
+                align="center"
                 onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
               >
                 <Text
                   as={"span"}
+                  whiteSpace={"nowrap"}
                   textDecoration={isCurrent ? "underline" : undefined}
                 >
                   {formatTime(cue.startTime)} - {formatTime(cue.endTime)}
@@ -102,7 +98,6 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                 {languageCode && (
                   <Tooltip content={languageName(languageCode)} portalled>
                     <Badge
-                      ml={2}
                       size={"sm"}
                       variant={"surface"}
                       colorPalette={"blue"}
@@ -112,9 +107,9 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                     </Badge>
                   </Tooltip>
                 )}
-              </GridItem>
-              <GridItem
-                colSpan={4}
+              </Flex>
+              <Box
+                flex="1"
                 onClick={() => seek(cue.startTime)}
                 cursor={"pointer"}
               >
@@ -131,11 +126,11 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                 {!query && (
                   <Text as={isCurrent ? "u" : undefined}>{cue.text}</Text>
                 )}
-              </GridItem>
-            </Fragment>
+              </Box>
+            </Flex>
           );
         })}
-      </Grid>
+      </VStack>
     );
   }
 
