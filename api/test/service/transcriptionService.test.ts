@@ -8,7 +8,7 @@ describe("transcription service test", () =>
     await jobStarted(
       "76c65a59-1c57-489b-be96-020ceaa9675a",
       "95edf479-b991-4d0c-9e9e-d34474880b65",
-      "transcription/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/a907ed50-a407-461e-bc20-b1ccdc8f41a1.json",
+      "transcription/76c65a59-1c57-489b-be96-020ceaa9675a/95edf479-b991-4d0c-9e9e-d34474880b65.json",
       {
         s3SchemaVersion: "1.0",
         configurationId: "eebad215-feed-40d2-8b97-7c9717881172",
@@ -18,7 +18,7 @@ describe("transcription service test", () =>
           arn: "arn:aws:s3:::transcription-ap-southeast-2-854640616043",
         },
         object: {
-          key: "private/ap-southeast-2%3Ac4ef3d04-e56c-4544-bba5-0a73206c7fad/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/Welcome.wav",
+          key: "users/76c65a59-1c57-489b-be96-020ceaa9675a/95edf479-b991-4d0c-9e9e-d34474880b65.upload",
           size: 1292288,
           eTag: "c2ee56cbea8c6d3d694042bd4f5439fe",
           sequencer: "00606FAC27C252D5E2",
@@ -57,7 +57,7 @@ describe("transcription service test", () =>
     ).toEqual([
       expect.objectContaining({
         outputKey:
-          "transcription/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/a907ed50-a407-461e-bc20-b1ccdc8f41a1.json",
+          "transcription/76c65a59-1c57-489b-be96-020ceaa9675a/95edf479-b991-4d0c-9e9e-d34474880b65.json",
         pk: "76c65a59-1c57-489b-be96-020ceaa9675a",
         sk: "95edf479-b991-4d0c-9e9e-d34474880b65",
         transcriptionResponse: {
@@ -79,7 +79,7 @@ describe("transcription service test", () =>
           configurationId: "eebad215-feed-40d2-8b97-7c9717881172",
           object: {
             eTag: "c2ee56cbea8c6d3d694042bd4f5439fe",
-            key: "private/ap-southeast-2%3Ac4ef3d04-e56c-4544-bba5-0a73206c7fad/76c65a59-1c57-489b-be96-020ceaa9675a/en-AU/Welcome.wav",
+            key: "users/76c65a59-1c57-489b-be96-020ceaa9675a/95edf479-b991-4d0c-9e9e-d34474880b65.upload",
             sequencer: "00606FAC27C252D5E2",
             size: 1292288,
           },

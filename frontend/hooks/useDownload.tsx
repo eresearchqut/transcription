@@ -63,9 +63,7 @@ export const useDownload = () => {
   ): Promise<string> =>
     getCurrentSession().then(() =>
       getUrl({
-        path: objectKey.startsWith("users/")
-          ? objectKey
-          : ({ identityId }) => `private/${identityId}/${objectKey}`,
+        path: objectKey,
         options: {
           contentDisposition: `attachment; filename = ${fileName}`,
         },
@@ -79,9 +77,7 @@ export const useDownload = () => {
     return getCurrentSession()
       .then(() =>
         downloadData({
-          path: objectKey.startsWith("users/")
-            ? objectKey
-            : ({ identityId }) => `private/${identityId}/${objectKey}`,
+          path: objectKey,
         }),
       )
       .then((downloadDataOutput) => downloadDataOutput.result)
@@ -108,9 +104,7 @@ export const useDownload = () => {
     return getCurrentSession()
       .then(() =>
         downloadData({
-          path: objectKey.startsWith("users/")
-            ? objectKey
-            : ({ identityId }) => `private/${identityId}/${objectKey}`,
+          path: objectKey,
         }),
       )
       .then((downloadDataOutput) => downloadDataOutput.result)

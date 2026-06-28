@@ -16,7 +16,6 @@ import { jobStarted } from "../service/transcriptionService";
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const uploadPattern = /^users\/([^/]+)\/([^/]+)\.upload$/;
-const legacyUploadPattern = /^private\/[^/]+\/([^/]+)\/([^/]+)\.upload$/;
 
 const transcribeClient = new TranscribeClient({ region });
 const s3client = new S3Client({ region: process.env.AWS_REGION });
@@ -31,7 +30,7 @@ export const handler = async (event: S3Event) => {
       const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
       const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
       const bucketName = record["s3"]["bucket"]["name"];
-      const match = uploadPattern.exec(key) ?? legacyUploadPattern.exec(key);
+      const match = uploadPattern.exec(key);
 
       if (!match) {
         console.error("Unexpected key: ", key);
