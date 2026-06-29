@@ -76,7 +76,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
 
   if (track?.cues) {
     return (
-      <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
+      <Grid templateColumns="max-content 1fr" gap={2} mt={6}>
         {Array.from(Array(track?.cues.length).keys()).map((index) => {
           const cues = track?.cues as TextTrackCueList;
           const cue = cues[index] as TextTrackCue & { text: string };
@@ -89,9 +89,11 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
           return (
             <Fragment key={index}>
               <GridItem
-                colSpan={2}
                 onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
+                display={"flex"}
+                alignItems={"center"}
+                whiteSpace={"nowrap"}
               >
                 <Text
                   as={"span"}
@@ -113,11 +115,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                   </Tooltip>
                 )}
               </GridItem>
-              <GridItem
-                colSpan={4}
-                onClick={() => seek(cue.startTime)}
-                cursor={"pointer"}
-              >
+              <GridItem onClick={() => seek(cue.startTime)} cursor={"pointer"}>
                 {query && (
                   <Text as={isCurrent ? "u" : undefined}>
                     <Highlight
