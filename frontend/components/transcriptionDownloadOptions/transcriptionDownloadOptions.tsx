@@ -18,7 +18,6 @@ import {
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
-import type { LanguageSpan } from "../transcriptLanguages";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
 import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
@@ -31,7 +30,8 @@ export interface DownloadOptionsProps
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
-    languages?: LanguageSpan[],
+    languages?: (string | undefined)[],
+    speakers?: string[],
   ) => void;
 }
 
@@ -97,13 +97,17 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   const playUnavailable = isUndefined(transcription.downloadKey);
 
   const loadPlayer = (
-    transcript: Promise<{ url: string; languages?: LanguageSpan[] }>,
+    transcript: Promise<{
+      url: string;
+      languages?: (string | undefined)[];
+      speakers?: string[];
+    }>,
   ) => {
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
       transcript,
-    ]).then(([mediaUrl, { url, languages }]) => {
-      handlePlayClick(mediaUrl, url, summary, languages ?? []);
+    ]).then(([mediaUrl, { url, languages, speakers }]) => {
+      handlePlayClick(mediaUrl, url, summary, languages ?? [], speakers ?? []);
     });
   };
 
@@ -176,6 +180,16 @@ export const TranscriptionDownloadOptions: FunctionComponent<
                 }
               >
                 <MappedIcon icon={"json"} /> JSON
+              </MenuItem>
+              <MenuItem
+                value={"txt"}
+                onClick={() =>
+                  downloadTranscript({
+                    ...transcriptProps(transcription, "txt"),
+                  })
+                }
+              >
+                <MappedIcon icon={"readme"} /> Text (.txt)
               </MenuItem>
               <MenuItem
                 value={"srt"}

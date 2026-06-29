@@ -19,7 +19,6 @@ import { TRANSCRIBE_QUOTAS, Transcription } from "model";
 import { TranscriptionStatus } from "@/components/transcriptionStatus";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
 import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
-import type { LanguageSpan } from "@/components/transcriptLanguages";
 import NextLink from "next/link";
 import { add, set } from "date-fns";
 import {
@@ -49,20 +48,22 @@ const Transcriptions: NextPageWithLayout = () => {
   const [play, setPlay] = useState<
     Pick<
       MediaPlayerDrawerProps,
-      "mediaUrl" | "transcriptUrl" | "summary" | "languages"
+      "mediaUrl" | "transcriptUrl" | "summary" | "languages" | "speakers"
     >
   >({} as MediaPlayerDrawerProps);
   const handlePlayClick = (
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
-    languages?: LanguageSpan[],
+    languages?: (string | undefined)[],
+    speakers?: string[],
   ) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
       summary,
       languages,
+      speakers,
     });
     setOpen(true);
   };
@@ -275,6 +276,7 @@ const Transcriptions: NextPageWithLayout = () => {
         transcriptUrl={play?.transcriptUrl}
         summary={play?.summary}
         languages={play?.languages}
+        speakers={play?.speakers}
         open={open}
         onOpenChange={onMediaPlayerOpenChange}
       />

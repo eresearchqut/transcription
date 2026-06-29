@@ -1,12 +1,21 @@
 import { SpeakerSegment, TranscriptJob } from "./transcriptDocument";
 
 /**
- * Builders that produce subtitle/text output from a translated transcript at the
- * SEGMENT level. Amazon Translate produces no word-level (`results.items`)
- * alignment, so the word-based `aws-transcription-to-srt` cannot be used for
- * translations. These builders use each segment's original start/end times so
- * the translated captions stay roughly in sync with the media.
+ * Builders that produce subtitle/text output from a transcript at the SEGMENT
+ * level. Amazon Transcribe groups words into `audio_segments`, each with a
+ * `transcript`, `start_time` and `end_time`. Translations are stored
+ * Transcribe-shaped with translated `segments` (no word-level `items`).
+ * Building captions from these segments keeps lines aligned to natural pauses,
+ * which the word-based `aws-transcription-to-srt` could not do.
  */
+
+export interface SubtitleSegment {
+  start_time: string;
+  end_time: string;
+  transcript: string;
+  speaker_label?: string;
+  language_code?: string;
+}
 
 const speakers: Record<string, string> = {
   spk_0: "Speaker 1",
@@ -39,31 +48,60 @@ const speakerLabel = (
   segments: SpeakerSegment[] | undefined,
   startTime: string,
   endTime: string,
+  ownLabel?: string,
 ): string => {
-  const label = segments?.find(
-    ({ start_time: speakerStartTime }) =>
-      parseFloat(speakerStartTime) <= parseFloat(endTime) &&
-      parseFloat(speakerStartTime) >= parseFloat(startTime),
-  )?.speaker_label;
+  const label =
+    ownLabel ??
+    segments?.find(
+      ({ start_time: speakerStartTime }) =>
+        parseFloat(speakerStartTime) <= parseFloat(endTime) &&
+        parseFloat(speakerStartTime) >= parseFloat(startTime),
+    )?.speaker_label;
   if (!label) return "";
   return speakers[label] ?? label;
 };
 
+/**
+ * Normalise a transcript to a flat list of timed segments. Original transcripts
+ * expose `audio_segments`; translations expose `segments` (single alternative).
+ */
+export const subtitleSegments = (job: TranscriptJob): SubtitleSegment[] => {
+  const audioSegments = job.results.audio_segments;
+  if (audioSegments && audioSegments.length > 0) {
+    return audioSegments
+      .filter((segment) => segment.transcript.trim().length > 0)
+      .map((segment) => ({
+        start_time: segment.start_time,
+        end_time: segment.end_time,
+        transcript: segment.transcript,
+        speaker_label: segment.speaker_label,
+        language_code: segment.language_code,
+      }));
+  }
+  return (job.results.segments ?? []).map((segment) => ({
+    start_time: segment.start_time,
+    end_time: segment.end_time,
+    transcript: segment.alternatives[0]?.transcript ?? "",
+  }));
+};
+
 export const segmentsToSrt = (
   job: TranscriptJob,
-  { includeSpeakers = true }: { includeSpeakers?: boolean } = {},
+  { includeSpeakers = false }: { includeSpeakers?: boolean } = {},
 ): string =>
-  job.results.segments
+  subtitleSegments(job)
     .map((segment, index) => {
       const speaker = includeSpeakers
         ? speakerLabel(
             job.results.speaker_labels?.segments,
             segment.start_time,
             segment.end_time,
+            segment.speaker_label,
           )
         : "";
-      const transcript = segment.alternatives[0]?.transcript ?? "";
-      const line = speaker ? `${speaker}: ${transcript}` : transcript;
+      const line = speaker
+        ? `${speaker}: ${segment.transcript}`
+        : segment.transcript;
       return [
         index + 1,
         `${formatSrtTime(segment.start_time)} --> ${formatSrtTime(segment.end_time)}`,
@@ -73,14 +111,17 @@ export const segmentsToSrt = (
     .join("\n\n");
 
 export const segmentsToText = (job: TranscriptJob): string =>
-  job.results.segments
-    .map((segment) => {
-      const speaker = speakerLabel(
-        job.results.speaker_labels?.segments,
-        segment.start_time,
-        segment.end_time,
-      );
-      const transcript = segment.alternatives[0]?.transcript ?? "";
-      return speaker ? `${speaker}: ${transcript}` : transcript;
-    })
+  subtitleSegments(job)
+    .map((segment) => segment.transcript)
     .join("\n\n");
+
+/** Display speaker label for each subtitle segment, in cue order. */
+export const speakerLabels = (job: TranscriptJob): string[] =>
+  subtitleSegments(job).map((segment) =>
+    speakerLabel(
+      job.results.speaker_labels?.segments,
+      segment.start_time,
+      segment.end_time,
+      segment.speaker_label,
+    ),
+  );

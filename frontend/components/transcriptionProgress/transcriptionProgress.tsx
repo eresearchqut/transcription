@@ -3,7 +3,6 @@ import { FunctionComponent } from "react";
 import { Box, Spinner, Stack, Text, VStack } from "@chakra-ui/react";
 import { lowerCase } from "lodash";
 import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
-import type { LanguageSpan } from "../transcriptLanguages";
 import {
   enableGenerateSummary,
   enableTranslation,
@@ -33,7 +32,8 @@ export interface FileTranscriptionProgressProps
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
-    languages?: LanguageSpan[],
+    languages?: (string | undefined)[],
+    speakers?: string[],
   ) => void;
 }
 

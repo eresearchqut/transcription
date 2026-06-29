@@ -1,79 +1,20 @@
 import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
 
-import type { AudioSegment, Item, TranscriptJob } from "./transcriptDocument";
+import { subtitleSegments } from "./segmentSubtitles";
+import type { TranscriptJob } from "./transcriptDocument";
 
-export interface LanguageSpan {
-  startTime: number;
-  endTime: number;
-  languageCode: string;
-}
-
-const toSeconds = (value: string | undefined): number => {
-  const parsed = Number.parseFloat(value ?? "");
-  return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const spansFromAudioSegments = (segments: AudioSegment[]): LanguageSpan[] =>
-  segments
-    .filter((segment) => !!segment.language_code)
-    .map((segment) => ({
-      startTime: toSeconds(segment.start_time),
-      endTime: toSeconds(segment.end_time),
-      languageCode: segment.language_code as string,
-    }));
-
-const spansFromItems = (items: Item[]): LanguageSpan[] => {
-  const spans: LanguageSpan[] = [];
-  for (const item of items) {
-    const languageCode = item.language_code;
-    if (
-      !languageCode ||
-      item.start_time === undefined ||
-      item.end_time === undefined
-    ) {
-      continue;
-    }
-    const previous = spans[spans.length - 1];
-    if (previous && previous.languageCode === languageCode) {
-      previous.endTime = toSeconds(item.end_time);
-    } else {
-      spans.push({
-        startTime: toSeconds(item.start_time),
-        endTime: toSeconds(item.end_time),
-        languageCode,
-      });
-    }
-  }
-  return spans;
-};
-
-export const languageSpansFromTranscript = (
+/**
+ * Language code for each subtitle segment, in cue order. The player renders one
+ * cue per segment, so the array is indexed by cue position rather than looked
+ * up by time. `undefined` marks segments without an identified language.
+ */
+export const languageCodesFromTranscript = (
   job: TranscriptJob | undefined,
-): LanguageSpan[] => {
-  if (!job) return [];
-  const fromSegments = spansFromAudioSegments(job.results.audio_segments ?? []);
-  const spans =
-    fromSegments.length > 0
-      ? fromSegments
-      : spansFromItems(job.results.items ?? []);
-  return [...spans].sort((a, b) => a.startTime - b.startTime);
-};
+): (string | undefined)[] =>
+  job ? subtitleSegments(job).map((segment) => segment.language_code) : [];
 
-export const isMultilingual = (spans: LanguageSpan[]): boolean =>
-  new Set(spans.map((span) => span.languageCode)).size > 1;
-
-export const languageCodeAt = (
-  spans: LanguageSpan[],
-  time: number,
-): string | undefined => {
-  let preceding: LanguageSpan | undefined;
-  for (const span of spans) {
-    if (span.startTime > time) break;
-    if (time <= span.endTime) return span.languageCode;
-    preceding = span;
-  }
-  return (preceding ?? spans[0])?.languageCode;
-};
+export const isMultilingual = (codes: (string | undefined)[]): boolean =>
+  new Set(codes.filter((code): code is string => !!code)).size > 1;
 
 export const languageName = (code: string): string =>
   (supportedLanguages as Record<string, string>)[code] ?? code;
