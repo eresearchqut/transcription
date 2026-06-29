@@ -92,7 +92,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                 onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
                 display={"flex"}
-                alignItems={"center"}
+                alignItems={"flex-start"}
                 whiteSpace={"nowrap"}
               >
                 <Text
