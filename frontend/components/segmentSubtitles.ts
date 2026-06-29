@@ -78,11 +78,13 @@ export const subtitleSegments = (job: TranscriptJob): SubtitleSegment[] => {
         language_code: segment.language_code,
       }));
   }
-  return (job.results.segments ?? []).map((segment) => ({
-    start_time: segment.start_time,
-    end_time: segment.end_time,
-    transcript: segment.alternatives[0]?.transcript ?? "",
-  }));
+  return (job.results.segments ?? [])
+    .map((segment) => ({
+      start_time: segment.start_time,
+      end_time: segment.end_time,
+      transcript: segment.alternatives[0]?.transcript ?? "",
+    }))
+    .filter((segment) => segment.transcript.trim().length > 0);
 };
 
 export const segmentsToSrt = (
