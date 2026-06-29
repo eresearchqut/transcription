@@ -94,12 +94,13 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                 display={"flex"}
                 alignItems={"flex-start"}
                 whiteSpace={"nowrap"}
+                fontFamily={"mono"}
               >
                 <Text
                   as={"span"}
                   textDecoration={isCurrent ? "underline" : undefined}
                 >
-                  {formatTime(cue.startTime)} - {formatTime(cue.endTime)}
+                  {formatTime(cue.startTime)}-{formatTime(cue.endTime)}
                 </Text>
                 {languageCode && (
                   <Tooltip content={languageName(languageCode)} portalled>
