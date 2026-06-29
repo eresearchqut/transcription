@@ -1,7 +1,8 @@
-import React, { FunctionComponent, PropsWithChildren } from "react";
+import React, { FunctionComponent, PropsWithChildren, ReactNode } from "react";
 import {
   Box,
   Card,
+  Flex,
   Grid,
   GridItem,
   Heading,
@@ -18,6 +19,7 @@ import { Header } from "@/components/header";
 
 export interface LayoutProps {
   pageTitle?: string;
+  headerAction?: ReactNode;
   isLanding?: boolean;
   isAuthenticated?: boolean;
   contentMaxWidth?: string;
@@ -28,6 +30,7 @@ export interface LayoutProps {
 export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   children,
   pageTitle,
+  headerAction,
   isLanding,
   isAuthenticated,
   contentMaxWidth,
@@ -117,10 +120,15 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
                 variant={"elevated"}
               >
                 <Card.Header pl={6} pr={6} pb={0}>
-                  {pageTitle && (
-                    <Heading as={"h1"} fontSize={"3xl"}>
-                      {pageTitle}
-                    </Heading>
+                  {(pageTitle || headerAction) && (
+                    <Flex justify={"space-between"} align={"center"}>
+                      {pageTitle && (
+                        <Heading as={"h1"} fontSize={"3xl"}>
+                          {pageTitle}
+                        </Heading>
+                      )}
+                      {headerAction}
+                    </Flex>
                   )}
                 </Card.Header>
                 <Card.Body pl={6} pr={6}>
