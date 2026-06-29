@@ -7,6 +7,8 @@ import React, {
 } from "react";
 
 import {
+  Badge,
+  Box,
   Grid,
   GridItem,
   Highlight,
@@ -15,14 +17,22 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { InputGroup } from "./ui/input-group";
+import { Tooltip } from "./ui/tooltip";
 import { MappedIcon } from "./mappedIcon";
 import { useAnalytics } from "../context/analytics-context";
+import {
+  LanguageSpan,
+  isMultilingual,
+  languageCodeAt,
+  languageName,
+} from "./transcriptLanguages";
 
 export interface PlayerProps {
   audio: string;
   transcript: string;
   preload?: boolean;
   query?: string;
+  languages?: LanguageSpan[];
 }
 
 export interface TranscriptionProps {
@@ -30,6 +40,7 @@ export interface TranscriptionProps {
   seek: (seconds: number) => void;
   currentTime: number;
   query?: string;
+  languages?: LanguageSpan[];
 }
 
 export const Transcription: FunctionComponent<TranscriptionProps> = ({
@@ -37,6 +48,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
   seek,
   currentTime,
   query,
+  languages,
 }) => {
   const formatTime = (t: number): string => {
     let minutes: string | number = Math.floor(t / 60);
@@ -59,31 +71,52 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
     seek(seconds);
   };
 
-  if (track?.cues !== null) {
+  const languageSpans = languages ?? [];
+  const showLanguages = isMultilingual(languageSpans);
+
+  if (track?.cues) {
     return (
-      <Grid templateColumns="repeat(6, 1fr)" gap={2} mt={6}>
+      <Grid templateColumns="max-content 1fr" gap={2} mt={6}>
         {Array.from(Array(track?.cues.length).keys()).map((index) => {
           const cues = track?.cues as TextTrackCueList;
           const cue = cues[index] as TextTrackCue & { text: string };
           const isCurrent =
             currentTime >= cue.startTime && currentTime < cue.endTime;
+          const languageCode = showLanguages
+            ? languageCodeAt(languageSpans, cue.startTime)
+            : undefined;
 
           return (
             <Fragment key={index}>
               <GridItem
-                colSpan={2}
                 onClick={() => handleSeek(cue.startTime)}
                 cursor={"pointer"}
+                display={"flex"}
+                alignItems={"flex-start"}
+                whiteSpace={"nowrap"}
+                fontFamily={"mono"}
               >
-                <Text as={isCurrent ? "u" : undefined}>
-                  {formatTime(cue.startTime)} - {formatTime(cue.endTime)}
+                <Text
+                  as={"span"}
+                  textDecoration={isCurrent ? "underline" : undefined}
+                >
+                  {formatTime(cue.startTime)}-{formatTime(cue.endTime)}
                 </Text>
+                {languageCode && (
+                  <Tooltip content={languageName(languageCode)} portalled>
+                    <Badge
+                      ml={2}
+                      size={"sm"}
+                      variant={"surface"}
+                      colorPalette={"blue"}
+                      minW={"max-content"}
+                    >
+                      {languageCode.toUpperCase()}
+                    </Badge>
+                  </Tooltip>
+                )}
               </GridItem>
-              <GridItem
-                colSpan={4}
-                onClick={() => seek(cue.startTime)}
-                cursor={"pointer"}
-              >
+              <GridItem onClick={() => seek(cue.startTime)} cursor={"pointer"}>
                 {query && (
                   <Text as={isCurrent ? "u" : undefined}>
                     <Highlight
@@ -138,9 +171,9 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
   }, [tries]);
 
   return (
-    <VStack align="stretch" gap={2}>
+    <VStack align="stretch" gap={2} h="100%" minH={0}>
       <audio
-        style={{ width: "100%" }}
+        style={{ width: "100%", flexShrink: 0 }}
         controls
         crossOrigin="anonymous"
         preload={`${props.preload}`}
@@ -153,6 +186,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
 
       <InputGroup
         mt={2}
+        flexShrink={0}
         startElement={<MappedIcon icon={"search"} color={"gray.300"} />}
       >
         <Input
@@ -161,14 +195,17 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
           onChange={(e) => setQuery(e.target.value)}
         />
       </InputGroup>
-      {transcriptLoaded && (
-        <Transcription
-          track={track.current?.track}
-          seek={seek}
-          query={query}
-          currentTime={currentTime}
-        />
-      )}
+      <Box flex="1" minH={0} overflowY="auto">
+        {transcriptLoaded && (
+          <Transcription
+            track={track.current?.track}
+            seek={seek}
+            query={query}
+            currentTime={currentTime}
+            languages={props.languages}
+          />
+        )}
+      </Box>
     </VStack>
   );
 };

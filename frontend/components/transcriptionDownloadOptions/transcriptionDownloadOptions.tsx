@@ -18,6 +18,7 @@ import {
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 import { Transcription } from "model";
+import type { LanguageSpan } from "../transcriptLanguages";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
 import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
@@ -30,6 +31,7 @@ export interface DownloadOptionsProps
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
+    languages?: LanguageSpan[],
   ) => void;
 }
 
@@ -63,7 +65,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
 > = ({ initialTranscription, handlePlayClick }) => {
   const {
     fetchMediaUrl,
-    fetchTranscriptUrl,
+    fetchTranscriptForPlayer,
     fetchTranslatedTranscriptUrl,
     downloadTranscript,
     downloadTranslatedTranscript,
@@ -94,25 +96,27 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     ].join(".");
   const playUnavailable = isUndefined(transcription.downloadKey);
 
-  const loadPlayer = (transcriptUrl: Promise<string>) => {
+  const loadPlayer = (
+    transcript: Promise<{ url: string; languages?: LanguageSpan[] }>,
+  ) => {
     Promise.all([
       fetchMediaUrl(mediaKey(transcription), transcription.metadata.filename),
-      transcriptUrl,
-    ]).then(([mediaUrl, transcriptUrl]) => {
-      handlePlayClick(mediaUrl, transcriptUrl, summary);
+      transcript,
+    ]).then(([mediaUrl, { url, languages }]) => {
+      handlePlayClick(mediaUrl, url, summary, languages ?? []);
     });
   };
 
   const loadOriginalPlayer = () => {
-    const { objectKey, format } = transcriptProps(transcription, "vtt");
-    loadPlayer(fetchTranscriptUrl(objectKey, format));
+    const { objectKey } = transcriptProps(transcription, "vtt");
+    loadPlayer(fetchTranscriptForPlayer(objectKey));
   };
 
   const loadTranslatedPlayer = () => {
     loadPlayer(
       fetchTranslatedTranscriptUrl(transcription.translationKey!, "vtt", {
         includeSpeakers: false,
-      }),
+      }).then((url) => ({ url })),
     );
   };
 

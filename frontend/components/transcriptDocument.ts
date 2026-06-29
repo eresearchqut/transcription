@@ -9,8 +9,8 @@ import {
 } from "docx";
 
 export interface Item {
-  start_time: string; // "0.14"
-  end_time: string; // "0.49"
+  start_time?: string; // "0.14"
+  end_time?: string; // "0.49"
   alternatives: [
     {
       confidence: string; // "1.0",
@@ -18,6 +18,16 @@ export interface Item {
     },
   ];
   type: "pronunciation" | "punctuation";
+  language_code?: string;
+}
+
+export interface AudioSegment {
+  id: number;
+  transcript: string;
+  start_time: string;
+  end_time: string;
+  items: number[];
+  language_code?: string;
 }
 
 export interface Timed {
@@ -47,6 +57,8 @@ export interface TranscriptJob {
       segments: SpeakerSegment[];
     };
     segments: Segment[];
+    items?: Item[];
+    audio_segments?: AudioSegment[];
   };
 }
 

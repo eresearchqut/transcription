@@ -10,6 +10,10 @@ import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
 import { decodeFilename } from "../utils/filename";
+import {
+  LanguageSpan,
+  languageSpansFromTranscript,
+} from "../components/transcriptLanguages";
 
 export interface DownloadProps {
   filename: string;
@@ -70,11 +74,8 @@ export const useDownload = () => {
       }).then((output) => output.url.href),
     );
 
-  const fetchTranscriptUrl = async (
-    objectKey: string,
-    format: "srt" | "vtt" | "docx",
-  ): Promise<string> => {
-    return getCurrentSession()
+  const downloadTranscriptJob = (objectKey: string): Promise<TranscriptJob> =>
+    getCurrentSession()
       .then(() =>
         downloadData({
           path: objectKey,
@@ -82,7 +83,13 @@ export const useDownload = () => {
       )
       .then((downloadDataOutput) => downloadDataOutput.result)
       .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
-      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
+      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob);
+
+  const fetchTranscriptUrl = async (
+    objectKey: string,
+    format: "srt" | "vtt" | "docx",
+  ): Promise<string> => {
+    return downloadTranscriptJob(objectKey)
       .then((transcriptJob) =>
         format === "docx"
           ? Packer.toBlob(transcriptDocument(transcriptJob))
@@ -91,6 +98,20 @@ export const useDownload = () => {
       .then((blob) =>
         format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
       );
+  };
+
+  const fetchTranscriptForPlayer = async (
+    objectKey: string,
+  ): Promise<{ url: string; languages: LanguageSpan[] }> => {
+    return downloadTranscriptJob(objectKey).then(async (transcriptJob) => {
+      const blob = new Blob([srtConvert(transcriptJob)], {
+        type: "text/plain",
+      });
+      return {
+        url: await toWebVTT(blob),
+        languages: languageSpansFromTranscript(transcriptJob),
+      };
+    });
   };
 
   // Translations are stored as a Transcribe-shaped JSON with translated SEGMENTS
@@ -166,6 +187,7 @@ export const useDownload = () => {
   return {
     fetchMediaUrl,
     fetchTranscriptUrl,
+    fetchTranscriptForPlayer,
     fetchTranslatedTranscriptUrl,
     downloadFile,
     downloadTranscript,
