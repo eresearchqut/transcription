@@ -128,7 +128,7 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
               </GridItem>
               {speakerColumn && (
                 <GridItem
-                  onClick={() => seek(cue.startTime)}
+                  onClick={() => handleSeek(cue.startTime)}
                   cursor={"pointer"}
                   whiteSpace={"nowrap"}
                   fontWeight={"medium"}
