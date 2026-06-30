@@ -4,6 +4,7 @@ import {
   AlertRoot,
   AlertTitle,
   Box,
+  Button,
   Flex,
   HStack,
   IconButton,
@@ -240,7 +241,7 @@ const Transcriptions: NextPageWithLayout = () => {
             <>
               <Alert status="info" title={"Getting Started"}>
                 <Box>
-                  <Link as={NextLink} href={"/transcription/upload"}>
+                  <Link as={NextLink} href={"/"}>
                     Upload Media
                   </Link>{" "}
                   to start the transcription process.
@@ -284,7 +285,18 @@ const Transcriptions: NextPageWithLayout = () => {
 
 Transcriptions.getLayout = (page) => {
   return (
-    <AuthenticatedLayout pageTitle={"My Transcriptions"} isLanding={false}>
+    <AuthenticatedLayout
+      pageTitle={"My Transcriptions"}
+      headerAction={
+        <Button colorPalette={"blue"} asChild>
+          <NextLink href={"/"}>
+            <MappedIcon icon={"upload"} />
+            New transcription
+          </NextLink>
+        </Button>
+      }
+      isLanding={false}
+    >
       <TranscriptionsContextProvider>{page}</TranscriptionsContextProvider>
     </AuthenticatedLayout>
   );

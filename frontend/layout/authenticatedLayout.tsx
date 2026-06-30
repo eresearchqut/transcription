@@ -5,7 +5,7 @@ import { Layout, LayoutProps } from "./layout";
 import { signOut } from "aws-amplify/auth";
 import { LoadingPage } from "@/components/loadingPage";
 
-export const AuthenticatedLayout: FunctionComponent<PropsWithChildren<Pick<LayoutProps, 'pageTitle' | 'isLanding' | 'contentMaxWidth'>>> = (
+export const AuthenticatedLayout: FunctionComponent<PropsWithChildren<Pick<LayoutProps, 'pageTitle' | 'headerAction' | 'isLanding' | 'contentMaxWidth'>>> = (
   {children, ...layoutProps}
 ) => {
 
