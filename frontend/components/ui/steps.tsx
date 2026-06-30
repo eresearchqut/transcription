@@ -38,7 +38,7 @@ const StepInfo = (props: StepInfoProps) => {
   const { title, description } = props;
   if (title && description) {
     return (
-      <Box>
+      <Box hideBelow={"md"}>
         {title && <ChakraSteps.Title>{title}</ChakraSteps.Title>}
         {description && (
           <ChakraSteps.Description>{description}</ChakraSteps.Description>
@@ -48,9 +48,11 @@ const StepInfo = (props: StepInfoProps) => {
   }
   return (
     <>
-      {title && <ChakraSteps.Title>{title}</ChakraSteps.Title>}
+      {title && <ChakraSteps.Title hideBelow={"md"}>{title}</ChakraSteps.Title>}
       {description && (
-        <ChakraSteps.Description>{description}</ChakraSteps.Description>
+        <ChakraSteps.Description hideBelow={"md"}>
+          {description}
+        </ChakraSteps.Description>
       )}
     </>
   );

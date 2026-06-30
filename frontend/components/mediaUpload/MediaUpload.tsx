@@ -2,7 +2,15 @@
 
 import { FunctionComponent, ReactNode, useState } from "react";
 import NextLink from "next/link";
-import { Box, Button, Group, Stack, Text, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Group,
+  Heading,
+  Stack,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
 import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import { TRANSCRIBE_QUOTAS } from "model";
 import {
@@ -21,6 +29,13 @@ import {
 import { MappedIcon } from "@/components/mappedIcon";
 
 export type { TranscribeProps };
+
+const STEP_TITLES = [
+  "Overview",
+  "Choose options",
+  "Choose files",
+  "Track progress",
+];
 
 const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
   props: {
@@ -104,6 +119,12 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onFilesPicked,
   };
 
+  const stepHeading = (index: number) => (
+    <Heading as={"h2"} size={"lg"} hideFrom={"md"}>
+      {STEP_TITLES[index]}
+    </Heading>
+  );
+
   return (
     <StepsRoot
       step={step}
@@ -114,14 +135,15 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
       colorPalette={"blue"}
     >
       <StepsList>
-        <StepsItem index={0} title={"Overview"} />
-        <StepsItem index={1} title={"Choose options"} />
-        <StepsItem index={2} title={"Choose files"} />
-        <StepsItem index={3} title={"Track progress"} />
+        <StepsItem index={0} title={STEP_TITLES[0]} />
+        <StepsItem index={1} title={STEP_TITLES[1]} />
+        <StepsItem index={2} title={STEP_TITLES[2]} />
+        <StepsItem index={3} title={STEP_TITLES[3]} />
       </StepsList>
 
       <StepsContent index={0}>
         <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(0)}
           <Box>
             <Text mb={3}>
               This service transcribes your audio and video files into text. You
@@ -143,7 +165,12 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               </Text>
             </Stack>
           </Box>
-          <Group justifyContent={"space-between"} alignItems={"center"}>
+          <Group
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            flexWrap={"wrap"}
+            gap={3}
+          >
             <Button colorPalette={"gray"} variant={"solid"} asChild>
               <NextLink href={"/classic"}>Revert to classic view</NextLink>
             </Button>
@@ -157,6 +184,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
       <StepsContent index={1}>
         <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(1)}
           <TranscriptionOptions
             identityId={identityId}
             onChange={setOptionsValue}
@@ -181,6 +209,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
       <StepsContent index={2}>
         <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(2)}
           <OptionsSummary options={optionsValue.props} />
           <FilePicker
             key={filePickerKey}
@@ -215,6 +244,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 
       <StepsContent index={3}>
         <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(3)}
           <OptionsSummary options={optionsValue.props} />
           {children ?? (
             <Box>
@@ -224,8 +254,8 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               </Text>
             </Box>
           )}
-          <Group justifyContent={"space-between"}>
-            <Group>
+          <Group justifyContent={"space-between"} flexWrap={"wrap"} gap={3}>
+            <Group flexWrap={"wrap"} gap={3}>
               <Button
                 variant={"outline"}
                 disabled={!uploadsComplete}

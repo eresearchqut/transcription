@@ -68,8 +68,12 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
     <Grid
       templateAreas={templateAreas}
       gridTemplateRows={gridTemplateRows}
+      gridTemplateColumns={"minmax(0, 1fr)"}
       transition="width .4s ease-in-out"
       minH={"100vh"}
+      width={"100%"}
+      maxWidth={"100vw"}
+      overflowX={"hidden"}
       alignContent={"stretch"}
       bgColor={{ base: "gray.100", _dark: "gray.900" }}
       {...(isLanding && landingBackgroundProps)}
@@ -86,11 +90,17 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
             isAuthenticated={isAuthenticated}
             onLogin={onLogin}
             onLogout={onLogout}
+            navigationItems={navigationItems}
           />
         </chakra.header>
       </GridItem>
       {isAuthenticated && (
-        <Box width={"100%"} bgColor={"gray.800"} color={"white"}>
+        <Box
+          hideBelow={"md"}
+          width={"100%"}
+          bgColor={"gray.800"}
+          color={"white"}
+        >
           <Stack
             direction="row"
             alignItems={"center"}

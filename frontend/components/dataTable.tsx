@@ -236,16 +236,14 @@ export const DataTable = (props: DataTableProps) => {
             </Flex>
           </Flex>
           <Flex align={"flex-start"}>
-            <Flex alignItems="center">
-              <Text flexShrink="0" mr={8}>
+            <Flex alignItems="center" flexWrap={"wrap"} gap={2} rowGap={2}>
+              <Text flexShrink="0">
                 Page {table.getState().pagination.pageIndex + 1} of{" "}
                 {table.getPageCount()}
               </Text>
               <Text flexShrink="0">Go to page:</Text>{" "}
               <NumberInputRoot
-                ml={2}
-                mr={4}
-                w={28}
+                w={20}
                 min={1}
                 max={table.getPageCount()}
                 onValueChange={(e: { value: any }) => {
