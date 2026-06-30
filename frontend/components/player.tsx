@@ -136,7 +136,10 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                   <Text as={"span"}>{speaker}</Text>
                 </GridItem>
               )}
-              <GridItem onClick={() => seek(cue.startTime)} cursor={"pointer"}>
+              <GridItem
+                onClick={() => handleSeek(cue.startTime)}
+                cursor={"pointer"}
+              >
                 {query && (
                   <Text as={isCurrent ? "u" : undefined}>
                     <Highlight
