@@ -17,9 +17,10 @@ export interface StepsItemProps
 export const StepsItem = React.forwardRef<HTMLDivElement, StepsItemProps>(
   function StepsItem(props, ref) {
     const { title, description, completedIcon, icon, ...rest } = props;
+    const accessibleName = typeof title === "string" ? title : undefined;
     return (
       <ChakraSteps.Item {...rest} ref={ref}>
-        <ChakraSteps.Trigger>
+        <ChakraSteps.Trigger aria-label={accessibleName}>
           <ChakraSteps.Indicator>
             <ChakraSteps.Status
               complete={completedIcon || <LuCheck />}
