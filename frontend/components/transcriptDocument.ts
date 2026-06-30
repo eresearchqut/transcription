@@ -121,7 +121,7 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
       type: WidthType.PERCENTAGE,
       size: 100,
     },
-    // DXA units (twentieths of a point); 8640 = default content width (12240pt page − 1800pt margins each side), split 12%/12%/76%
+    // DXA units (twentieths of a point); 8640 = default content width (12240 DXA page − 1800 DXA margins each side), split 12%/12%/76%
     columnWidths: [1037, 1037, 6566],
     // FIXED layout ensures the column grid is respected rather than auto-sized by content
     layout: TableLayoutType.FIXED,
