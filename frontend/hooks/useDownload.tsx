@@ -3,24 +3,24 @@ import { useAuth } from "../context/auth-context";
 import transcriptDocument, {
   TranscriptJob,
 } from "../components/transcriptDocument";
-import { segmentsToSrt, segmentsToText } from "../components/segmentSubtitles";
+import {
+  segmentsToSrt,
+  segmentsToText,
+  speakerLabels,
+} from "../components/segmentSubtitles";
 import { Packer } from "docx";
-import srtConvert from "aws-transcription-to-srt";
 import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
 import { useAnalytics } from "../context/analytics-context";
 import { decodeFilename } from "../utils/filename";
-import {
-  LanguageSpan,
-  languageSpansFromTranscript,
-} from "../components/transcriptLanguages";
+import { languageCodesFromTranscript } from "../components/transcriptLanguages";
 
 export interface DownloadProps {
   filename: string;
   objectKey: string;
 }
 
-export type TranscriptFormat = "srt" | "vtt" | "docx";
+export type TranscriptFormat = "srt" | "vtt" | "docx" | "txt";
 export interface DownloadTranscriptProps extends DownloadProps {
   format: TranscriptFormat;
 }
@@ -87,14 +87,23 @@ export const useDownload = () => {
 
   const fetchTranscriptUrl = async (
     objectKey: string,
-    format: "srt" | "vtt" | "docx",
+    format: TranscriptFormat,
   ): Promise<string> => {
     return downloadTranscriptJob(objectKey)
-      .then((transcriptJob) =>
-        format === "docx"
-          ? Packer.toBlob(transcriptDocument(transcriptJob))
-          : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
-      )
+      .then((transcriptJob) => {
+        switch (format) {
+          case "docx":
+            return Packer.toBlob(transcriptDocument(transcriptJob));
+          case "txt":
+            return new Blob([segmentsToText(transcriptJob)], {
+              type: "text/plain",
+            });
+          default:
+            return new Blob([segmentsToSrt(transcriptJob)], {
+              type: "text/plain",
+            });
+        }
+      })
       .then((blob) =>
         format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
       );
@@ -102,25 +111,33 @@ export const useDownload = () => {
 
   const fetchTranscriptForPlayer = async (
     objectKey: string,
-  ): Promise<{ url: string; languages: LanguageSpan[] }> => {
+  ): Promise<{
+    url: string;
+    languages: (string | undefined)[];
+    speakers: string[];
+  }> => {
     return downloadTranscriptJob(objectKey).then(async (transcriptJob) => {
-      const blob = new Blob([srtConvert(transcriptJob)], {
-        type: "text/plain",
-      });
+      const blob = new Blob(
+        [segmentsToSrt(transcriptJob, { includeSpeakers: false })],
+        {
+          type: "text/plain",
+        },
+      );
       return {
         url: await toWebVTT(blob),
-        languages: languageSpansFromTranscript(transcriptJob),
+        languages: languageCodesFromTranscript(transcriptJob),
+        speakers: speakerLabels(transcriptJob),
       };
     });
   };
 
   // Translations are stored as a Transcribe-shaped JSON with translated SEGMENTS
-  // (no word-level items), so subtitles are rebuilt from segment timings rather
-  // than via the word-based `srtConvert` used for the original transcript.
+  // (no word-level items), so subtitles are rebuilt from segment timings, the
+  // same segment-based approach used for the original transcript.
   const fetchTranslatedTranscriptUrl = async (
     objectKey: string,
     format: TranslatedTranscriptFormat,
-    { includeSpeakers = true }: { includeSpeakers?: boolean } = {},
+    { includeSpeakers = false }: { includeSpeakers?: boolean } = {},
   ): Promise<string> => {
     return getCurrentSession()
       .then(() =>

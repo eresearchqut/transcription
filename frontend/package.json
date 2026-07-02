@@ -26,7 +26,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/table-core": "^8.21.3",
     "aws-amplify": "^6.16.2",
-    "aws-transcription-to-srt": "^1.0.6",
     "chakra-react-select": "^6.1.1",
     "date-fns": "^4.1.0",
     "docx": "^9.5.1",

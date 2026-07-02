@@ -12,27 +12,25 @@ import {
   Grid,
   GridItem,
   Highlight,
+  HStack,
   Input,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { InputGroup } from "./ui/input-group";
+import { Switch } from "./ui/switch";
 import { Tooltip } from "./ui/tooltip";
 import { MappedIcon } from "./mappedIcon";
 import { useAnalytics } from "../context/analytics-context";
-import {
-  LanguageSpan,
-  isMultilingual,
-  languageCodeAt,
-  languageName,
-} from "./transcriptLanguages";
+import { isMultilingual, languageName } from "./transcriptLanguages";
 
 export interface PlayerProps {
   audio: string;
   transcript: string;
   preload?: boolean;
   query?: string;
-  languages?: LanguageSpan[];
+  languages?: (string | undefined)[];
+  speakers?: string[];
 }
 
 export interface TranscriptionProps {
@@ -40,7 +38,10 @@ export interface TranscriptionProps {
   seek: (seconds: number) => void;
   currentTime: number;
   query?: string;
-  languages?: LanguageSpan[];
+  languages?: (string | undefined)[];
+  speakers?: string[];
+  showSpeakers?: boolean;
+  showLanguages?: boolean;
 }
 
 export const Transcription: FunctionComponent<TranscriptionProps> = ({
@@ -49,6 +50,9 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
   currentTime,
   query,
   languages,
+  speakers,
+  showSpeakers = false,
+  showLanguages = false,
 }) => {
   const formatTime = (t: number): string => {
     let minutes: string | number = Math.floor(t / 60);
@@ -71,20 +75,26 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
     seek(seconds);
   };
 
-  const languageSpans = languages ?? [];
-  const showLanguages = isMultilingual(languageSpans);
+  const languageCodes = languages ?? [];
+  const speakerLabels = speakers ?? [];
 
   if (track?.cues) {
+    const speakerColumn = showSpeakers && speakerLabels.some(Boolean);
     return (
-      <Grid templateColumns="max-content 1fr" gap={2} mt={6}>
+      <Grid
+        templateColumns={
+          speakerColumn ? "max-content max-content 1fr" : "max-content 1fr"
+        }
+        gap={2}
+        mt={6}
+      >
         {Array.from(Array(track?.cues.length).keys()).map((index) => {
           const cues = track?.cues as TextTrackCueList;
           const cue = cues[index] as TextTrackCue & { text: string };
           const isCurrent =
             currentTime >= cue.startTime && currentTime < cue.endTime;
-          const languageCode = showLanguages
-            ? languageCodeAt(languageSpans, cue.startTime)
-            : undefined;
+          const languageCode = showLanguages ? languageCodes[index] : undefined;
+          const speaker = speakerLabels[index];
 
           return (
             <Fragment key={index}>
@@ -116,7 +126,30 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                   </Tooltip>
                 )}
               </GridItem>
-              <GridItem onClick={() => seek(cue.startTime)} cursor={"pointer"}>
+              {speakerColumn && (
+                <GridItem
+                  onClick={() => handleSeek(cue.startTime)}
+                  cursor={"pointer"}
+                  whiteSpace={"nowrap"}
+                  display={"flex"}
+                  alignItems={"flex-start"}
+                >
+                  {speaker && (
+                    <Badge
+                      size={"sm"}
+                      variant={"surface"}
+                      colorPalette={"gray"}
+                      minW={"max-content"}
+                    >
+                      {speaker}
+                    </Badge>
+                  )}
+                </GridItem>
+              )}
+              <GridItem
+                onClick={() => handleSeek(cue.startTime)}
+                cursor={"pointer"}
+              >
                 {query && (
                   <Text as={isCurrent ? "u" : undefined}>
                     <Highlight
@@ -146,6 +179,10 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [tries, setTries] = useState<number>(0);
   const [query, setQuery] = useState<string>(props.query || "");
+  const hasSpeakers = (props.speakers ?? []).some(Boolean);
+  const multilingual = isMultilingual(props.languages ?? []);
+  const [showSpeakers, setShowSpeakers] = useState(false);
+  const [showLanguages, setShowLanguages] = useState(true);
   const audio = useRef<HTMLAudioElement>(null);
   const track = useRef<HTMLTrackElement>(null);
 
@@ -184,6 +221,29 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
         <track default kind="subtitles" src={props.transcript} ref={track} />
       </audio>
 
+      {(hasSpeakers || multilingual) && (
+        <HStack gap={6} flexShrink={0}>
+          {hasSpeakers && (
+            <Switch
+              checked={showSpeakers}
+              onCheckedChange={(e) => setShowSpeakers(e.checked)}
+              size={"sm"}
+            >
+              Show speaker label
+            </Switch>
+          )}
+          {multilingual && (
+            <Switch
+              checked={showLanguages}
+              onCheckedChange={(e) => setShowLanguages(e.checked)}
+              size={"sm"}
+            >
+              Show language label
+            </Switch>
+          )}
+        </HStack>
+      )}
+
       <InputGroup
         mt={2}
         flexShrink={0}
@@ -203,6 +263,9 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
             query={query}
             currentTime={currentTime}
             languages={props.languages}
+            speakers={props.speakers}
+            showSpeakers={showSpeakers}
+            showLanguages={showLanguages}
           />
         )}
       </Box>

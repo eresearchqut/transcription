@@ -2,7 +2,6 @@ import * as React from "react";
 import { FunctionComponent } from "react";
 import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
 import Player from "../player";
-import type { LanguageSpan } from "../transcriptLanguages";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -24,7 +23,8 @@ export interface MediaPlayerDrawerProps
   mediaUrl: string;
   transcriptUrl: string;
   summary?: string;
-  languages?: LanguageSpan[];
+  languages?: (string | undefined)[];
+  speakers?: string[];
 }
 
 const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
@@ -32,6 +32,7 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   transcriptUrl,
   summary,
   languages,
+  speakers,
   open,
   onOpenChange,
   ...drawerProps
@@ -42,7 +43,7 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
     <DrawerRoot
       placement="end"
       finalFocusEl={() => finalRef.current}
-      size={"md"}
+      size={"lg"}
       open={open}
       onOpenChange={onOpenChange}
       {...drawerProps}
@@ -78,6 +79,7 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
                 audio={mediaUrl}
                 transcript={transcriptUrl}
                 languages={languages}
+                speakers={speakers}
               />
             </Box>
           )}

@@ -29,6 +29,7 @@ export interface AudioSegment {
   end_time: string;
   items: number[];
   language_code?: string;
+  speaker_label?: string;
 }
 
 export interface Timed {
@@ -105,6 +106,19 @@ const formatTime = (time: string) => {
   );
 };
 
+const documentSegments = (
+  job: TranscriptJob,
+): { start_time: string; end_time: string; alternatives: Alternative[] }[] => {
+  if (job.results.segments?.length) return job.results.segments;
+  return (job.results.audio_segments ?? [])
+    .filter((segment) => segment.transcript.trim().length > 0)
+    .map((segment) => ({
+      start_time: segment.start_time,
+      end_time: segment.end_time,
+      alternatives: [{ transcript: segment.transcript }],
+    }));
+};
+
 const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
   const formatSpeakerLabel = (startTime: string, endTime: string) => {
     const speakerLabel = job.results.speaker_labels.segments.find(
@@ -151,7 +165,7 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
           }),
         ],
       }),
-      ...job.results.segments
+      ...documentSegments(job)
         .map((segment) =>
           (withAlternatives
             ? segment.alternatives
