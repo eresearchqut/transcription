@@ -19,15 +19,15 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
       - name: Use Node 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -35,7 +35,7 @@ jobs:
         run: pnpm install
       - name: Build dependencies
         run: pnpm build
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ap-southeast-2
           role-to-assume: ${{ secrets.API_ROLE_ARN }}
@@ -52,7 +52,7 @@ jobs:
         run: aws cloudformation describe-stacks --stack-name ${{ vars.ENVIRONMENT }}-transcription --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.production
       - name: Build frontend
         run: pnpm --filter frontend build
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           aws-region: ap-southeast-2
           role-to-assume: ${{ secrets.FRONTEND_ROLE_ARN }}
