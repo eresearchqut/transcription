@@ -1,7 +1,7 @@
-import { FunctionComponent } from "react";
-import { Props as SelectProps, Select } from "chakra-react-select";
-import { SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE } from "model";
+import { Select, type Props as SelectProps } from "chakra-react-select";
 import { isArray } from "lodash";
+import { SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE } from "model";
+import type { FunctionComponent } from "react";
 
 export interface LanguageInputProps
   extends Omit<SelectProps, "options" | "onChange"> {

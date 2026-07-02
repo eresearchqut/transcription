@@ -1,5 +1,5 @@
-import { FunctionComponent, PropsWithChildren } from "react";
 import { HStack, Text } from "@chakra-ui/react";
+import type { FunctionComponent, PropsWithChildren } from "react";
 import { MappedIcon } from "@/components/mappedIcon";
 
 export interface NewFeatureProps {

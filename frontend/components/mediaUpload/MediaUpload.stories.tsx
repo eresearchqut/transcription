@@ -1,5 +1,5 @@
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { MediaUpload } from "../mediaUpload";
-import { Meta, StoryObj } from "@storybook/nextjs";
 
 const meta = {
   title: "Forms/MediaUpload",

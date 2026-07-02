@@ -1,5 +1,5 @@
-import React, { Fragment, FunctionComponent } from "react";
 import { Button, Flex, Spacer, Text, VStack } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
 import { ExternalLink } from "../externalLink";
 import { MappedIcon } from "../mappedIcon";
 
@@ -30,15 +30,14 @@ export const Footer: FunctionComponent = () => {
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.
         </ExternalLink>
-        <Fragment>
-          <Text hideFrom={"md"}>
-            TEQSA <TeqsaLink /> | CRICOS No. 00213J
-          </Text>
-          <Text hideBelow={"md"}>
-            TEQSA Provider ID <TeqsaLink /> Australian University | CRICOS No.
-            00213J
-          </Text>
-        </Fragment>
+
+        <Text hideFrom={"md"}>
+          TEQSA <TeqsaLink /> | CRICOS No. 00213J
+        </Text>
+        <Text hideBelow={"md"}>
+          TEQSA Provider ID <TeqsaLink /> Australian University | CRICOS No.
+          00213J
+        </Text>
       </VStack>
       <Spacer display={{ base: "none", md: "block" }} />
       <ExternalLink

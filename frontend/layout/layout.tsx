@@ -1,21 +1,20 @@
-import React, { FunctionComponent, PropsWithChildren, ReactNode } from "react";
 import {
   Box,
   Card,
+  chakra,
   Flex,
   Grid,
   GridItem,
   Heading,
   SkipNavLink,
   Stack,
-  chakra,
 } from "@chakra-ui/react";
-
-import { Navigation } from "../components/navigation";
-import { Footer } from "../components/footer";
-import loginImage from "@/public/login.jpg";
-import { MappedIcon } from "@/components/mappedIcon";
+import type { FunctionComponent, PropsWithChildren, ReactNode } from "react";
 import { Header } from "@/components/header";
+import { MappedIcon } from "@/components/mappedIcon";
+import loginImage from "@/public/login.jpg";
+import { Footer } from "../components/footer";
+import { Navigation } from "../components/navigation";
 
 export interface LayoutProps {
   pageTitle?: string;

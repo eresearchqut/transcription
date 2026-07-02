@@ -25,11 +25,11 @@ xray.captureAWSv3Client(s3client);
 
 export const handler = async (event: S3Event) => {
   let uploadsCount = 0;
-  for (const record of event["Records"]) {
+  for (const record of event.Records) {
     try {
-      const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
-      const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
-      const bucketName = record["s3"]["bucket"]["name"];
+      const objectKey = decodeURIComponent(record.s3.object.key);
+      const key = record.s3.object.key.replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
+      const bucketName = record.s3.bucket.name;
       const match = uploadPattern.exec(key);
 
       if (!match) {
@@ -41,7 +41,7 @@ export const handler = async (event: S3Event) => {
 
       const headResponse = await s3client.send(
         new HeadObjectCommand({
-          Bucket: record["s3"]["bucket"]["name"],
+          Bucket: record.s3.bucket.name,
           Key: objectKey,
         }),
       );
@@ -50,8 +50,7 @@ export const handler = async (event: S3Event) => {
         continue;
       }
 
-      const languages: string[] =
-        headResponse.Metadata["languages"].split(/,\s?/);
+      const languages: string[] = headResponse.Metadata.languages.split(/,\s?/);
       const enablePiiRedaction: boolean = JSON.parse(
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
@@ -116,7 +115,7 @@ export const handler = async (event: S3Event) => {
           identityId,
           jobId,
           outputKey,
-          record["s3"],
+          record.s3,
           transcriptionResponse,
           headResponse.Metadata,
         ).then(() => uploadsCount++);

@@ -1,5 +1,5 @@
-import { FunctionComponent } from "react";
-import { Center, Progress, ProgressRootProps } from "@chakra-ui/react";
+import { Center, Progress, type ProgressRootProps } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
 
 export interface LoadingPageProps extends Pick<ProgressRootProps, "size"> {
   label?: string;

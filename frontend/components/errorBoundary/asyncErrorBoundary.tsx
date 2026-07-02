@@ -1,4 +1,8 @@
-import { FunctionComponent, PropsWithChildren, useEffect } from "react";
+import {
+  type FunctionComponent,
+  type PropsWithChildren,
+  useEffect,
+} from "react";
 import { useErrorBoundary } from "react-error-boundary";
 
 const AsyncErrorBoundary: FunctionComponent<PropsWithChildren> = ({

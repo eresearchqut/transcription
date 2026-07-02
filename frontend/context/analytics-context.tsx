@@ -1,12 +1,14 @@
+import UmamiAnalytics, {
+  type UmamiAnalyticsProps,
+} from "@danielgtmn/umami-react";
 import {
-  Context,
+  type Context,
   createContext,
-  FunctionComponent,
-  PropsWithChildren,
+  type FunctionComponent,
+  type PropsWithChildren,
   useCallback,
   useContext,
 } from "react";
-import UmamiAnalytics, { UmamiAnalyticsProps } from "@danielgtmn/umami-react";
 
 export interface AnalyticsContextOperations {
   track: (
@@ -19,12 +21,10 @@ export interface AnalyticsContextOperations {
   ) => void;
 }
 
-const AnalyticsContext: Context<AnalyticsContextOperations> = createContext(
-  {
-    track: () => undefined,
-    identify: () => undefined
-  } as AnalyticsContextOperations,
-);
+const AnalyticsContext: Context<AnalyticsContextOperations> = createContext({
+  track: () => undefined,
+  identify: () => undefined,
+} as AnalyticsContextOperations);
 
 export const useAnalytics = (): AnalyticsContextOperations => {
   return useContext<AnalyticsContextOperations>(AnalyticsContext);
@@ -34,9 +34,9 @@ const props: UmamiAnalyticsProps = {
   websiteId: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
   url: process.env.NEXT_PUBLIC_UMAMI_URL,
   onlyInProduction: false,
-  scriptAttributes:{
-    'data-auto-track': 'true'
-  }
+  scriptAttributes: {
+    "data-auto-track": "true",
+  },
 };
 
 const AnalyticsProvider: FunctionComponent<PropsWithChildren> = ({
@@ -72,4 +72,4 @@ const AnalyticsProvider: FunctionComponent<PropsWithChildren> = ({
   );
 };
 
-export { AnalyticsProvider, AnalyticsContext };
+export { AnalyticsContext, AnalyticsProvider };

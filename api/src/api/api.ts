@@ -1,12 +1,17 @@
 import xray from "aws-xray-sdk";
 import bodyParser from "body-parser";
 import cors from "cors";
-import express, { ErrorRequestHandler } from "express";
+import express, { type ErrorRequestHandler } from "express";
 
 import transcriptionRoutes from "../routes/transcriptionRoutes";
 import userRoutes from "../routes/userRoutes";
 
-const errorHandler: ErrorRequestHandler = (error, request, response, _next) => {
+const errorHandler: ErrorRequestHandler = (
+  error,
+  _request,
+  response,
+  _next,
+) => {
   console.error(error.stack);
   response
     .status(500)

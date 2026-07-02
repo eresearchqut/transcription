@@ -1,12 +1,4 @@
 import {
-  FunctionComponent,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState,
-} from "react";
-import { DropzoneOptions, FileRejection, useDropzone } from "react-dropzone";
-import {
   Box,
   Button,
   Group,
@@ -18,10 +10,22 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { Quotas } from "../../components/quotas";
 import { TRANSCRIBE_QUOTAS } from "model";
-import { Alert } from "@/components/ui/alert";
+import {
+  type FunctionComponent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+import {
+  type DropzoneOptions,
+  type FileRejection,
+  useDropzone,
+} from "react-dropzone";
 import { MappedIcon } from "@/components/mappedIcon";
+import { Alert } from "@/components/ui/alert";
+import { Quotas } from "../../components/quotas";
 
 export interface FilePickerProps
   extends Pick<
@@ -42,17 +46,17 @@ export const bytesToSize = (bytes: number, precision = 0): string => {
   const terabyte = gigabyte * 1024;
 
   if (bytes >= 0 && bytes < kilobyte) {
-    return bytes + " B";
+    return `${bytes} B`;
   } else if (bytes >= kilobyte && bytes < megabyte) {
-    return (bytes / kilobyte).toFixed(precision) + "KB";
+    return `${(bytes / kilobyte).toFixed(precision)}KB`;
   } else if (bytes >= megabyte && bytes < gigabyte) {
-    return (bytes / megabyte).toFixed(precision) + "MB";
+    return `${(bytes / megabyte).toFixed(precision)}MB`;
   } else if (bytes >= gigabyte && bytes < terabyte) {
-    return (bytes / gigabyte).toFixed(precision) + "GB";
+    return `${(bytes / gigabyte).toFixed(precision)}GB`;
   } else if (bytes >= terabyte) {
-    return (bytes / terabyte).toFixed(precision) + "TB";
+    return `${(bytes / terabyte).toFixed(precision)}TB`;
   } else {
-    return bytes + " B";
+    return `${bytes} B`;
   }
 };
 

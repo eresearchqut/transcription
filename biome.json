@@ -14,7 +14,7 @@
       "!**/next-env.d.ts",
       "!**/cdk.out",
       "!**/storybook-static",
-      "!frontend/public/**",
+      "!frontend/public",
       "!model/src/supported_transcription_languages.json",
       "!model/src/supported_translation_languages.json"
     ]

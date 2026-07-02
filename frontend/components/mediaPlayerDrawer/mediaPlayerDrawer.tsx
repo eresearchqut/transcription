@@ -1,7 +1,14 @@
+import { Box, Button, type DrawerRootProps } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
 import * as React from "react";
-import { FunctionComponent } from "react";
-import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
+import {
+  AccordionItem,
+  AccordionItemContent,
+  AccordionItemTrigger,
+  AccordionRoot,
+} from "@/components/ui/accordion";
 import Player from "../player";
+import { Alert } from "../ui/alert";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -10,13 +17,6 @@ import {
   DrawerFooter,
   DrawerRoot,
 } from "../ui/drawer";
-import { Alert } from "../ui/alert";
-import {
-  AccordionItem,
-  AccordionItemContent,
-  AccordionItemTrigger,
-  AccordionRoot,
-} from "@/components/ui/accordion";
 
 export interface MediaPlayerDrawerProps
   extends Omit<DrawerRootProps, "children"> {

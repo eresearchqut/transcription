@@ -6,15 +6,20 @@ import {
 import {
   GetTranscriptionJobCommand,
   TranscribeClient,
-  TranscriptionJob,
+  type TranscriptionJob,
 } from "@aws-sdk/client-transcribe";
 import {
   StartTextTranslationJobCommand,
+  type StartTextTranslationJobCommandOutput,
   TranslateClient,
 } from "@aws-sdk/client-translate";
 
 import xray from "aws-xray-sdk";
-import { Transcription, enableTranslation, toTranslateSourceCode } from "model";
+import {
+  enableTranslation,
+  type Transcription,
+  toTranslateSourceCode,
+} from "model";
 
 import {
   getTranscription,
@@ -22,8 +27,8 @@ import {
   translationJob as updateTranslationJob,
   translationKey as updateTranslationKey,
 } from "../service/transcriptionService";
-import { TranscriptDocument, segmentTexts } from "../util/transcript";
-import { XLIFF_FILE_NAME, buildXliff } from "../util/xliff";
+import { segmentTexts, type TranscriptDocument } from "../util/transcript";
+import { buildXliff, XLIFF_FILE_NAME } from "../util/xliff";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
@@ -148,7 +153,7 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
     }),
   );
 
-  let startResponse;
+  let startResponse: StartTextTranslationJobCommandOutput | undefined;
   try {
     startResponse = await translateClient.send(
       new StartTextTranslationJobCommand({

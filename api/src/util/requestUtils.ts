@@ -1,4 +1,4 @@
-import { Request } from "express";
+import type { Request } from "express";
 
 interface Claims {
   username?: string;
@@ -31,16 +31,12 @@ export const getClaims = (request: Request): Claims => {
 export const getUserName = (request: Request) => {
   let username = "anonymous";
   const claims = getClaims(request);
-  if (claims["username"]) {
+  if (claims.username) {
     username = claims.username;
   } else if (claims["custom:username"]) {
     username = claims["custom:username"];
-  } else if (
-    claims["identities"] &&
-    claims["identities"][0] &&
-    claims["identities"][0]["userId"]
-  ) {
-    username = claims["identities"][0]["userId"];
+  } else if (claims.identities?.[0]?.userId) {
+    username = claims.identities[0].userId;
   } else if (claims["cognito:username"]) {
     username = claims["cognito:username"];
   } else {

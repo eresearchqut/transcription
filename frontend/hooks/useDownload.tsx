@@ -1,19 +1,19 @@
+import { downloadData, getUrl } from "aws-amplify/storage";
+import { Packer } from "docx";
 import { useState } from "react";
-import { useAuth } from "../context/auth-context";
-import transcriptDocument, {
-  TranscriptJob,
-} from "../components/transcriptDocument";
+import toWebVTT from "srt-webvtt";
 import {
   segmentsToSrt,
   segmentsToText,
   speakerLabels,
 } from "../components/segmentSubtitles";
-import { Packer } from "docx";
-import toWebVTT from "srt-webvtt";
-import { downloadData, getUrl } from "aws-amplify/storage";
-import { useAnalytics } from "../context/analytics-context";
-import { decodeFilename } from "../utils/filename";
+import transcriptDocument, {
+  type TranscriptJob,
+} from "../components/transcriptDocument";
 import { languageCodesFromTranscript } from "../components/transcriptLanguages";
+import { useAnalytics } from "../context/analytics-context";
+import { useAuth } from "../context/auth-context";
+import { decodeFilename } from "../utils/filename";
 
 export interface DownloadProps {
   filename: string;

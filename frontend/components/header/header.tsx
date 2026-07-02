@@ -1,4 +1,3 @@
-import React, { FunctionComponent, ReactElement } from "react";
 import {
   Box,
   Heading,
@@ -11,7 +10,9 @@ import {
   Text,
 } from "@chakra-ui/react";
 import NextLink from "next/link";
+import type { FunctionComponent, ReactElement } from "react";
 import { MappedIcon } from "@/components/mappedIcon";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import {
   ColorModeButton,
   ColorModeIcon,
@@ -24,9 +25,7 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@/components/ui/menu";
-
 import logo from "@/public/logo.png";
-import { Button, ButtonProps } from "@/components/ui/button";
 
 export interface NavigationItem {
   icon: ReactElement;

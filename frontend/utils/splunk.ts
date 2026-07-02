@@ -9,7 +9,7 @@ import type { SplunkOtelWebConfig } from "@splunk/otel-web";
  * from client-only code paths keeps them out of the server module graph.
  */
 
-type SplunkOtelWeb = (typeof import("@splunk/otel-web"))["default"];
+type SplunkOtelWeb = typeof import("@splunk/otel-web")["default"];
 
 let splunkOtelWeb: SplunkOtelWeb | undefined;
 let initialised = false;

@@ -1,6 +1,6 @@
-import { Meta, StoryObj } from "@storybook/nextjs";
-import { Header } from "./";
 import { Box } from "@chakra-ui/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import { Header } from "./";
 
 export default {
   title: "Components/Header",

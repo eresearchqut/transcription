@@ -1,4 +1,4 @@
-import { TranscriptionJob } from "@aws-sdk/client-transcribe";
+import type { TranscriptionJob } from "@aws-sdk/client-transcribe";
 
 import { jobStatusUpdated } from "../service/transcriptionService";
 
@@ -10,7 +10,7 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
   }
 
   const [identityId, jobId] = transcriptionJobName.split("_");
-  if (identityId === undefined || jobId == undefined) {
+  if (identityId === undefined || jobId === undefined) {
     console.error({ identityId, jobId });
   }
   await jobStatusUpdated(identityId, jobId, event);

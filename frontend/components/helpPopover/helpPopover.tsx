@@ -1,6 +1,6 @@
-import React, { FunctionComponent } from "react";
 import { IconButton } from "@chakra-ui/react";
-import { MappedIcon } from "../mappedIcon";
+import type React from "react";
+import type { FunctionComponent } from "react";
 import {
   PopoverArrow,
   PopoverBody,
@@ -10,6 +10,7 @@ import {
   PopoverRoot,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { MappedIcon } from "../mappedIcon";
 
 export interface HelpPopoverProps {
   ariaLabel: string;

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs";
-import { ErrorMessage } from "./";
 import { ErrorBoundary } from "react-error-boundary";
+import { ErrorMessage } from "./";
 
 export default {
   title: "Components/ErrorMessage",

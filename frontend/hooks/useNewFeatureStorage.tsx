@@ -1,4 +1,4 @@
-import { add, Duration } from "date-fns";
+import { add, type Duration } from "date-fns";
 import { get, keys, pick } from "lodash";
 
 interface FeatureDisplayConfig {

@@ -1,9 +1,9 @@
-import { FunctionComponent } from "react";
-import { formatDuration } from "date-fns";
 import { Heading, Stack, StackSeparator, Text } from "@chakra-ui/react";
-import { bytesToSize } from "../../inputs/filePicker";
+import { formatDuration } from "date-fns";
 import { isEmpty, lowerFirst, upperFirst } from "lodash";
-import { TranscribeQuotaProps } from "model";
+import type { TranscribeQuotaProps } from "model";
+import type { FunctionComponent } from "react";
+import { bytesToSize } from "../../inputs/filePicker";
 
 export interface QuotasProps extends Omit<TranscribeQuotaProps, "accept"> {
   asTextOnly?: boolean;

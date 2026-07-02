@@ -13,9 +13,9 @@ const s3Client = new S3Client({ region });
 xray.captureAWSv3Client(s3Client);
 
 export const handler: S3Handler = async (event) => {
-  for (const record of event["Records"]) {
-    const key = record["s3"]["object"]["key"];
-    const bucketName = record["s3"]["bucket"]["name"];
+  for (const record of event.Records) {
+    const key = record.s3.object.key;
+    const bucketName = record.s3.bucket.name;
 
     // transcription/{identityId}/{fileName}
     const match = key.match(outputPattern);
@@ -40,5 +40,5 @@ export const handler: S3Handler = async (event) => {
     }
   }
 
-  console.log(`Processed ${event["Records"].length} uploads`);
+  console.log(`Processed ${event.Records.length} uploads`);
 };

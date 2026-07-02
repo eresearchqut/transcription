@@ -17,8 +17,8 @@ import { sdkStreamMixin } from "@smithy/util-stream";
 
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
-import { Transcription } from "model";
-import { Readable } from "stream";
+import { Readable } from "node:stream";
+import type { Transcription } from "model";
 
 import { handler } from "../../src/event/translateStartHandler";
 import dynamoDBClient from "../../src/repository/dynamoDBClient";

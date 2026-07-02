@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/nextjs";
-import { AsyncErrorBoundary } from "./";
 import { Text } from "@chakra-ui/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/errorMessage";
+import { AsyncErrorBoundary } from "./";
 
 export default {
   title: "Components/AsyncErrorBoundary",
@@ -21,7 +21,7 @@ const PromiseRejectComponent = () => {
   new Promise((_, reject) => {
     reject(new Error("Unexpected promise rejection"));
   }).then();
-  return <></>;
+  return null;
 };
 
 export const Default: Story = {

@@ -1,18 +1,20 @@
-import { NextPageWithLayout } from "@/pages/_app";
-import { useState } from "react";
-
-import NextLink from "next/link";
-import { v4 as uuid } from "uuid";
-import { useAuth } from "../context/auth-context";
 import { Link, Text, VStack } from "@chakra-ui/react";
-import { TranscriptionProgress } from "@/components/transcriptionProgress";
-import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
-import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
-import { LegacyMediaUpload, TranscribeProps } from "@/components/mediaUpload";
-import { OpenChangeDetails } from "@zag-js/dialog";
+import type { OpenChangeDetails } from "@zag-js/dialog";
 import { uploadData } from "aws-amplify/storage";
-import { useAnalytics } from "../context/analytics-context";
 import { pick } from "lodash";
+import NextLink from "next/link";
+import { useState } from "react";
+import { v4 as uuid } from "uuid";
+import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
+import type { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
+import {
+  LegacyMediaUpload,
+  type TranscribeProps,
+} from "@/components/mediaUpload";
+import { TranscriptionProgress } from "@/components/transcriptionProgress";
+import type { NextPageWithLayout } from "@/pages/_app";
+import { useAnalytics } from "../context/analytics-context";
+import { useAuth } from "../context/auth-context";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
 import { encodeFilename } from "../utils/filename";
 
@@ -141,7 +143,9 @@ const ClassicUpload: NextPageWithLayout = () => {
       );
     };
 
-    files.forEach((file) => uploadFile(file, transcribeProps));
+    files.forEach((file) => {
+      void uploadFile(file, transcribeProps);
+    });
   };
 
   return (

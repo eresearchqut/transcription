@@ -1,6 +1,5 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -8,20 +7,21 @@ import {
   Code,
   Heading,
   Stack,
-  StackProps,
+  type StackProps,
   Text,
 } from "@chakra-ui/react";
+import type { CheckedChangeDetails } from "@zag-js/switch";
 import { isArray } from "lodash";
-import { LanguageInput } from "../../inputs/languageInput";
-import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
-import { Field } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
-import { Alert } from "@/components/ui/alert";
-import { CheckedChangeDetails } from "@zag-js/switch";
+import { type FunctionComponent, useEffect, useState } from "react";
 import { ExternalLink } from "@/components/externalLink";
 import { NewFeature } from "@/components/newFeature";
-import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
+import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
+import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
+import { LanguageInput } from "../../inputs/languageInput";
+import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
 
 export interface TranscribeProps {
   languages: string[];
@@ -105,6 +105,9 @@ export const TranscriptionOptions: FunctionComponent<
     generateSummary,
     enableTranslation,
     targetLanguage,
+    piiLanguageValid,
+    onChange,
+    languageSizeLimitExceeded,
   ]);
 
   return (

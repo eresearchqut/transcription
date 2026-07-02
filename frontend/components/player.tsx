@@ -1,11 +1,3 @@
-import React, {
-  Fragment,
-  FunctionComponent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
 import {
   Badge,
   Box,
@@ -17,12 +9,19 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
+import {
+  Fragment,
+  type FunctionComponent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useAnalytics } from "../context/analytics-context";
+import { MappedIcon } from "./mappedIcon";
+import { isMultilingual, languageName } from "./transcriptLanguages";
 import { InputGroup } from "./ui/input-group";
 import { Switch } from "./ui/switch";
 import { Tooltip } from "./ui/tooltip";
-import { MappedIcon } from "./mappedIcon";
-import { useAnalytics } from "../context/analytics-context";
-import { isMultilingual, languageName } from "./transcriptLanguages";
 
 export interface PlayerProps {
   audio: string;
@@ -194,15 +193,10 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
   };
 
   useEffect(() => {
-    if (
-      track &&
-      track.current &&
-      track.current.track.cues &&
-      track.current.track.cues.length > 0
-    ) {
+    if (track?.current?.track.cues && track.current.track.cues.length > 0) {
       setTranscriptLoaded(true);
     } else {
-      const wait = 25 * Math.pow(tries, 2);
+      const wait = 25 * tries ** 2;
       setTimeout(() => setTries((current: number) => current + 1), wait, tries);
     }
   }, [tries]);
