@@ -11,7 +11,7 @@ import {
 import { marshall } from "@aws-sdk/util-dynamodb";
 import { sdkStreamMixin, Uint8ArrayBlobAdapter } from "@smithy/util-stream";
 
-import { S3Event } from "aws-lambda";
+import type { S3Event } from "aws-lambda";
 import { mockClient } from "aws-sdk-client-mock";
 import "aws-sdk-client-mock-jest";
 import { Transcription } from "model";

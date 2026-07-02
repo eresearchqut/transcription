@@ -1,6 +1,6 @@
 import { CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-import { S3Handler } from "aws-lambda";
+import type { S3Handler } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import { downloadKey } from "../service/transcriptionService";

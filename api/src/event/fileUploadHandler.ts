@@ -8,7 +8,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
-import { S3Event } from "aws-lambda";
+import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import { jobStarted } from "../service/transcriptionService";

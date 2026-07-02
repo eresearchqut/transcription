@@ -9,36 +9,14 @@
   },
   "scripts": {
     "clean": "rimraf dist && rimraf node_modules",
-    "build": "tsc",
-    "fmt": "prettier --write .",
-    "fmt:check": "prettier --check .",
-    "lint": "eslint --fix '**/*.{ts,tsx}'",
-    "lint:check": "eslint '**/*.{ts,tsx}'"
+    "build": "tsc"
   },
   "dependencies": {
-    "date-fns": "^4.1.0",
-    "react-dropzone": "^14.2.3"
+    "date-fns": "^4.4.0",
+    "react-dropzone": "^15.0.0"
   },
   "devDependencies": {
-    "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-    "eslint": "^9.37.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.0.3",
-    "rimraf": "^6.0.1",
-    "typescript": "^5.9.3",
-    "@typescript-eslint/eslint-plugin": "^8.46.1",
-    "@typescript-eslint/parser": "^8.46.1"
-  },
-  "prettier": {
-    "importOrder": [
-      "^react",
-      "^[\\w\\d]+",
-      "^[./]"
-    ],
-    "importOrderSeparation": true,
-    "plugins": [
-      "@trivago/prettier-plugin-sort-imports"
-    ]
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3"
   }
 }

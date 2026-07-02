@@ -1,4 +1,0 @@
-{
-  "importOrder": ["^react", "^[\\w\\d]+", "^[./]"],
-  "importOrderSeparation": true
-}
