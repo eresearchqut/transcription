@@ -155,7 +155,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
       ))}
       <Box {...getRootProps()} borderStyle={"dashed"} borderWidth={4} p={4}>
         <Input {...chakraInputProps} />
-        <VStack gap={8}>
+        <VStack gap={8} textAlign={"center"}>
           <MappedIcon icon={"upload"} boxSize={[10, 20]} />
           <Heading>{heading}</Heading>
           {description && <Text textAlign={"center"}>{description}</Text>}

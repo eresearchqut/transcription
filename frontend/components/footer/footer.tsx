@@ -16,8 +16,9 @@ const TeqsaLink: FunctionComponent = () => (
 export const Footer: FunctionComponent = () => {
   return (
     <Flex
-      direction={["column", "column", "row"]}
-      alignItems="center"
+      direction={{ base: "column", md: "row" }}
+      alignItems={{ base: "stretch", md: "center" }}
+      gap={4}
       className="dark"
     >
       <VStack alignItems={"start"} gap={0}>
@@ -39,16 +40,18 @@ export const Footer: FunctionComponent = () => {
           </Text>
         </Fragment>
       </VStack>
-      <Spacer />
+      <Spacer display={{ base: "none", md: "block" }} />
       <ExternalLink
         href={
           "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
         }
         withIcon={false}
+        display={{ base: "block", md: "inline" }}
       >
         <Button
           colorPalette={"blue"}
           variant={"solid"}
+          width={{ base: "full", md: "auto" }}
           data-umami-event={"contact-eresearch"}
         >
           Contact eResearch{" "}

@@ -5,6 +5,7 @@ import React, {
   SVGProps,
 } from "react";
 import {
+  FaBars,
   FaCheckCircle,
   FaChevronDown,
   FaChevronLeft,
@@ -60,6 +61,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   generated: MdChecklist,
   home: FaHome,
   json: VscJson,
+  menu: FaBars,
   movie: FaPhotoVideo,
   "play-outline-square": AiOutlinePlaySquare,
   playlist: RiPlayList2Fill,

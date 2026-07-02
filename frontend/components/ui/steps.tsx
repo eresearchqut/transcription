@@ -17,9 +17,10 @@ export interface StepsItemProps
 export const StepsItem = React.forwardRef<HTMLDivElement, StepsItemProps>(
   function StepsItem(props, ref) {
     const { title, description, completedIcon, icon, ...rest } = props;
+    const accessibleName = typeof title === "string" ? title : undefined;
     return (
       <ChakraSteps.Item {...rest} ref={ref}>
-        <ChakraSteps.Trigger>
+        <ChakraSteps.Trigger aria-label={accessibleName}>
           <ChakraSteps.Indicator>
             <ChakraSteps.Status
               complete={completedIcon || <LuCheck />}
@@ -38,7 +39,7 @@ const StepInfo = (props: StepInfoProps) => {
   const { title, description } = props;
   if (title && description) {
     return (
-      <Box>
+      <Box hideBelow={"md"}>
         {title && <ChakraSteps.Title>{title}</ChakraSteps.Title>}
         {description && (
           <ChakraSteps.Description>{description}</ChakraSteps.Description>
@@ -48,9 +49,11 @@ const StepInfo = (props: StepInfoProps) => {
   }
   return (
     <>
-      {title && <ChakraSteps.Title>{title}</ChakraSteps.Title>}
+      {title && <ChakraSteps.Title hideBelow={"md"}>{title}</ChakraSteps.Title>}
       {description && (
-        <ChakraSteps.Description>{description}</ChakraSteps.Description>
+        <ChakraSteps.Description hideBelow={"md"}>
+          {description}
+        </ChakraSteps.Description>
       )}
     </>
   );

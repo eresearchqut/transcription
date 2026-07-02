@@ -7,7 +7,6 @@ import {
   Field as ChakraField,
   Code,
   Heading,
-  HStack,
   Stack,
   StackProps,
   Text,
@@ -121,18 +120,25 @@ export const TranscriptionOptions: FunctionComponent<
         <Text fontSize={"sm"} color={"fg.muted"}>
           Specify up to five (5) languages spoken in your audio files.
         </Text>
-        <HStack gap={3} align={"center"}>
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          gap={{ base: 1.5, sm: 3 }}
+          align={{ base: "stretch", sm: "center" }}
+          width={"full"}
+        >
           <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
             Source languages
           </Text>
-          <LanguageInput
-            isMulti={true}
-            value={languages}
-            onChange={onLanguageChange}
-            maxSize={MAX_LANGUAGE_LIMIT}
-            invalid={languageSizeLimitExceeded}
-          />
-        </HStack>
+          <Box flex={"1"} minWidth={0} width={"full"}>
+            <LanguageInput
+              isMulti={true}
+              value={languages}
+              onChange={onLanguageChange}
+              maxSize={MAX_LANGUAGE_LIMIT}
+              invalid={languageSizeLimitExceeded}
+            />
+          </Box>
+        </Stack>
         {languageSizeLimitAchieved && (
           <ChakraField.HelperText whiteSpace={"nowrap"}>
             A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
@@ -169,18 +175,23 @@ export const TranscriptionOptions: FunctionComponent<
             Translate
           </Switch>
           {enableTranslation && (
-            <HStack gap={3} align={"center"}>
+            <Stack
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 1.5, sm: 3 }}
+              align={{ base: "stretch", sm: "center" }}
+              width={"full"}
+            >
               <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
                 Target language
               </Text>
-              <Box minWidth={"15rem"}>
+              <Box minWidth={{ base: "auto", sm: "15rem" }} width={"full"}>
                 <TranslationLanguageInput
                   value={targetLanguage}
                   onChange={(value) => setTargetLanguage(value)}
                   placeholder={"Select a language..."}
                 />
               </Box>
-            </HStack>
+            </Stack>
           )}
           {enableTranslation && !targetLanguage && (
             <ChakraField.HelperText whiteSpace={"nowrap"}>
