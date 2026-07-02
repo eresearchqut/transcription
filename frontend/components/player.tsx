@@ -131,9 +131,19 @@ export const Transcription: FunctionComponent<TranscriptionProps> = ({
                   onClick={() => handleSeek(cue.startTime)}
                   cursor={"pointer"}
                   whiteSpace={"nowrap"}
-                  fontWeight={"medium"}
+                  display={"flex"}
+                  alignItems={"flex-start"}
                 >
-                  <Text as={"span"}>{speaker}</Text>
+                  {speaker && (
+                    <Badge
+                      size={"sm"}
+                      variant={"surface"}
+                      colorPalette={"gray"}
+                      minW={"max-content"}
+                    >
+                      {speaker}
+                    </Badge>
+                  )}
                 </GridItem>
               )}
               <GridItem
