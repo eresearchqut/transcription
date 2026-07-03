@@ -22,15 +22,20 @@ export const initialiseSplunk = async (
   }
   initialised = true;
 
-  const [{ default: SplunkOtelWeb }, { default: SplunkSessionRecorder }] =
-    await Promise.all([
-      import("@splunk/otel-web"),
-      import("@splunk/otel-web-session-recorder"),
-    ]);
+  try {
+    const [{ default: SplunkOtelWeb }, { default: SplunkSessionRecorder }] =
+      await Promise.all([
+        import("@splunk/otel-web"),
+        import("@splunk/otel-web-session-recorder"),
+      ]);
 
-  splunkOtelWeb = SplunkOtelWeb;
-  SplunkOtelWeb.init({ ...config });
-  SplunkSessionRecorder.init({ ...config });
+    splunkOtelWeb = SplunkOtelWeb;
+    SplunkOtelWeb.init({ ...config });
+    SplunkSessionRecorder.init({ ...config });
+  } catch (error) {
+    initialised = false;
+    console.error("Failed to initialise Splunk RUM", error);
+  }
 };
 
 export const setSplunkGlobalAttributes = (

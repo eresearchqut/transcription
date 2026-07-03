@@ -102,45 +102,59 @@ const Upload: NextPageWithLayout = () => {
         };
       });
 
-      getCurrentSession().then(() =>
-        uploadData({
-          path: key,
-          data: file,
-          options: {
-            contentDisposition: `attachment; filename = ${metadata.filename}`,
-            metadata,
-            onProgress: ({ transferredBytes, totalBytes }) => {
-              const progressPercent =
-                (transferredBytes / (totalBytes ?? 1)) * 100;
+      getCurrentSession()
+        .then(() =>
+          uploadData({
+            path: key,
+            data: file,
+            options: {
+              contentDisposition: `attachment; filename = ${metadata.filename}`,
+              metadata,
+              onProgress: ({ transferredBytes, totalBytes }) => {
+                const progressPercent =
+                  (transferredBytes / (totalBytes ?? 1)) * 100;
 
-              setUploadProps((current) => {
-                return {
-                  ...current,
-                  [id]: {
-                    filename: file.name,
-                    uploadProgressPercent: progressPercent,
-                    isPreparingUpload: false,
-                    uploaded: false,
-                    transcriptionProgress: undefined,
-                  },
-                };
-              });
+                setUploadProps((current) => {
+                  return {
+                    ...current,
+                    [id]: {
+                      filename: file.name,
+                      uploadProgressPercent: progressPercent,
+                      isPreparingUpload: false,
+                      uploaded: false,
+                      transcriptionProgress: undefined,
+                    },
+                  };
+                });
+              },
             },
-          },
-        }).result.then(() => {
+          }).result.then(() => {
+            setUploadProps((current) => {
+              return {
+                ...current,
+                [id]: {
+                  ...current[id],
+                  uploadProgressPercent: 100,
+                  isPreparingUpload: false,
+                  uploaded: true,
+                },
+              };
+            });
+          }),
+        )
+        .catch((error) => {
+          console.error("Upload failed", error);
           setUploadProps((current) => {
             return {
               ...current,
               [id]: {
                 ...current[id],
-                uploadProgressPercent: 100,
                 isPreparingUpload: false,
-                uploaded: true,
+                uploaded: false,
               },
             };
           });
-        }),
-      );
+        });
     };
 
     files.forEach((file) => {
