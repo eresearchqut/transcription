@@ -27,13 +27,15 @@ export const handler = async (event: S3Event) => {
   let uploadsCount = 0;
   for (const record of event.Records) {
     try {
-      const objectKey = decodeURIComponent(record.s3.object.key);
-      const key = record.s3.object.key.replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
+      // S3 encodes spaces as "+" and percent-encodes other characters; normalise both. https://stackoverflow.com/a/61869212
+      const objectKey = decodeURIComponent(
+        record.s3.object.key.replace(/\+/g, " "),
+      );
       const bucketName = record.s3.bucket.name;
-      const match = uploadPattern.exec(key);
+      const match = uploadPattern.exec(objectKey);
 
       if (!match) {
-        console.error("Unexpected key: ", key);
+        console.error("Unexpected key: ", objectKey);
         continue;
       }
 
@@ -95,7 +97,7 @@ export const handler = async (event: S3Event) => {
         ...languageParams,
         ...piiParams,
         Media: {
-          MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
+          MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${objectKey}`,
         },
         OutputBucketName: transcribeBucket,
         OutputKey: outputKey,

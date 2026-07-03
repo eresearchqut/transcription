@@ -1,3 +1,4 @@
+import type { AttributeValue } from "@aws-sdk/client-dynamodb";
 import {
   DeleteItemCommand,
   GetItemCommand,
@@ -5,7 +6,6 @@ import {
   QueryCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import type { AttributeValue } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import dynamoDBClient from "./dynamoDBClient";
