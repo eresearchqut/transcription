@@ -130,6 +130,7 @@ const Upload: NextPageWithLayout = () => {
             },
           }).result.then(() => {
             setUploadProps((current) => {
+              if (!current[id]) return current;
               return {
                 ...current,
                 [id]: {
@@ -145,6 +146,7 @@ const Upload: NextPageWithLayout = () => {
         .catch((error) => {
           console.error("Upload failed", error);
           setUploadProps((current) => {
+            if (!current[id]) return current;
             return {
               ...current,
               [id]: {

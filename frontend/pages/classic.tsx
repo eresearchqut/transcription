@@ -131,6 +131,7 @@ const ClassicUpload: NextPageWithLayout = () => {
             },
           }).result.then(() => {
             setUploadProps((current) => {
+              if (!current[id]) return current;
               return {
                 ...current,
                 [id]: {
@@ -145,6 +146,7 @@ const ClassicUpload: NextPageWithLayout = () => {
         .catch((error) => {
           console.error("Upload failed", error);
           setUploadProps((current) => {
+            if (!current[id]) return current;
             return {
               ...current,
               [id]: {
