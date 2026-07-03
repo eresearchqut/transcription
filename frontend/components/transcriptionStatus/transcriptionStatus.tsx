@@ -5,7 +5,7 @@ import {
   TranscriptionJobStatus as Status,
   type Transcription,
 } from "model";
-import { type FunctionComponent, useEffect, useState } from "react";
+import type { FunctionComponent } from "react";
 import {
   type UseTranscriptionProps,
   useTranscription,
@@ -39,12 +39,7 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
     return rawStatus;
   };
 
-  const [status, setStatus] = useState(displayStatus(transcription));
-
-  useEffect(() => {
-    setStatus(displayStatus(transcription));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcription, displayStatus]);
+  const status = displayStatus(transcription);
 
   const colorPalette =
     status === Status.FAILED

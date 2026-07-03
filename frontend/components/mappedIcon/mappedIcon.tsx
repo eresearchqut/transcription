@@ -127,10 +127,9 @@ const AccessibleIcon = forwardRef<SVGSVGElement, AccessibleIconProps>(
 );
 
 const WrappedIcon = forwardRef<SVGSVGElement, MappedIconProps>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  ({ icon, ...props }, _ref) => {
+  ({ icon, ...props }, ref) => {
     const WrappedIconType = get(wrappedIconsMap, icon);
-    return <WrappedIconType {...props} />;
+    return <WrappedIconType {...props} ref={ref} />;
   },
 );
 
