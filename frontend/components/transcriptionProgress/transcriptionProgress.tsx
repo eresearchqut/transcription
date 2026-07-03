@@ -180,7 +180,7 @@ export const TranscriptionProgress: FunctionComponent<
     <Alert
       key={filename}
       title={
-        <Text pl={2} fontSize={"lg"}>
+        <Text pl={2} fontSize={"lg"} wordBreak={"break-word"}>
           {filename}
         </Text>
       }
