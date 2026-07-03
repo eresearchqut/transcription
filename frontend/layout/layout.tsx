@@ -130,7 +130,12 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
               >
                 <Card.Header pl={6} pr={6} pb={0}>
                   {(pageTitle || headerAction) && (
-                    <Flex justify={"space-between"} align={"center"}>
+                    <Flex
+                      direction={{ base: "column", sm: "row" }}
+                      justify={"space-between"}
+                      align={{ base: "flex-start", sm: "center" }}
+                      gap={3}
+                    >
                       {pageTitle && (
                         <Heading as={"h1"} fontSize={"3xl"}>
                           {pageTitle}

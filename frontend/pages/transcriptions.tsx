@@ -105,8 +105,11 @@ const Transcriptions: NextPageWithLayout = () => {
         const ttl = new Date(props.row.original.ttl * 1000);
         const formattedTtl = formatDate(ttl.toISOString());
         return (
-          <HStack wrap={"nowrap"}>
-            <Flex align={"flex-start"} whiteSpace={"nowrap"}>
+          <HStack wrap={{ base: "wrap", xl: "nowrap" }}>
+            <Flex
+              align={"flex-start"}
+              whiteSpace={{ base: "normal", xl: "nowrap" }}
+            >
               {formatDate(props.row.original.date)}
             </Flex>
             {isExpiringSoon(props.row.original.date) && (
@@ -139,7 +142,7 @@ const Transcriptions: NextPageWithLayout = () => {
         const transcription = props.row.original as Transcription;
         const filename = decodeFilename(transcription.metadata.filename);
 
-        return <Text>{filename}</Text>;
+        return <Text overflowWrap={"anywhere"}>{filename}</Text>;
       },
     },
     {

@@ -114,14 +114,14 @@ export const DataTable = (props: DataTableProps) => {
             return (
               <Fragment key={cell.id}>
                 {label && (
-                  <GridItem>
+                  <GridItem minW={0}>
                     <Text as={"h3"} letterSpacing={"wider"}>
                       {" "}
                       {label}:
                     </Text>
                   </GridItem>
                 )}
-                <GridItem>
+                <GridItem minW={0}>
                   <Text as={!label && rowIndex === 0 ? "h2" : "span"}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </Text>
