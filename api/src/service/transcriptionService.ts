@@ -1,4 +1,4 @@
-import { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
+import type { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
 import {
   getResource,

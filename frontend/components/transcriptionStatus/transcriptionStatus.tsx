@@ -1,15 +1,14 @@
-import * as React from "react";
-import { FunctionComponent, useEffect, useState } from "react";
-import {
-  isTranslationFailed,
-  Transcription,
-  mapTranscriptionStatus,
-  TranscriptionJobStatus as Status,
-} from "model";
 import { Badge, Spinner } from "@chakra-ui/react";
 import {
+  isTranslationFailed,
+  mapTranscriptionStatus,
+  TranscriptionJobStatus as Status,
+  type Transcription,
+} from "model";
+import type { FunctionComponent } from "react";
+import {
+  type UseTranscriptionProps,
   useTranscription,
-  UseTranscriptionProps,
 } from "../../hooks/useTranscription";
 
 const formatStatus = (status: string) =>
@@ -40,12 +39,7 @@ const TranscriptionStatus: FunctionComponent<UseTranscriptionProps> = ({
     return rawStatus;
   };
 
-  const [status, setStatus] = useState(displayStatus(transcription));
-
-  useEffect(() => {
-    setStatus(displayStatus(transcription));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transcription, isPipelineCompleted]);
+  const status = displayStatus(transcription);
 
   const colorPalette =
     status === Status.FAILED

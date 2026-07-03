@@ -1,4 +1,4 @@
-import { SpeakerSegment, TranscriptJob } from "./transcriptDocument";
+import type { SpeakerSegment, TranscriptJob } from "./transcriptDocument";
 
 /**
  * Builders that produce subtitle/text output from a transcript at the SEGMENT

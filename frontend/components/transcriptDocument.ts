@@ -101,9 +101,7 @@ const formatTime = (time: string) => {
   seconds = seconds - hours * 3600;
   const minutes = Math.floor(seconds / 60);
   seconds = Math.floor(seconds - minutes * 60);
-  return (
-    padTime(hours, 2) + ":" + padTime(minutes, 2) + ":" + padTime(seconds, 2)
-  );
+  return `${padTime(hours, 2)}:${padTime(minutes, 2)}:${padTime(seconds, 2)}`;
 };
 
 const documentSegments = (
@@ -165,34 +163,32 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
           }),
         ],
       }),
-      ...documentSegments(job)
-        .map((segment) =>
-          (withAlternatives
-            ? segment.alternatives
-            : segment.alternatives.slice(0, 1)
-          ).map(
-            (alternative, index) =>
-              new TableRow({
-                children:
-                  index === 0
-                    ? [
-                        cell(formatTime(segment.start_time)),
-                        cell(
-                          formatSpeakerLabel(
-                            segment.start_time,
-                            segment.end_time,
-                          ),
+      ...documentSegments(job).flatMap((segment) =>
+        (withAlternatives
+          ? segment.alternatives
+          : segment.alternatives.slice(0, 1)
+        ).map(
+          (alternative, index) =>
+            new TableRow({
+              children:
+                index === 0
+                  ? [
+                      cell(formatTime(segment.start_time)),
+                      cell(
+                        formatSpeakerLabel(
+                          segment.start_time,
+                          segment.end_time,
                         ),
-                        cell(alternative.transcript),
-                      ]
-                    : [
-                        cell(`Alternative ${index}`, 2),
-                        cell(alternative.transcript),
-                      ],
-              }),
-          ),
-        )
-        .flat(1),
+                      ),
+                      cell(alternative.transcript),
+                    ]
+                  : [
+                      cell(`Alternative ${index}`, 2),
+                      cell(alternative.transcript),
+                    ],
+            }),
+        ),
+      ),
     ],
   });
 };

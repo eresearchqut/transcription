@@ -5,9 +5,9 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 
-import { S3Event } from "aws-lambda";
+import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
-import { Transcription } from "model";
+import type { Transcription } from "model";
 
 import { bedrockClientConfig, invokeModel } from "../client/bedrockClient";
 import {
@@ -37,9 +37,9 @@ if (process.env.NODE_ENV !== "test") {
 export const handler = async (event: S3Event) => {
   const promises = [];
   let summaryCount = 0;
-  for (const record of event["Records"]) {
-    const key = decodeURIComponent(record["s3"]["object"]["key"]);
-    const bucketName = record["s3"]["bucket"]["name"];
+  for (const record of event.Records) {
+    const key = decodeURIComponent(record.s3.object.key);
+    const bucketName = record.s3.bucket.name;
 
     // users/{identityId}/{fileName}
     const match = key.match(outputPattern);
@@ -98,5 +98,5 @@ export const handler = async (event: S3Event) => {
   }
 
   await Promise.all(promises);
-  return `Processed ${event["Records"].length} uploads, generated ${summaryCount} summaries.`;
+  return `Processed ${event.Records.length} uploads, generated ${summaryCount} summaries.`;
 };

@@ -1,12 +1,12 @@
-import { FunctionComponent } from "react";
-import {
-  useTranscription,
-  UseTranscriptionProps,
-} from "../../hooks/useTranscription";
 import { Badge, List, ListItem } from "@chakra-ui/react";
 import { get, isUndefined } from "lodash";
+import type { Transcription } from "model";
 import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
-import { Transcription } from "model";
+import type { FunctionComponent } from "react";
+import {
+  type UseTranscriptionProps,
+  useTranscription,
+} from "../../hooks/useTranscription";
 
 export const languagesFromTranscription = (
   transcription: Transcription | undefined,

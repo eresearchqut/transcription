@@ -1,4 +1,3 @@
-import { useContext, useState } from "react";
 import {
   AlertIndicator,
   AlertRoot,
@@ -13,31 +12,32 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { ColumnDef, SortingState } from "@tanstack/react-table";
-import DataTable from "@/components/dataTable";
-import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
-import { TRANSCRIBE_QUOTAS, Transcription } from "model";
-import { TranscriptionStatus } from "@/components/transcriptionStatus";
-import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
-import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
-import NextLink from "next/link";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { OpenChangeDetails } from "@zag-js/dialog";
 import { add, set } from "date-fns";
+import { TRANSCRIBE_QUOTAS, type Transcription } from "model";
+import NextLink from "next/link";
+import { useContext, useState } from "react";
+import DataTable from "@/components/dataTable";
+import { MappedIcon } from "@/components/mappedIcon";
+import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
+import type { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
+import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
 import {
   languagesFromTranscription,
   TranscriptionLanguages,
 } from "@/components/transcriptionLanguages";
-import { OpenChangeDetails } from "@zag-js/dialog";
-import { MappedIcon } from "@/components/mappedIcon";
+import { TranscriptionStatus } from "@/components/transcriptionStatus";
+import { TranscriptionSummary } from "@/components/transcriptionSummary";
 import { Alert } from "@/components/ui/alert";
-import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
 import { InputGroup } from "@/components/ui/input-group";
-import { NextPageWithLayout } from "@/pages/_app";
+import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
+import { ToggleTip } from "@/components/ui/toggle-tip";
+import type { NextPageWithLayout } from "@/pages/_app";
 import {
   TranscriptionsContext,
   TranscriptionsContextProvider,
 } from "../context/transcriptions-context";
-import { ToggleTip } from "@/components/ui/toggle-tip";
-import { TranscriptionSummary } from "@/components/transcriptionSummary";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
 import { decodeFilename } from "../utils/filename";
 
@@ -239,16 +239,14 @@ const Transcriptions: NextPageWithLayout = () => {
         {!transcriptionsLoading &&
           transcriptions &&
           transcriptions.length === 0 && (
-            <>
-              <Alert status="info" title={"Getting Started"}>
-                <Box>
-                  <Link as={NextLink} href={"/"}>
-                    Upload Media
-                  </Link>{" "}
-                  to start the transcription process.
-                </Box>
-              </Alert>
-            </>
+            <Alert status="info" title={"Getting Started"}>
+              <Box>
+                <Link as={NextLink} href={"/"}>
+                  Upload Media
+                </Link>{" "}
+                to start the transcription process.
+              </Box>
+            </Alert>
           )}
         {!transcriptionsLoading &&
           transcriptions &&

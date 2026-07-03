@@ -1,6 +1,6 @@
-import { Meta, StoryObj } from "@storybook/nextjs";
-import { HelpPopover } from "./";
 import { Text } from "@chakra-ui/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import { HelpPopover } from "./";
 
 export default {
   title: "Components/HelpPopover",

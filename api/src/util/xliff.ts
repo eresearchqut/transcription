@@ -86,8 +86,8 @@ export const parseXliffTargets = (xml: string): Map<number, string> => {
   for (const unit of units) {
     const id = Number(unit["@_id"]);
     if (Number.isNaN(id)) continue;
-    const target = textContent(unit["target"]);
-    targets.set(id, target !== "" ? target : textContent(unit["source"]));
+    const target = textContent(unit.target);
+    targets.set(id, target !== "" ? target : textContent(unit.source));
   }
   return targets;
 };

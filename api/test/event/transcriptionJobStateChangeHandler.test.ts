@@ -1,4 +1,4 @@
-import { TranscriptionJob } from "@aws-sdk/client-transcribe";
+import type { TranscriptionJob } from "@aws-sdk/client-transcribe";
 
 import { handler } from "../../src/event/transcriptionJobStateChangeHandler";
 import jobStateChangeEvent from "./jobStateChangeEvent.json";

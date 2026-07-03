@@ -1,9 +1,6 @@
-import React, { FunctionComponent } from "react";
-import {
-  useTranscription,
-  UseTranscriptionProps,
-} from "../../hooks/useTranscription";
 import { IconButton } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
+import { MappedIcon } from "@/components/mappedIcon";
 import {
   PopoverArrow,
   PopoverBody,
@@ -12,7 +9,10 @@ import {
   PopoverRoot,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MappedIcon } from "@/components/mappedIcon";
+import {
+  type UseTranscriptionProps,
+  useTranscription,
+} from "../../hooks/useTranscription";
 
 const TranscriptionSummary: FunctionComponent<UseTranscriptionProps> = ({
   jobId,

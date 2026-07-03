@@ -1,6 +1,6 @@
-import { FunctionComponent, ReactElement } from "react";
-import { Link, LinkProps, List } from "@chakra-ui/react";
+import { Link, type LinkProps, List } from "@chakra-ui/react";
 import NextLink from "next/link";
+import type { FunctionComponent, ReactElement } from "react";
 
 interface NavigationItemProps {
   url: string;

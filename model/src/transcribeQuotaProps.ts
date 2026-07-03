@@ -1,6 +1,5 @@
-import { Accept } from "react-dropzone";
-
-import { Duration } from "date-fns";
+import type { Duration } from "date-fns";
+import type { Accept } from "react-dropzone";
 
 export interface TranscribeQuotaProps {
   accept: Accept;

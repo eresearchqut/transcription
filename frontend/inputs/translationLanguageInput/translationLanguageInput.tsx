@@ -1,6 +1,6 @@
-import { FunctionComponent } from "react";
-import { Props as SelectProps, Select } from "chakra-react-select";
+import { Select, type Props as SelectProps } from "chakra-react-select";
 import { SUPPORTED_TRANSLATION_LANGUAGES as SUPPORTED_TRANSLATION_LANGUAGES_SOURCE } from "model";
+import type { FunctionComponent } from "react";
 
 export interface TranslationLanguageInputProps
   extends Omit<SelectProps, "options" | "onChange" | "value"> {

@@ -1,7 +1,5 @@
 "use client";
 
-import { FunctionComponent, ReactNode, useState } from "react";
-import NextLink from "next/link";
 import {
   Box,
   Button,
@@ -11,14 +9,10 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import { TRANSCRIBE_QUOTAS } from "model";
-import {
-  TranscribeProps,
-  TranscriptionOptions,
-  TranscriptionOptionsValue,
-} from "./transcriptionOptions";
-import { OptionsSummary } from "./optionsSummary";
+import NextLink from "next/link";
+import { type FunctionComponent, type ReactNode, useState } from "react";
+import { MappedIcon } from "@/components/mappedIcon";
 import { supportedFileFormatsText } from "@/components/quotas/quotas";
 import {
   StepsContent,
@@ -26,7 +20,13 @@ import {
   StepsList,
   StepsRoot,
 } from "@/components/ui/steps";
-import { MappedIcon } from "@/components/mappedIcon";
+import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
+import { OptionsSummary } from "./optionsSummary";
+import {
+  type TranscribeProps,
+  TranscriptionOptions,
+  type TranscriptionOptionsValue,
+} from "./transcriptionOptions";
 
 export type { TranscribeProps };
 

@@ -1,12 +1,14 @@
-import * as React from "react";
-import { FunctionComponent } from "react";
 import { Button, Stack } from "@chakra-ui/react";
-import { TranscriptFormat, useDownload } from "../../hooks/useDownload";
-import {
-  useTranscription,
-  UseTranscriptionProps,
-} from "../../hooks/useTranscription";
 import { isUndefined } from "lodash";
+import type { Transcription } from "model";
+import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
+import type { FunctionComponent } from "react";
+import { languagesFromTranscription } from "@/components/transcriptionLanguages";
+import { type TranscriptFormat, useDownload } from "../../hooks/useDownload";
+import {
+  type UseTranscriptionProps,
+  useTranscription,
+} from "../../hooks/useTranscription";
 import { MappedIcon } from "../mappedIcon";
 import {
   MenuContent,
@@ -17,9 +19,6 @@ import {
   MenuTrigger,
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
-import { Transcription } from "model";
-import { languagesFromTranscription } from "@/components/transcriptionLanguages";
-import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key;

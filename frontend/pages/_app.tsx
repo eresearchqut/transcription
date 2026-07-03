@@ -1,21 +1,24 @@
 import "../styles/globals.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Amplify } from "aws-amplify";
+import { signInWithRedirect } from "aws-amplify/auth";
+import type { NextPage } from "next";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { MonitoringProvider } from "../context/monitoring-context";
-import { Amplify } from "aws-amplify";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Provider } from "@/components/ui/provider";
-import Layout from "../layout/layout";
-import React, { ReactElement, ReactNode } from "react";
-import { NextPage } from "next";
-import { ErrorMessage } from "@/components/errorMessage";
+import type { ReactElement, ReactNode } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { AsyncErrorBoundary } from "@/components/errorBoundary";
+import { ErrorMessage } from "@/components/errorMessage";
+import { Provider } from "@/components/ui/provider";
 import { AnalyticsProvider } from "../context/analytics-context";
 import { AuthProvider } from "../context/auth-context";
-import { signInWithRedirect } from "aws-amplify/auth";
+import { MonitoringProvider } from "../context/monitoring-context";
+import Layout from "../layout/layout";
 
-export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
+export type NextPageWithLayout<P = NonNullable<unknown>, IP = P> = NextPage<
+  P,
+  IP
+> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 

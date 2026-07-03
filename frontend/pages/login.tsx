@@ -9,17 +9,19 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { TRANSCRIBE_QUOTAS } from "model";
-import { formatDuration } from "date-fns";
-import { ExternalLink } from "@/components/externalLink";
-import { handleLogin, NextPageWithLayout } from "@/pages/_app";
-import { SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE } from "model";
-import { SUPPORTED_TRANSLATION_LANGUAGES as SUPPORTED_TRANSLATION_LANGUAGES_SOURCE } from "model";
 import { signOut } from "aws-amplify/auth";
-import { FunctionComponent, PropsWithChildren } from "react";
+import { formatDuration } from "date-fns";
+import {
+  SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE,
+  SUPPORTED_TRANSLATION_LANGUAGES as SUPPORTED_TRANSLATION_LANGUAGES_SOURCE,
+  TRANSCRIBE_QUOTAS,
+} from "model";
+import type { FunctionComponent, PropsWithChildren } from "react";
+import { ExternalLink } from "@/components/externalLink";
+import { handleLogin, type NextPageWithLayout } from "@/pages/_app";
+import { useAuth } from "../context/auth-context";
 import { bytesToSize } from "../inputs/filePicker";
 import Layout from "../layout/layout";
-import { useAuth } from "../context/auth-context";
 
 const SUPPORTED_UPLOAD_FILE_FORMATS = [
   "wav",

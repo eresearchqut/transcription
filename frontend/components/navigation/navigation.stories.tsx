@@ -1,6 +1,6 @@
-import Navigation from "./navigation";
-import { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { MappedIcon } from "@/components/mappedIcon";
+import Navigation from "./navigation";
 
 const meta = {
   title: "Components/Navigation",

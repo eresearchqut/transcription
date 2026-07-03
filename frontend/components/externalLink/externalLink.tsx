@@ -1,5 +1,5 @@
-import { Link, LinkProps } from "@chakra-ui/react";
-import React from "react";
+import { Link, type LinkProps } from "@chakra-ui/react";
+import type React from "react";
 import { MappedIcon } from "@/components/mappedIcon";
 
 interface ExternalLinkProps extends LinkProps {

@@ -1,23 +1,22 @@
-import * as React from "react";
-import { FunctionComponent } from "react";
 import { Box, Spinner, Stack, Text, VStack } from "@chakra-ui/react";
 import { lowerCase } from "lodash";
-import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import {
   enableGenerateSummary,
   enableTranslation,
   isTranslationFailed,
   mapTranscriptionStatus,
+  SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages,
   TranscriptionJobStatus,
 } from "model";
+import type { FunctionComponent } from "react";
 import {
+  type UseTranscriptionProps,
   useTranscription,
-  UseTranscriptionProps,
 } from "../../hooks/useTranscription";
-import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 import { MappedIcon } from "../mappedIcon";
+import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import { Alert } from "../ui/alert";
-import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
+import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;

@@ -1,11 +1,13 @@
 "use client";
 
-import { FunctionComponent } from "react";
 import { Badge, Flex, Group, Text, Wrap } from "@chakra-ui/react";
 import { get } from "lodash";
-import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
-import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
-import { TranscribeProps } from "./transcriptionOptions";
+import {
+  SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages,
+  SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages,
+} from "model";
+import type { FunctionComponent } from "react";
+import type { TranscribeProps } from "./transcriptionOptions";
 
 const languageName = (code: string): string =>
   get(supportedLanguages, code, code);

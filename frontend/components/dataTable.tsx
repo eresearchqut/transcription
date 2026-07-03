@@ -1,5 +1,5 @@
 import {
-  ButtonProps,
+  type ButtonProps,
   chakra,
   createListCollection,
   Flex,
@@ -12,21 +12,20 @@ import {
   Text,
 } from "@chakra-ui/react";
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  HeaderContext,
-  SortingState,
+  type HeaderContext,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { Fragment, useState } from "react";
-import { InitialTableState } from "@tanstack/table-core";
-import { Tooltip } from "./ui/tooltip";
-import { MappedIcon } from "./mappedIcon";
-import { NumberInputField, NumberInputRoot } from "./ui/number-input";
+import type { InitialTableState } from "@tanstack/table-core";
+import type { ValueChangeDetails } from "@zag-js/select";
+import type React from "react";
+import { Fragment, useState } from "react";
 import {
   SelectContent,
   SelectItem,
@@ -35,7 +34,9 @@ import {
   SelectTrigger,
   SelectValueText,
 } from "@/components/ui/select";
-import { ValueChangeDetails } from "@zag-js/select";
+import { MappedIcon } from "./mappedIcon";
+import { NumberInputField, NumberInputRoot } from "./ui/number-input";
+import { Tooltip } from "./ui/tooltip";
 
 export type Column = ColumnDef<any>;
 
@@ -247,7 +248,7 @@ export const DataTable = (props: DataTableProps) => {
                 min={1}
                 max={table.getPageCount()}
                 onValueChange={(e: { value: any }) => {
-                  const page = e.value ? parseInt(e.value) - 1 : 0;
+                  const page = e.value ? parseInt(e.value, 10) - 1 : 0;
                   table.setPageIndex(page);
                 }}
                 defaultValue={String(table.getState().pagination.pageIndex + 1)}

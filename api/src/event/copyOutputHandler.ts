@@ -1,6 +1,6 @@
 import { CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
-import { S3Handler } from "aws-lambda";
+import type { S3Handler } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import { downloadKey } from "../service/transcriptionService";
@@ -13,9 +13,9 @@ const s3Client = new S3Client({ region });
 xray.captureAWSv3Client(s3Client);
 
 export const handler: S3Handler = async (event) => {
-  for (const record of event["Records"]) {
-    const key = record["s3"]["object"]["key"];
-    const bucketName = record["s3"]["bucket"]["name"];
+  for (const record of event.Records) {
+    const key = record.s3.object.key;
+    const bucketName = record.s3.bucket.name;
 
     // transcription/{identityId}/{fileName}
     const match = key.match(outputPattern);
@@ -40,5 +40,5 @@ export const handler: S3Handler = async (event) => {
     }
   }
 
-  console.log(`Processed ${event["Records"].length} uploads`);
+  console.log(`Processed ${event.Records.length} uploads`);
 };

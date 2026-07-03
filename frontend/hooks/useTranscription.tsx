@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { downloadData } from "aws-amplify/storage";
+import { isEmpty, isUndefined } from "lodash";
 import {
   enableGenerateSummary,
   enableTranslation,
   isTranslationFailed,
   mapTranscriptionStatus,
-  Transcription,
+  type Transcription,
   TranscriptionJobStatus,
 } from "model";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { getter } from "../client/fetchers";
-import { isEmpty, isUndefined } from "lodash";
 import { useAuth } from "../context/auth-context";
-import { downloadData } from "aws-amplify/storage";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";

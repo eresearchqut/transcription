@@ -1,13 +1,13 @@
-import { Meta, StoryObj } from "@storybook/nextjs";
-import { NewFeature } from "@/components/newFeature";
 import { HStack } from "@chakra-ui/react";
+import type { Meta, StoryObj } from "@storybook/nextjs";
+import { addDays } from "date-fns";
+import { NewFeature } from "@/components/newFeature";
+import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import {
+  type UseNewFeatureStorageProps,
   useNewFeatureStorage,
-  UseNewFeatureStorageProps,
 } from "./useNewFeatureStorage";
-import { Field } from "@/components/ui/field";
-import { addDays } from "date-fns";
 
 const UseNewFeatureStorageDemo = (
   props: UseNewFeatureStorageProps & { featureId: string },

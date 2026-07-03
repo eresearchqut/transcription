@@ -9,7 +9,7 @@ import {
 } from "@aws-sdk/client-translate";
 
 import xray from "aws-xray-sdk";
-import { Transcription } from "model";
+import type { Transcription } from "model";
 
 import {
   getTranscription,
@@ -18,10 +18,10 @@ import {
   translationKey as updateTranslationKey,
 } from "../service/transcriptionService";
 import {
-  TranscriptDocument,
   assembleTranslatedDocument,
+  type TranscriptDocument,
 } from "../util/transcript";
-import { XLIFF_FILE_NAME, parseXliffTargets } from "../util/xliff";
+import { parseXliffTargets, XLIFF_FILE_NAME } from "../util/xliff";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";

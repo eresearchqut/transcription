@@ -1,12 +1,12 @@
+import type { Transcription } from "model";
 import {
-  Context,
+  type Context,
   createContext,
-  FunctionComponent,
-  PropsWithChildren,
+  type FunctionComponent,
+  type PropsWithChildren,
   useEffect,
   useState,
 } from "react";
-import { Transcription } from "model";
 import { getter } from "../client/fetchers";
 
 const API_ENDPOINT =
@@ -17,7 +17,7 @@ export interface TranscriptionsContextState {
   transcriptions: Transcription[];
 }
 
-export interface TranscriptionsContextOperations {}
+export type TranscriptionsContextOperations = NonNullable<unknown>;
 
 export const TranscriptionsContext: Context<
   TranscriptionsContextState & TranscriptionsContextOperations

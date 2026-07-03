@@ -1,28 +1,28 @@
 "use client";
 
-import { FunctionComponent, useState } from "react";
-import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
   Box,
-  Code,
   Field as ChakraField,
+  Code,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { LanguageInput } from "../../inputs/languageInput";
-import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
+import type { CheckedChangeDetails } from "@zag-js/switch";
 import { isArray } from "lodash";
 import { TRANSCRIBE_QUOTAS } from "model";
+import { type FunctionComponent, useState } from "react";
+import { ExternalLink } from "@/components/externalLink";
 import { HelpPopover } from "@/components/helpPopover";
+import { NewFeature } from "@/components/newFeature";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
-import { CheckedChangeDetails } from "@zag-js/switch";
-import { ExternalLink } from "@/components/externalLink";
-import { NewFeature } from "@/components/newFeature";
-import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
 import features from "@/public/features.json";
-import { TranscribeProps } from "./transcriptionOptions";
+import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
+import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
+import { LanguageInput } from "../../inputs/languageInput";
+import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
+import type { TranscribeProps } from "./transcriptionOptions";
 
 export type { TranscribeProps };
 
