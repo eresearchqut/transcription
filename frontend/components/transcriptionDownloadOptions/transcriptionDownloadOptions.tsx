@@ -28,9 +28,8 @@ import { Tooltip } from "../ui/tooltip";
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key;
 
-export interface DownloadOptionsProps extends Required<
-  Pick<UseTranscriptionProps, "initialTranscription">
-> {
+export interface DownloadOptionsProps
+  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
   handlePlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
