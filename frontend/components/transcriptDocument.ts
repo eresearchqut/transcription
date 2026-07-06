@@ -9,6 +9,13 @@ import {
   WidthType,
 } from "docx";
 
+import {
+  hasLanguageCodes,
+  type NormalizedSegment,
+  normalizedSegments,
+  resolveSpeaker,
+} from "./transcriptSegments";
+
 export interface Item {
   start_time?: string; // "0.14"
   end_time?: string; // "0.49"
@@ -78,19 +85,6 @@ export interface SpeakerSegment extends Timed {
     | "spk_9";
 }
 
-const speakers = {
-  spk_0: "Speaker 1",
-  spk_1: "Speaker 2",
-  spk_2: "Speaker 3",
-  spk_3: "Speaker 4",
-  spk_4: "Speaker 5",
-  spk_5: "Speaker 6",
-  spk_6: "Speaker 7",
-  spk_7: "Speaker 8",
-  spk_8: "Speaker 9",
-  spk_9: "Speaker 10",
-};
-
 const padTime = (time: string | number, length: number) => {
   return (new Array(length + 1).join("0") + time).slice(-length);
 };
@@ -103,54 +97,6 @@ const formatTime = (time: string) => {
   seconds = Math.floor(seconds - minutes * 60);
   return `${padTime(hours, 2)}:${padTime(minutes, 2)}:${padTime(seconds, 2)}`;
 };
-
-interface DocumentSegment {
-  start_time: string;
-  end_time: string;
-  alternatives: Alternative[];
-  language_code?: string;
-  speaker_label?: string;
-}
-
-const documentSegments = (job: TranscriptJob): DocumentSegment[] => {
-  const audioSegments = job.results.audio_segments ?? [];
-  const segments = job.results.segments ?? [];
-
-  // Original transcripts expose both `segments` (word-level `alternatives`) and
-  // `audio_segments` (which carry `language_code` and `speaker_label`). Keep the
-  // richer `alternatives` from `segments` but enrich each with the language and
-  // speaker from its parallel audio segment. Translations expose only
-  // `segments` (no language/speaker), so those fields stay undefined.
-  if (segments.length) {
-    return segments.map((segment, index) => {
-      const audio =
-        audioSegments.find(
-          (candidate) => candidate.start_time === segment.start_time,
-        ) ?? audioSegments[index];
-      return {
-        start_time: segment.start_time,
-        end_time: segment.end_time,
-        alternatives: segment.alternatives,
-        language_code: audio?.language_code,
-        speaker_label: audio?.speaker_label,
-      };
-    });
-  }
-
-  return audioSegments
-    .filter((segment) => segment.transcript.trim().length > 0)
-    .map((segment) => ({
-      start_time: segment.start_time,
-      end_time: segment.end_time,
-      alternatives: [{ transcript: segment.transcript }],
-      language_code: segment.language_code,
-      speaker_label: segment.speaker_label,
-    }));
-};
-
-/** Whether any segment carries an identified language code. */
-const hasLanguageCodes = (segments: DocumentSegment[]): boolean =>
-  segments.some((segment) => !!segment.language_code);
 
 export interface DocumentOptions {
   withAlternatives?: boolean;
@@ -166,20 +112,11 @@ const table = (
     includeLanguages = false,
   }: DocumentOptions = {},
 ) => {
-  const segments = documentSegments(job);
+  const segments = normalizedSegments(job);
   const showLanguages = includeLanguages && hasLanguageCodes(segments);
 
-  const formatSpeakerLabel = (segment: DocumentSegment) => {
-    const label =
-      segment.speaker_label ??
-      job.results.speaker_labels?.segments.find(
-        ({ start_time: speakerStartTime }) =>
-          parseFloat(speakerStartTime) <= parseFloat(segment.end_time) &&
-          parseFloat(speakerStartTime) >= parseFloat(segment.start_time),
-      )?.speaker_label;
-    if (!label) return "";
-    return speakers[label as keyof typeof speakers] ?? label;
-  };
+  const formatSpeakerLabel = (segment: NormalizedSegment) =>
+    resolveSpeaker(segment, job.results.speaker_labels?.segments);
 
   // Column layout in percentages; Transcript takes the remaining width.
   const timeWidth = 12;
