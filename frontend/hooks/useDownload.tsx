@@ -235,9 +235,14 @@ export const useDownload = () => {
     format,
     options,
   }: DownloadTranscriptProps) => {
-    track("download-transcript", { format, ...options });
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-transcript", { format, ...transcriptOptions });
     download({
-      downloadUrl: fetchTranscriptUrl(objectKey, format, options),
+      downloadUrl: fetchTranscriptUrl(objectKey, format, transcriptOptions),
       filename,
     });
   };
@@ -248,9 +253,18 @@ export const useDownload = () => {
     format,
     options,
   }: DownloadTranslatedTranscriptProps) => {
-    track("download-translation", { format, ...options });
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-translation", { format, ...transcriptOptions });
     download({
-      downloadUrl: fetchTranslatedTranscriptUrl(objectKey, format, options),
+      downloadUrl: fetchTranslatedTranscriptUrl(
+        objectKey,
+        format,
+        transcriptOptions,
+      ),
       filename,
     });
   };

@@ -28,8 +28,9 @@ import { Tooltip } from "../ui/tooltip";
 const mediaKey = (transcription: Transcription): string =>
   transcription.uploadEvent.object.key;
 
-export interface DownloadOptionsProps
-  extends Required<Pick<UseTranscriptionProps, "initialTranscription">> {
+export interface DownloadOptionsProps extends Required<
+  Pick<UseTranscriptionProps, "initialTranscription">
+> {
   handlePlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
@@ -129,10 +130,13 @@ export const TranscriptionDownloadOptions: FunctionComponent<
   // On narrow (mobile) screens a side-anchored sub-menu can overflow the
   // viewport, so open it below the trigger instead; keep the beside placement
   // on wider screens. `flip`/`slide`/`fitViewport` keep it on-screen either way.
-  const submenuPlacement = useBreakpointValue({
-    base: "bottom-start",
-    sm: "left-start",
-  } as const);
+  // `useBreakpointValue` is `undefined` on the first (server) render, so fall
+  // back to the beside placement until it resolves.
+  const submenuPlacement =
+    useBreakpointValue({
+      base: "bottom-start",
+      sm: "left-start",
+    } as const) ?? "left-start";
   const submenuPositioning = {
     placement: submenuPlacement,
     gutter: 2,
