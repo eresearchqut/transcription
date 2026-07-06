@@ -104,66 +104,128 @@ const formatTime = (time: string) => {
   return `${padTime(hours, 2)}:${padTime(minutes, 2)}:${padTime(seconds, 2)}`;
 };
 
-const documentSegments = (
-  job: TranscriptJob,
-): { start_time: string; end_time: string; alternatives: Alternative[] }[] => {
-  if (job.results.segments?.length) return job.results.segments;
-  return (job.results.audio_segments ?? [])
+interface DocumentSegment {
+  start_time: string;
+  end_time: string;
+  alternatives: Alternative[];
+  language_code?: string;
+  speaker_label?: string;
+}
+
+const documentSegments = (job: TranscriptJob): DocumentSegment[] => {
+  const audioSegments = job.results.audio_segments ?? [];
+  const segments = job.results.segments ?? [];
+
+  // Original transcripts expose both `segments` (word-level `alternatives`) and
+  // `audio_segments` (which carry `language_code` and `speaker_label`). Keep the
+  // richer `alternatives` from `segments` but enrich each with the language and
+  // speaker from its parallel audio segment. Translations expose only
+  // `segments` (no language/speaker), so those fields stay undefined.
+  if (segments.length) {
+    return segments.map((segment, index) => {
+      const audio =
+        audioSegments.find(
+          (candidate) => candidate.start_time === segment.start_time,
+        ) ?? audioSegments[index];
+      return {
+        start_time: segment.start_time,
+        end_time: segment.end_time,
+        alternatives: segment.alternatives,
+        language_code: audio?.language_code,
+        speaker_label: audio?.speaker_label,
+      };
+    });
+  }
+
+  return audioSegments
     .filter((segment) => segment.transcript.trim().length > 0)
     .map((segment) => ({
       start_time: segment.start_time,
       end_time: segment.end_time,
       alternatives: [{ transcript: segment.transcript }],
+      language_code: segment.language_code,
+      speaker_label: segment.speaker_label,
     }));
 };
 
-const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
-  const formatSpeakerLabel = (startTime: string, endTime: string) => {
-    const speakerLabel = job.results.speaker_labels.segments.find(
-      ({ start_time: speakerStartTime }) =>
-        parseFloat(speakerStartTime) <= parseFloat(endTime) &&
-        parseFloat(speakerStartTime) >= parseFloat(startTime),
-    )?.speaker_label;
+/** Whether any segment carries an identified language code. */
+const hasLanguageCodes = (segments: DocumentSegment[]): boolean =>
+  segments.some((segment) => !!segment.language_code);
 
-    return speakerLabel ? speakers[speakerLabel] : "";
+export interface DocumentOptions {
+  withAlternatives?: boolean;
+  includeSpeakers?: boolean;
+  includeLanguages?: boolean;
+}
+
+const table = (
+  job: TranscriptJob,
+  {
+    withAlternatives = false,
+    includeSpeakers = false,
+    includeLanguages = false,
+  }: DocumentOptions = {},
+) => {
+  const segments = documentSegments(job);
+  const showLanguages = includeLanguages && hasLanguageCodes(segments);
+
+  const formatSpeakerLabel = (segment: DocumentSegment) => {
+    const label =
+      segment.speaker_label ??
+      job.results.speaker_labels?.segments.find(
+        ({ start_time: speakerStartTime }) =>
+          parseFloat(speakerStartTime) <= parseFloat(segment.end_time) &&
+          parseFloat(speakerStartTime) >= parseFloat(segment.start_time),
+      )?.speaker_label;
+    if (!label) return "";
+    return speakers[label as keyof typeof speakers] ?? label;
   };
+
+  // Column layout in percentages; Transcript takes the remaining width.
+  const timeWidth = 12;
+  const languageWidth = showLanguages ? 15 : 0;
+  const speakerWidth = includeSpeakers ? 12 : 0;
+  const transcriptWidth = 100 - timeWidth - languageWidth - speakerWidth;
+  const columnWidthPercentages = [
+    timeWidth,
+    ...(showLanguages ? [languageWidth] : []),
+    ...(includeSpeakers ? [speakerWidth] : []),
+    transcriptWidth,
+  ];
+  // DXA units (twentieths of a point); 8640 = default content width
+  // (12240 DXA page − 1800 DXA margins each side).
+  const contentWidth = 8640;
+  const columnWidths = columnWidthPercentages.map((percentage) =>
+    Math.round((contentWidth * percentage) / 100),
+  );
+  const columnCount = columnWidthPercentages.length;
+
+  const headerCell = (text: string, size: number) =>
+    new TableCell({
+      width: { type: WidthType.PERCENTAGE, size },
+      children: [new Paragraph(text)],
+    });
+
+  const headerRow = new TableRow({
+    children: [
+      headerCell("Start Time", timeWidth),
+      ...(showLanguages ? [headerCell("Language", languageWidth)] : []),
+      ...(includeSpeakers ? [headerCell("Speaker", speakerWidth)] : []),
+      headerCell("Transcript", transcriptWidth),
+    ],
+  });
 
   return new Table({
     width: {
       type: WidthType.PERCENTAGE,
       size: 100,
     },
-    // DXA units (twentieths of a point); 8640 = default content width (12240 DXA page − 1800 DXA margins each side), split 12%/12%/76%
-    columnWidths: [1037, 1037, 6566],
+    columnWidths,
     // FIXED layout ensures the column grid is respected rather than auto-sized by content
     layout: TableLayoutType.FIXED,
     rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 12,
-            },
-            children: [new Paragraph("Start Time")],
-          }),
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 12,
-            },
-            children: [new Paragraph("Speaker")],
-          }),
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 76,
-            },
-            children: [new Paragraph("Transcript")],
-          }),
-        ],
-      }),
-      ...documentSegments(job).flatMap((segment) =>
+      headerRow,
+      ...segments.flatMap((segment) =>
         (withAlternatives
           ? segment.alternatives
           : segment.alternatives.slice(0, 1)
@@ -174,16 +236,16 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
                 index === 0
                   ? [
                       cell(formatTime(segment.start_time)),
-                      cell(
-                        formatSpeakerLabel(
-                          segment.start_time,
-                          segment.end_time,
-                        ),
-                      ),
+                      ...(showLanguages
+                        ? [cell((segment.language_code ?? "").toUpperCase())]
+                        : []),
+                      ...(includeSpeakers
+                        ? [cell(formatSpeakerLabel(segment))]
+                        : []),
                       cell(alternative.transcript),
                     ]
                   : [
-                      cell(`Alternative ${index}`, 2),
+                      cell(`Alternative ${index}`, columnCount - 1),
                       cell(alternative.transcript),
                     ],
             }),
@@ -212,16 +274,29 @@ export const heading = (text: string, pageBreakBefore: boolean = false) =>
     pageBreakBefore,
   });
 
-const transcriptDocument = (job: TranscriptJob) =>
+const transcriptDocument = (
+  job: TranscriptJob,
+  { includeSpeakers = false, includeLanguages = false }: DocumentOptions = {},
+) =>
   new Document({
     sections: [
       {
-        children: [heading("Transcript with speakers", true), table(job)],
+        children: [
+          heading(
+            includeSpeakers ? "Transcript with speakers" : "Transcript",
+            true,
+          ),
+          table(job, { includeSpeakers, includeLanguages }),
+        ],
       },
       {
         children: [
           heading("Transcript with alternatives", true),
-          table(job, true),
+          table(job, {
+            withAlternatives: true,
+            includeSpeakers,
+            includeLanguages,
+          }),
         ],
       },
       {

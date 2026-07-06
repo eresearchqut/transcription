@@ -1,10 +1,14 @@
-import { Button, Stack } from "@chakra-ui/react";
+import { Button, Stack, useBreakpointValue } from "@chakra-ui/react";
 import { isUndefined } from "lodash";
 import type { Transcription } from "model";
 import { SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages } from "model";
 import type { FunctionComponent } from "react";
 import { languagesFromTranscription } from "@/components/transcriptionLanguages";
-import { type TranscriptFormat, useDownload } from "../../hooks/useDownload";
+import {
+  type TranscriptFormat,
+  type TranscriptOptions,
+  useDownload,
+} from "../../hooks/useDownload";
 import {
   type UseTranscriptionProps,
   useTranscription,
@@ -17,6 +21,7 @@ import {
   MenuRoot,
   MenuSeparator,
   MenuTrigger,
+  MenuTriggerItem,
 } from "../ui/menu";
 import { Tooltip } from "../ui/tooltip";
 
@@ -43,11 +48,57 @@ const languageDisplayName = (code: string) =>
 const transcriptProps = (
   transcription: Transcription,
   format: TranscriptFormat,
+  options?: TranscriptOptions,
 ) => ({
   objectKey: transcription.downloadKey!,
   filename: filenameFromFormat(transcription, format),
   format,
+  options,
 });
+
+const TRANSCRIPT_FORMATS: {
+  format: TranscriptFormat;
+  label: string;
+  icon: string;
+}[] = [
+  { format: "txt", label: "Text (.txt)", icon: "readme" },
+  { format: "srt", label: "SRT", icon: "subtitle" },
+  { format: "vtt", label: "VTT", icon: "subtitle" },
+  { format: "docx", label: "DOCX", icon: "docx" },
+];
+
+const DOWNLOAD_VARIANTS: {
+  key: string;
+  label: string;
+  options: TranscriptOptions;
+}[] = [
+  {
+    key: "plain",
+    label: "Plain",
+    options: { includeSpeakers: false, includeLanguages: false },
+  },
+  {
+    key: "speakers",
+    label: "With speakers",
+    options: { includeSpeakers: true, includeLanguages: false },
+  },
+  {
+    key: "languages",
+    label: "With languages",
+    options: { includeSpeakers: false, includeLanguages: true },
+  },
+  {
+    key: "speakers-languages",
+    label: "With speakers & languages",
+    options: { includeSpeakers: true, includeLanguages: true },
+  },
+];
+
+// Translations are a single target language, so the language-label variants
+// would be identical to the plain/speaker ones; only offer those two.
+const TRANSLATION_DOWNLOAD_VARIANTS = DOWNLOAD_VARIANTS.filter(
+  (variant) => !variant.options.includeLanguages,
+);
 
 const MenuChevron = () => <MappedIcon icon={"chevron-down"} size={"xs"} />;
 
@@ -74,6 +125,23 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     jobId: initialTranscription.sk,
     initialTranscription,
   });
+
+  // On narrow (mobile) screens a side-anchored sub-menu can overflow the
+  // viewport, so open it below the trigger instead; keep the beside placement
+  // on wider screens. `flip`/`slide`/`fitViewport` keep it on-screen either way.
+  const submenuPlacement = useBreakpointValue({
+    base: "bottom-start",
+    sm: "left-start",
+  } as const);
+  const submenuPositioning = {
+    placement: submenuPlacement,
+    gutter: 2,
+    flip: true,
+    slide: true,
+    overlap: true,
+    fitViewport: true,
+    overflowPadding: 8,
+  };
 
   if (!transcription) return undefined;
 
@@ -180,46 +248,37 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               >
                 <MappedIcon icon={"json"} /> JSON
               </MenuItem>
-              <MenuItem
-                value={"txt"}
-                onClick={() =>
-                  downloadTranscript({
-                    ...transcriptProps(transcription, "txt"),
-                  })
-                }
-              >
-                <MappedIcon icon={"readme"} /> Text (.txt)
-              </MenuItem>
-              <MenuItem
-                value={"srt"}
-                onClick={() =>
-                  downloadTranscript({
-                    ...transcriptProps(transcription, "srt"),
-                  })
-                }
-              >
-                <MappedIcon icon={"subtitle"} /> SRT
-              </MenuItem>
-              <MenuItem
-                value={"vtt"}
-                onClick={() =>
-                  downloadTranscript({
-                    ...transcriptProps(transcription, "vtt"),
-                  })
-                }
-              >
-                <MappedIcon icon={"subtitle"} /> VTT
-              </MenuItem>
-              <MenuItem
-                value={"docx"}
-                onClick={() =>
-                  downloadTranscript({
-                    ...transcriptProps(transcription, "docx"),
-                  })
-                }
-              >
-                <MappedIcon icon={"subtitle"} /> DOCX
-              </MenuItem>
+              {TRANSCRIPT_FORMATS.map(({ format, label, icon }) => (
+                <MenuRoot key={format} positioning={submenuPositioning}>
+                  <MenuTriggerItem
+                    value={format}
+                    startIcon={<MappedIcon icon={icon} />}
+                  >
+                    {label}
+                  </MenuTriggerItem>
+                  <MenuContent>
+                    <MenuItemGroup title={label}>
+                      {DOWNLOAD_VARIANTS.map((variant) => (
+                        <MenuItem
+                          key={variant.key}
+                          value={`${format}-${variant.key}`}
+                          onClick={() =>
+                            downloadTranscript(
+                              transcriptProps(
+                                transcription,
+                                format,
+                                variant.options,
+                              ),
+                            )
+                          }
+                        >
+                          <MappedIcon icon={icon} /> {variant.label}
+                        </MenuItem>
+                      ))}
+                    </MenuItemGroup>
+                  </MenuContent>
+                </MenuRoot>
+              ))}
             </MenuItemGroup>
           )}
           {transcription.translationKey && (
@@ -228,54 +287,36 @@ export const TranscriptionDownloadOptions: FunctionComponent<
               <MenuItemGroup
                 title={`Translation (${translationLanguageLabel})`}
               >
-                <MenuItem
-                  value={"translation-txt"}
-                  onClick={() =>
-                    downloadTranslatedTranscript({
-                      objectKey: transcription.translationKey!,
-                      filename: translatedFilename("txt"),
-                      format: "txt",
-                    })
-                  }
-                >
-                  <MappedIcon icon={"readme"} /> Text (.txt)
-                </MenuItem>
-                <MenuItem
-                  value={"translation-srt"}
-                  onClick={() =>
-                    downloadTranslatedTranscript({
-                      objectKey: transcription.translationKey!,
-                      filename: translatedFilename("srt"),
-                      format: "srt",
-                    })
-                  }
-                >
-                  <MappedIcon icon={"subtitle"} /> SRT
-                </MenuItem>
-                <MenuItem
-                  value={"translation-vtt"}
-                  onClick={() =>
-                    downloadTranslatedTranscript({
-                      objectKey: transcription.translationKey!,
-                      filename: translatedFilename("vtt"),
-                      format: "vtt",
-                    })
-                  }
-                >
-                  <MappedIcon icon={"subtitle"} /> VTT
-                </MenuItem>
-                <MenuItem
-                  value={"translation-docx"}
-                  onClick={() =>
-                    downloadTranslatedTranscript({
-                      objectKey: transcription.translationKey!,
-                      filename: translatedFilename("docx"),
-                      format: "docx",
-                    })
-                  }
-                >
-                  <MappedIcon icon={"subtitle"} /> DOCX
-                </MenuItem>
+                {TRANSCRIPT_FORMATS.map(({ format, label, icon }) => (
+                  <MenuRoot key={format} positioning={submenuPositioning}>
+                    <MenuTriggerItem
+                      value={`translation-${format}`}
+                      startIcon={<MappedIcon icon={icon} />}
+                    >
+                      {label}
+                    </MenuTriggerItem>
+                    <MenuContent>
+                      <MenuItemGroup title={label}>
+                        {TRANSLATION_DOWNLOAD_VARIANTS.map((variant) => (
+                          <MenuItem
+                            key={variant.key}
+                            value={`translation-${format}-${variant.key}`}
+                            onClick={() =>
+                              downloadTranslatedTranscript({
+                                objectKey: transcription.translationKey!,
+                                filename: translatedFilename(format),
+                                format,
+                                options: variant.options,
+                              })
+                            }
+                          >
+                            <MappedIcon icon={icon} /> {variant.label}
+                          </MenuItem>
+                        ))}
+                      </MenuItemGroup>
+                    </MenuContent>
+                  </MenuRoot>
+                ))}
               </MenuItemGroup>
             </>
           )}
