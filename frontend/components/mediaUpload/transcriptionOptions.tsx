@@ -263,9 +263,9 @@ export const TranscriptionOptions: FunctionComponent<
           </ExternalLink>{" "}
           policies. By using this service you are expected to comply with{" "}
           <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
-            Anthropic&apos;s Usage Policy.
+            Anthropic&apos;s Usage Policy
           </ExternalLink>{" "}
-          Please be aware that factual assertions in the output should not be
+          . Please be aware that factual assertions in the output should not be
           relied upon without independently checking their accuracy, as they may
           be false, incomplete, misleading or not reflective of recent events or
           information.

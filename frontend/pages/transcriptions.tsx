@@ -2,11 +2,11 @@ import {
   AlertIndicator,
   AlertRoot,
   AlertTitle,
+  Badge,
   Box,
   Button,
   Flex,
   HStack,
-  IconButton,
   Input,
   Link,
   Text,
@@ -76,8 +76,13 @@ const Transcriptions: NextPageWithLayout = () => {
   const searchInputPlaceholder = "Search transcriptions";
 
   const formatDate = (isoDateString: string) => {
-    return new Date(isoDateString).toLocaleString("default");
+    return new Date(isoDateString).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
   };
+  const formatExpiryDate = (date: Date) =>
+    date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const startOfDay = (isoDateString: string) =>
     set(isoDateString, { hours: 0, minutes: 0, seconds: 0 });
   const isExpiringSoon = (isoDateString: string) => {
@@ -105,27 +110,33 @@ const Transcriptions: NextPageWithLayout = () => {
         const ttl = new Date(props.row.original.ttl * 1000);
         const formattedTtl = formatDate(ttl.toISOString());
         return (
-          <HStack wrap={{ base: "wrap", xl: "nowrap" }}>
-            <Flex
-              align={"flex-start"}
-              whiteSpace={{ base: "normal", xl: "nowrap" }}
-            >
+          <HStack
+            gap={3}
+            w={{ base: "auto", xl: "100%" }}
+            justify={{ base: "flex-start", xl: "space-between" }}
+          >
+            <Flex whiteSpace={{ base: "normal", xl: "nowrap" }}>
               {formatDate(props.row.original.date)}
             </Flex>
             {isExpiringSoon(props.row.original.date) && (
-              <Flex align={"flex-start"}>
-                <ToggleTip
-                  content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+              <ToggleTip
+                content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+              >
+                <Badge
+                  asChild
+                  colorPalette={"orange"}
+                  variant={"solid"}
+                  rounded={"full"}
+                  cursor={"pointer"}
+                  flexShrink={0}
+                  gap={1}
                 >
-                  <IconButton size={"xs"} rounded={"full"} variant={"ghost"}>
-                    <MappedIcon
-                      icon={"clock-exclamation"}
-                      aria-label={"Expiring soon"}
-                      color={"yellow.500"}
-                    />
-                  </IconButton>
-                </ToggleTip>
-              </Flex>
+                  <button type={"button"} aria-label={"Expiring soon"}>
+                    <MappedIcon icon={"clock-exclamation"} />
+                    Expires {formatExpiryDate(ttl)}
+                  </button>
+                </Badge>
+              </ToggleTip>
             )}
           </HStack>
         );

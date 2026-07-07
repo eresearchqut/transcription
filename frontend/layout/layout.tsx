@@ -37,8 +37,8 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
   onLogout,
 }: any) => {
   const navigationItems = {
-    Home: {
-      icon: <MappedIcon icon={"home"} />,
+    About: {
+      icon: <MappedIcon icon={"info"} />,
       url: "/login",
     },
     "Upload Media": {
@@ -105,10 +105,10 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
         >
           <Stack
             direction="row"
-            alignItems={"center"}
+            alignItems={"stretch"}
             maxWidth={"1576px"}
             m={"auto"}
-            p={4}
+            px={4}
           >
             <chakra.nav>
               <Navigation items={navigationItems} color={"white"} />
@@ -116,7 +116,7 @@ export const Layout: FunctionComponent<PropsWithChildren<LayoutProps>> = ({
           </Stack>
         </Box>
       )}
-      <Box id={"main"} p={3} pt={30}>
+      <Box id={"main"} px={{ base: 3, md: 8 }} pb={3} pt={30}>
         <chakra.main>
           <Box {...mainContainerProps}>
             {isLanding ? (

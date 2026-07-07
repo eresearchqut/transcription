@@ -171,7 +171,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             flexWrap={"wrap"}
             gap={3}
           >
-            <Button colorPalette={"gray"} variant={"solid"} asChild>
+            <Button colorPalette={"gray"} variant={"surface"} asChild>
               <NextLink href={"/classic"}>Revert to classic view</NextLink>
             </Button>
             <Button colorPalette={"blue"} onClick={() => setStep(1)}>
