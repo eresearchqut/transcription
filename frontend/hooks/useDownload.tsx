@@ -21,13 +21,19 @@ export interface DownloadProps {
 }
 
 export type TranscriptFormat = "srt" | "vtt" | "docx" | "txt";
+export interface TranscriptOptions {
+  includeSpeakers?: boolean;
+  includeLanguages?: boolean;
+}
 export interface DownloadTranscriptProps extends DownloadProps {
   format: TranscriptFormat;
+  options?: TranscriptOptions;
 }
 
 export type TranslatedTranscriptFormat = "srt" | "vtt" | "docx" | "txt";
 export interface DownloadTranslatedTranscriptProps extends DownloadProps {
   format: TranslatedTranscriptFormat;
+  options?: TranscriptOptions;
 }
 
 export const useDownload = () => {
@@ -88,20 +94,45 @@ export const useDownload = () => {
   const fetchTranscriptUrl = async (
     objectKey: string,
     format: TranscriptFormat,
+    {
+      includeSpeakers = false,
+      includeLanguages = false,
+    }: TranscriptOptions = {},
   ): Promise<string> => {
     return downloadTranscriptJob(objectKey)
       .then((transcriptJob) => {
         switch (format) {
           case "docx":
-            return Packer.toBlob(transcriptDocument(transcriptJob));
+            return Packer.toBlob(
+              transcriptDocument(transcriptJob, {
+                includeSpeakers,
+                includeLanguages,
+              }),
+            );
           case "txt":
-            return new Blob([segmentsToText(transcriptJob)], {
-              type: "text/plain",
-            });
+            return new Blob(
+              [
+                segmentsToText(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
           default:
-            return new Blob([segmentsToSrt(transcriptJob)], {
-              type: "text/plain",
-            });
+            return new Blob(
+              [
+                segmentsToSrt(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
         }
       })
       .then((blob) =>
@@ -137,7 +168,10 @@ export const useDownload = () => {
   const fetchTranslatedTranscriptUrl = async (
     objectKey: string,
     format: TranslatedTranscriptFormat,
-    { includeSpeakers = false }: { includeSpeakers?: boolean } = {},
+    {
+      includeSpeakers = false,
+      includeLanguages = false,
+    }: TranscriptOptions = {},
   ): Promise<string> => {
     return getCurrentSession()
       .then(() =>
@@ -151,14 +185,32 @@ export const useDownload = () => {
       .then((transcriptJob) => {
         switch (format) {
           case "docx":
-            return Packer.toBlob(transcriptDocument(transcriptJob));
+            return Packer.toBlob(
+              transcriptDocument(transcriptJob, {
+                includeSpeakers,
+                includeLanguages,
+              }),
+            );
           case "txt":
-            return new Blob([segmentsToText(transcriptJob)], {
-              type: "text/plain",
-            });
+            return new Blob(
+              [
+                segmentsToText(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
           default:
             return new Blob(
-              [segmentsToSrt(transcriptJob, { includeSpeakers })],
+              [
+                segmentsToSrt(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
               {
                 type: "text/plain",
               },
@@ -181,10 +233,16 @@ export const useDownload = () => {
     objectKey,
     filename,
     format,
+    options,
   }: DownloadTranscriptProps) => {
-    track("download-transcript", { format });
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-transcript", { format, ...transcriptOptions });
     download({
-      downloadUrl: fetchTranscriptUrl(objectKey, format),
+      downloadUrl: fetchTranscriptUrl(objectKey, format, transcriptOptions),
       filename,
     });
   };
@@ -193,10 +251,20 @@ export const useDownload = () => {
     objectKey,
     filename,
     format,
+    options,
   }: DownloadTranslatedTranscriptProps) => {
-    track("download-translation", { format });
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-translation", { format, ...transcriptOptions });
     download({
-      downloadUrl: fetchTranslatedTranscriptUrl(objectKey, format),
+      downloadUrl: fetchTranslatedTranscriptUrl(
+        objectKey,
+        format,
+        transcriptOptions,
+      ),
       filename,
     });
   };

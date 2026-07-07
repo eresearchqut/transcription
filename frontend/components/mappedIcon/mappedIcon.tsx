@@ -41,6 +41,7 @@ import {
   TbFile,
   TbFileAlert,
   TbFileCheck,
+  TbFileText,
 } from "react-icons/tb";
 import { VscJson } from "react-icons/vsc";
 
@@ -51,6 +52,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "chevron-right": FaChevronRight,
   clock: TbClock,
   "clock-exclamation": TbClockExclamation,
+  docx: TbFileText,
   "double-arrow-left": MdKeyboardDoubleArrowLeft,
   "double-arrow-right": MdKeyboardDoubleArrowRight,
   "enter-outline": IoEnterOutline,

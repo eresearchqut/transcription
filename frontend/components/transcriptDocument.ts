@@ -9,6 +9,13 @@ import {
   WidthType,
 } from "docx";
 
+import {
+  hasLanguageCodes,
+  type NormalizedSegment,
+  normalizedSegments,
+  resolveSpeaker,
+} from "./transcriptSegments";
+
 export interface Item {
   start_time?: string; // "0.14"
   end_time?: string; // "0.49"
@@ -78,19 +85,6 @@ export interface SpeakerSegment extends Timed {
     | "spk_9";
 }
 
-const speakers = {
-  spk_0: "Speaker 1",
-  spk_1: "Speaker 2",
-  spk_2: "Speaker 3",
-  spk_3: "Speaker 4",
-  spk_4: "Speaker 5",
-  spk_5: "Speaker 6",
-  spk_6: "Speaker 7",
-  spk_7: "Speaker 8",
-  spk_8: "Speaker 9",
-  spk_9: "Speaker 10",
-};
-
 const padTime = (time: string | number, length: number) => {
   return (new Array(length + 1).join("0") + time).slice(-length);
 };
@@ -104,66 +98,71 @@ const formatTime = (time: string) => {
   return `${padTime(hours, 2)}:${padTime(minutes, 2)}:${padTime(seconds, 2)}`;
 };
 
-const documentSegments = (
+export interface DocumentOptions {
+  withAlternatives?: boolean;
+  includeSpeakers?: boolean;
+  includeLanguages?: boolean;
+}
+
+const table = (
   job: TranscriptJob,
-): { start_time: string; end_time: string; alternatives: Alternative[] }[] => {
-  if (job.results.segments?.length) return job.results.segments;
-  return (job.results.audio_segments ?? [])
-    .filter((segment) => segment.transcript.trim().length > 0)
-    .map((segment) => ({
-      start_time: segment.start_time,
-      end_time: segment.end_time,
-      alternatives: [{ transcript: segment.transcript }],
-    }));
-};
+  {
+    withAlternatives = false,
+    includeSpeakers = false,
+    includeLanguages = false,
+  }: DocumentOptions = {},
+) => {
+  const segments = normalizedSegments(job);
+  const showLanguages = includeLanguages && hasLanguageCodes(segments);
 
-const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
-  const formatSpeakerLabel = (startTime: string, endTime: string) => {
-    const speakerLabel = job.results.speaker_labels.segments.find(
-      ({ start_time: speakerStartTime }) =>
-        parseFloat(speakerStartTime) <= parseFloat(endTime) &&
-        parseFloat(speakerStartTime) >= parseFloat(startTime),
-    )?.speaker_label;
+  const formatSpeakerLabel = (segment: NormalizedSegment) =>
+    resolveSpeaker(segment, job.results.speaker_labels?.segments);
 
-    return speakerLabel ? speakers[speakerLabel] : "";
-  };
+  // Column layout in percentages; Transcript takes the remaining width.
+  const timeWidth = 12;
+  const languageWidth = showLanguages ? 15 : 0;
+  const speakerWidth = includeSpeakers ? 12 : 0;
+  const transcriptWidth = 100 - timeWidth - languageWidth - speakerWidth;
+  const columnWidthPercentages = [
+    timeWidth,
+    ...(showLanguages ? [languageWidth] : []),
+    ...(includeSpeakers ? [speakerWidth] : []),
+    transcriptWidth,
+  ];
+  // DXA units (twentieths of a point); 8640 = default content width
+  // (12240 DXA page − 1800 DXA margins each side).
+  const contentWidth = 8640;
+  const columnWidths = columnWidthPercentages.map((percentage) =>
+    Math.round((contentWidth * percentage) / 100),
+  );
+  const columnCount = columnWidthPercentages.length;
+
+  const headerCell = (text: string, size: number) =>
+    new TableCell({
+      width: { type: WidthType.PERCENTAGE, size },
+      children: [new Paragraph(text)],
+    });
+
+  const headerRow = new TableRow({
+    children: [
+      headerCell("Start Time", timeWidth),
+      ...(showLanguages ? [headerCell("Language", languageWidth)] : []),
+      ...(includeSpeakers ? [headerCell("Speaker", speakerWidth)] : []),
+      headerCell("Transcript", transcriptWidth),
+    ],
+  });
 
   return new Table({
     width: {
       type: WidthType.PERCENTAGE,
       size: 100,
     },
-    // DXA units (twentieths of a point); 8640 = default content width (12240 DXA page − 1800 DXA margins each side), split 12%/12%/76%
-    columnWidths: [1037, 1037, 6566],
+    columnWidths,
     // FIXED layout ensures the column grid is respected rather than auto-sized by content
     layout: TableLayoutType.FIXED,
     rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 12,
-            },
-            children: [new Paragraph("Start Time")],
-          }),
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 12,
-            },
-            children: [new Paragraph("Speaker")],
-          }),
-          new TableCell({
-            width: {
-              type: WidthType.PERCENTAGE,
-              size: 76,
-            },
-            children: [new Paragraph("Transcript")],
-          }),
-        ],
-      }),
-      ...documentSegments(job).flatMap((segment) =>
+      headerRow,
+      ...segments.flatMap((segment) =>
         (withAlternatives
           ? segment.alternatives
           : segment.alternatives.slice(0, 1)
@@ -174,16 +173,16 @@ const table = (job: TranscriptJob, withAlternatives: boolean = false) => {
                 index === 0
                   ? [
                       cell(formatTime(segment.start_time)),
-                      cell(
-                        formatSpeakerLabel(
-                          segment.start_time,
-                          segment.end_time,
-                        ),
-                      ),
+                      ...(showLanguages
+                        ? [cell((segment.language_code ?? "").toUpperCase())]
+                        : []),
+                      ...(includeSpeakers
+                        ? [cell(formatSpeakerLabel(segment))]
+                        : []),
                       cell(alternative.transcript),
                     ]
                   : [
-                      cell(`Alternative ${index}`, 2),
+                      cell(`Alternative ${index}`, columnCount - 1),
                       cell(alternative.transcript),
                     ],
             }),
@@ -212,16 +211,29 @@ export const heading = (text: string, pageBreakBefore: boolean = false) =>
     pageBreakBefore,
   });
 
-const transcriptDocument = (job: TranscriptJob) =>
+const transcriptDocument = (
+  job: TranscriptJob,
+  { includeSpeakers = false, includeLanguages = false }: DocumentOptions = {},
+) =>
   new Document({
     sections: [
       {
-        children: [heading("Transcript with speakers", true), table(job)],
+        children: [
+          heading(
+            includeSpeakers ? "Transcript with speakers" : "Transcript",
+            true,
+          ),
+          table(job, { includeSpeakers, includeLanguages }),
+        ],
       },
       {
         children: [
           heading("Transcript with alternatives", true),
-          table(job, true),
+          table(job, {
+            withAlternatives: true,
+            includeSpeakers,
+            includeLanguages,
+          }),
         ],
       },
       {

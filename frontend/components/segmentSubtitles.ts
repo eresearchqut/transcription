@@ -1,4 +1,10 @@
-import type { SpeakerSegment, TranscriptJob } from "./transcriptDocument";
+import type { TranscriptJob } from "./transcriptDocument";
+import {
+  hasLanguageCodes,
+  normalizedSegments,
+  resolveSpeaker,
+  segmentTranscript,
+} from "./transcriptSegments";
 
 /**
  * Builders that produce subtitle/text output from a transcript at the SEGMENT
@@ -17,19 +23,6 @@ export interface SubtitleSegment {
   language_code?: string;
 }
 
-const speakers: Record<string, string> = {
-  spk_0: "Speaker 1",
-  spk_1: "Speaker 2",
-  spk_2: "Speaker 3",
-  spk_3: "Speaker 4",
-  spk_4: "Speaker 5",
-  spk_5: "Speaker 6",
-  spk_6: "Speaker 7",
-  spk_7: "Speaker 8",
-  spk_8: "Speaker 9",
-  spk_9: "Speaker 10",
-};
-
 const pad = (value: number, length: number) =>
   value.toString().padStart(length, "0");
 
@@ -44,66 +37,61 @@ const formatSrtTime = (time: string): string => {
   return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)},${pad(milliseconds, 3)}`;
 };
 
-const speakerLabel = (
-  segments: SpeakerSegment[] | undefined,
-  startTime: string,
-  endTime: string,
-  ownLabel?: string,
+const speakerLabel = (job: TranscriptJob, segment: SubtitleSegment): string =>
+  resolveSpeaker(segment, job.results.speaker_labels?.segments);
+
+/**
+ * Prefix a transcript line with an optional language tag and speaker label,
+ * e.g. `[EN] Speaker 1: ...`. Empty parts are omitted.
+ */
+const formatSegmentLine = (
+  transcript: string,
+  speaker: string,
+  languageCode: string | undefined,
 ): string => {
-  const label =
-    ownLabel ??
-    segments?.find(
-      ({ start_time: speakerStartTime }) =>
-        parseFloat(speakerStartTime) <= parseFloat(endTime) &&
-        parseFloat(speakerStartTime) >= parseFloat(startTime),
-    )?.speaker_label;
-  if (!label) return "";
-  return speakers[label] ?? label;
+  const prefix = [
+    languageCode ? `[${languageCode.toUpperCase()}]` : "",
+    speaker ? `${speaker}:` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return prefix ? `${prefix} ${transcript}` : transcript;
 };
+
+export interface SubtitleOptions {
+  includeSpeakers?: boolean;
+  includeLanguages?: boolean;
+}
 
 /**
  * Normalise a transcript to a flat list of timed segments. Original transcripts
  * expose `audio_segments`; translations expose `segments` (single alternative).
  */
-export const subtitleSegments = (job: TranscriptJob): SubtitleSegment[] => {
-  const audioSegments = job.results.audio_segments;
-  if (audioSegments && audioSegments.length > 0) {
-    return audioSegments
-      .filter((segment) => segment.transcript.trim().length > 0)
-      .map((segment) => ({
-        start_time: segment.start_time,
-        end_time: segment.end_time,
-        transcript: segment.transcript,
-        speaker_label: segment.speaker_label,
-        language_code: segment.language_code,
-      }));
-  }
-  return (job.results.segments ?? [])
+export const subtitleSegments = (job: TranscriptJob): SubtitleSegment[] =>
+  normalizedSegments(job)
     .map((segment) => ({
       start_time: segment.start_time,
       end_time: segment.end_time,
-      transcript: segment.alternatives[0]?.transcript ?? "",
+      transcript: segmentTranscript(segment),
+      speaker_label: segment.speaker_label,
+      language_code: segment.language_code,
     }))
     .filter((segment) => segment.transcript.trim().length > 0);
-};
 
 export const segmentsToSrt = (
   job: TranscriptJob,
-  { includeSpeakers = false }: { includeSpeakers?: boolean } = {},
-): string =>
-  subtitleSegments(job)
+  { includeSpeakers = false, includeLanguages = false }: SubtitleOptions = {},
+): string => {
+  const segments = subtitleSegments(job);
+  const showLanguages = includeLanguages && hasLanguageCodes(segments);
+  return segments
     .map((segment, index) => {
-      const speaker = includeSpeakers
-        ? speakerLabel(
-            job.results.speaker_labels?.segments,
-            segment.start_time,
-            segment.end_time,
-            segment.speaker_label,
-          )
-        : "";
-      const line = speaker
-        ? `${speaker}: ${segment.transcript}`
-        : segment.transcript;
+      const speaker = includeSpeakers ? speakerLabel(job, segment) : "";
+      const line = formatSegmentLine(
+        segment.transcript,
+        speaker,
+        showLanguages ? segment.language_code : undefined,
+      );
       return [
         index + 1,
         `${formatSrtTime(segment.start_time)} --> ${formatSrtTime(segment.end_time)}`,
@@ -111,19 +99,26 @@ export const segmentsToSrt = (
       ].join("\n");
     })
     .join("\n\n");
+};
 
-export const segmentsToText = (job: TranscriptJob): string =>
-  subtitleSegments(job)
-    .map((segment) => segment.transcript)
+export const segmentsToText = (
+  job: TranscriptJob,
+  { includeSpeakers = false, includeLanguages = false }: SubtitleOptions = {},
+): string => {
+  const segments = subtitleSegments(job);
+  const showLanguages = includeLanguages && hasLanguageCodes(segments);
+  return segments
+    .map((segment) => {
+      const speaker = includeSpeakers ? speakerLabel(job, segment) : "";
+      return formatSegmentLine(
+        segment.transcript,
+        speaker,
+        showLanguages ? segment.language_code : undefined,
+      );
+    })
     .join("\n\n");
+};
 
 /** Display speaker label for each subtitle segment, in cue order. */
 export const speakerLabels = (job: TranscriptJob): string[] =>
-  subtitleSegments(job).map((segment) =>
-    speakerLabel(
-      job.results.speaker_labels?.segments,
-      segment.start_time,
-      segment.end_time,
-      segment.speaker_label,
-    ),
-  );
+  subtitleSegments(job).map((segment) => speakerLabel(job, segment));
