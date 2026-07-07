@@ -88,7 +88,7 @@ export const DataTable = (props: DataTableProps) => {
   const paginationPages = createListCollection({
     items: [10, 20, 30, 40, 50].map((item) => ({
       label: `Show ${item}`,
-      value: item,
+      value: String(item),
     })),
   });
 

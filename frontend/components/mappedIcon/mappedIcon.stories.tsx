@@ -25,6 +25,7 @@ export const ExternalLink: Story = { args: { icon: "external-link" } };
 export const File: Story = { args: { icon: "file" } };
 export const FileCheck: Story = { args: { icon: "file-check" } };
 export const FileAlert: Story = { args: { icon: "file-alert" } };
+export const Info: Story = { args: { icon: "info" } };
 export const PlayOutlineSquare: Story = {
   args: { icon: "play-outline-square" },
 };

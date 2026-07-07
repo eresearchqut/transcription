@@ -11,6 +11,17 @@ export interface TranscribeQuotaProps {
   supportedFileFormats?: string[];
 }
 
+export const SUPPORTED_FILE_FORMATS = [
+  "mp3",
+  "mp4",
+  "m4a",
+  "wav",
+  "flac",
+  "ogg",
+  "webm",
+  "amr",
+];
+
 const ACCEPTED_FILE_TYPES: Accept = {
   "audio/flac": [],
   "audio/mpeg": [],
@@ -37,11 +48,5 @@ export const TRANSCRIBE_QUOTAS: TranscribeQuotaProps = {
   maximumDuration: { hours: 4 },
   maximumFileSizeBytes: 1024 * 1024 * 1024 * 2,
   storageDuration: { days: 14 },
-  supportedFileFormats: Array.from(
-    new Set(
-      Object.keys(ACCEPTED_FILE_TYPES).map(
-        (mimeType) => mimeType.split(/[/.-]/).at(-1) ?? "",
-      ),
-    ).values(),
-  ),
+  supportedFileFormats: SUPPORTED_FILE_FORMATS,
 };
