@@ -123,6 +123,7 @@ const Transcriptions: NextPageWithLayout = () => {
                 content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
               >
                 <Badge
+                  asChild
                   colorPalette={"orange"}
                   variant={"solid"}
                   rounded={"full"}
@@ -130,11 +131,10 @@ const Transcriptions: NextPageWithLayout = () => {
                   flexShrink={0}
                   gap={1}
                 >
-                  <MappedIcon
-                    icon={"clock-exclamation"}
-                    aria-label={"Expiring soon"}
-                  />
-                  Expires {formatExpiryDate(ttl)}
+                  <button type={"button"} aria-label={"Expiring soon"}>
+                    <MappedIcon icon={"clock-exclamation"} />
+                    Expires {formatExpiryDate(ttl)}
+                  </button>
                 </Badge>
               </ToggleTip>
             )}
