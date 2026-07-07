@@ -1,5 +1,5 @@
 import {
-  ButtonProps,
+  type ButtonProps,
   chakra,
   createListCollection,
   Flex,
@@ -12,21 +12,20 @@ import {
   Text,
 } from "@chakra-ui/react";
 import {
-  ColumnDef,
+  type ColumnDef,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  HeaderContext,
-  SortingState,
+  type HeaderContext,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { Fragment, useState } from "react";
-import { InitialTableState } from "@tanstack/table-core";
-import { Tooltip } from "./ui/tooltip";
-import { MappedIcon } from "./mappedIcon";
-import { NumberInputField, NumberInputRoot } from "./ui/number-input";
+import type { InitialTableState } from "@tanstack/table-core";
+import type { ValueChangeDetails } from "@zag-js/select";
+import type React from "react";
+import { Fragment, useState } from "react";
 import {
   SelectContent,
   SelectItem,
@@ -35,9 +34,19 @@ import {
   SelectTrigger,
   SelectValueText,
 } from "@/components/ui/select";
-import { ValueChangeDetails } from "@zag-js/select";
+import { MappedIcon } from "./mappedIcon";
+import { NumberInputField, NumberInputRoot } from "./ui/number-input";
+import { Tooltip } from "./ui/tooltip";
 
 export type Column = ColumnDef<any>;
+
+interface ColumnMeta {
+  cellProps?: React.ComponentProps<typeof Table.Cell>;
+  headerProps?: React.ComponentProps<typeof Table.ColumnHeader>;
+}
+
+const columnMeta = (column: ColumnDef<any>): ColumnMeta =>
+  (column.meta as ColumnMeta | undefined) ?? {};
 
 export interface DataTableProps {
   columns: Column[];
@@ -79,7 +88,7 @@ export const DataTable = (props: DataTableProps) => {
   const paginationPages = createListCollection({
     items: [10, 20, 30, 40, 50].map((item) => ({
       label: `Show ${item}`,
-      value: item,
+      value: String(item),
     })),
   });
 
@@ -105,14 +114,14 @@ export const DataTable = (props: DataTableProps) => {
             return (
               <Fragment key={cell.id}>
                 {label && (
-                  <GridItem>
+                  <GridItem minW={0}>
                     <Text as={"h3"} letterSpacing={"wider"}>
                       {" "}
                       {label}:
                     </Text>
                   </GridItem>
                 )}
-                <GridItem>
+                <GridItem minW={0}>
                   <Text as={!label && rowIndex === 0 ? "h2" : "span"}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </Text>
@@ -122,64 +131,71 @@ export const DataTable = (props: DataTableProps) => {
           })}
         </Grid>
       ))}
-      <Table.Root hideBelow={"xl"}>
+      <Table.Root hideBelow={"xl"} bg="inherit">
         <Table.Header>
           {table.getHeaderGroups().map((headerGroup) => (
-            <Table.Row key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <Table.ColumnHeader
-                  pl={0}
-                  textTransform={"revert"}
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  cursor={header.column.getCanSort() ? "pointer" : "none"}
-                  onClick={header.column.getToggleSortingHandler()}
-                >
-                  {!header.isPlaceholder && header.column.getCanSort() && (
-                    <Flex>
-                      <chakra.span>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                      </chakra.span>
-                      <Spacer />
-                      <chakra.span>
-                        {{
-                          asc: (
-                            <MappedIcon
-                              icon={"triangle-up"}
-                              aria-label="sorted ascending"
-                            />
-                          ),
-                          desc: (
-                            <MappedIcon
-                              icon={"triangle-down"}
-                              aria-label="sorted descending"
-                            />
-                          ),
-                        }[header.column.getIsSorted() as string] ?? null}
-                      </chakra.span>
-                    </Flex>
-                  )}
-                  {!header.isPlaceholder &&
-                    !header.column.getCanSort() &&
-                    flexRender(
-                      header.column.columnDef.header,
-                      header.getContext(),
+            <Table.Row key={headerGroup.id} bg="inherit">
+              {headerGroup.headers.map((header) => {
+                const { headerProps } = columnMeta(header.column.columnDef);
+
+                return (
+                  <Table.ColumnHeader
+                    pl={0}
+                    textTransform={"revert"}
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    cursor={header.column.getCanSort() ? "pointer" : "none"}
+                    onClick={header.column.getToggleSortingHandler()}
+                    {...headerProps}
+                  >
+                    {!header.isPlaceholder && header.column.getCanSort() && (
+                      <Flex>
+                        <chakra.span>
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </chakra.span>
+                        <Spacer />
+                        <chakra.span>
+                          {{
+                            asc: (
+                              <MappedIcon
+                                icon={"triangle-up"}
+                                aria-label="sorted ascending"
+                              />
+                            ),
+                            desc: (
+                              <MappedIcon
+                                icon={"triangle-down"}
+                                aria-label="sorted descending"
+                              />
+                            ),
+                          }[header.column.getIsSorted() as string] ?? null}
+                        </chakra.span>
+                      </Flex>
                     )}
-                </Table.ColumnHeader>
-              ))}
+                    {!header.isPlaceholder &&
+                      !header.column.getCanSort() &&
+                      flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                  </Table.ColumnHeader>
+                );
+              })}
             </Table.Row>
           ))}
         </Table.Header>
         <Table.Body>
           {table.getRowModel().rows.map((row) => {
             return (
-              <Table.Row key={row.id}>
+              <Table.Row key={row.id} bg="inherit">
                 {row.getVisibleCells().map((cell) => {
+                  const { cellProps } = columnMeta(cell.column.columnDef);
+
                   return (
-                    <Table.Cell pl={0} key={cell.id}>
+                    <Table.Cell pl={0} key={cell.id} {...cellProps}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -221,20 +237,18 @@ export const DataTable = (props: DataTableProps) => {
             </Flex>
           </Flex>
           <Flex align={"flex-start"}>
-            <Flex alignItems="center">
-              <Text flexShrink="0" mr={8}>
+            <Flex alignItems="center" flexWrap={"wrap"} gap={2} rowGap={2}>
+              <Text flexShrink="0">
                 Page {table.getState().pagination.pageIndex + 1} of{" "}
                 {table.getPageCount()}
               </Text>
               <Text flexShrink="0">Go to page:</Text>{" "}
               <NumberInputRoot
-                ml={2}
-                mr={4}
-                w={28}
+                w={20}
                 min={1}
                 max={table.getPageCount()}
                 onValueChange={(e: { value: any }) => {
-                  const page = e.value ? parseInt(e.value) - 1 : 0;
+                  const page = e.value ? parseInt(e.value, 10) - 1 : 0;
                   table.setPageIndex(page);
                 }}
                 defaultValue={String(table.getState().pagination.pageIndex + 1)}

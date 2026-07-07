@@ -1,10 +1,10 @@
 #!/usr/bin/env node
+import { execSync } from "node:child_process";
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import * as cdk from "aws-cdk-lib";
 import { ApiStack } from "../lib/api-stack";
-import { GitHubStack } from "../lib/github-stack";
 import { FrontEndStack } from "../lib/front-end-stack";
-import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { execSync } from "child_process";
+import { GitHubStack } from "../lib/github-stack";
 
 const devDeployOverride = process.env.DEV_DEPLOY_OVERRIDE;
 const GIT_CURRENT_BRANCH_COMMAND = "git rev-parse --abbrev-ref HEAD";
@@ -98,6 +98,8 @@ new SSMClient()
     });
 
     [apiStack, apiGitHubStack, frontEndStack, frontEndGitHubStack].forEach(
-      (stack) => cdk.Tags.of(stack).add("EresCdkApp", repo),
+      (stack) => {
+        cdk.Tags.of(stack).add("EresCdkApp", repo);
+      },
     );
   });

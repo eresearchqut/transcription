@@ -1,5 +1,5 @@
-import React, { Fragment, FunctionComponent } from "react";
 import { Button, Flex, Spacer, Text, VStack } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
 import { ExternalLink } from "../externalLink";
 import { MappedIcon } from "../mappedIcon";
 
@@ -16,8 +16,9 @@ const TeqsaLink: FunctionComponent = () => (
 export const Footer: FunctionComponent = () => {
   return (
     <Flex
-      direction={["column", "column", "row"]}
-      alignItems="center"
+      direction={{ base: "column", md: "row" }}
+      alignItems={{ base: "stretch", md: "center" }}
+      gap={4}
       className="dark"
     >
       <VStack alignItems={"start"} gap={0}>
@@ -29,26 +30,27 @@ export const Footer: FunctionComponent = () => {
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.
         </ExternalLink>
-        <Fragment>
-          <Text hideFrom={"md"}>
-            TEQSA <TeqsaLink /> | CRICOS No. 00213J
-          </Text>
-          <Text hideBelow={"md"}>
-            TEQSA Provider ID <TeqsaLink /> Australian University | CRICOS No.
-            00213J
-          </Text>
-        </Fragment>
+
+        <Text hideFrom={"md"}>
+          TEQSA <TeqsaLink /> | CRICOS No. 00213J
+        </Text>
+        <Text hideBelow={"md"}>
+          TEQSA Provider ID <TeqsaLink /> Australian University | CRICOS No.
+          00213J
+        </Text>
       </VStack>
-      <Spacer />
+      <Spacer display={{ base: "none", md: "block" }} />
       <ExternalLink
         href={
           "https://qutvirtual4.qut.edu.au/group/research-students/conducting-research/specialty-research-facilities/advanced-research-computing-storage"
         }
         withIcon={false}
+        display={{ base: "block", md: "inline" }}
       >
         <Button
           colorPalette={"blue"}
           variant={"solid"}
+          width={{ base: "full", md: "auto" }}
           data-umami-event={"contact-eresearch"}
         >
           Contact eResearch{" "}

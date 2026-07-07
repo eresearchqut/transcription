@@ -1,7 +1,14 @@
+import { Box, Button, type DrawerRootProps } from "@chakra-ui/react";
+import type { FunctionComponent } from "react";
 import * as React from "react";
-import { FunctionComponent } from "react";
-import { Box, Button, DrawerRootProps } from "@chakra-ui/react";
+import {
+  AccordionItem,
+  AccordionItemContent,
+  AccordionItemTrigger,
+  AccordionRoot,
+} from "@/components/ui/accordion";
 import Player from "../player";
+import { Alert } from "../ui/alert";
 import {
   DrawerBackdrop,
   DrawerBody,
@@ -10,25 +17,22 @@ import {
   DrawerFooter,
   DrawerRoot,
 } from "../ui/drawer";
-import { Alert } from "../ui/alert";
-import {
-  AccordionItem,
-  AccordionItemContent,
-  AccordionItemTrigger,
-  AccordionRoot,
-} from "@/components/ui/accordion";
 
 export interface MediaPlayerDrawerProps
   extends Omit<DrawerRootProps, "children"> {
   mediaUrl: string;
   transcriptUrl: string;
   summary?: string;
+  languages?: (string | undefined)[];
+  speakers?: string[];
 }
 
 const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   mediaUrl,
   transcriptUrl,
   summary,
+  languages,
+  speakers,
   open,
   onOpenChange,
   ...drawerProps
@@ -39,7 +43,7 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
     <DrawerRoot
       placement="end"
       finalFocusEl={() => finalRef.current}
-      size={"md"}
+      size={"lg"}
       open={open}
       onOpenChange={onOpenChange}
       {...drawerProps}
@@ -53,9 +57,14 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
           </Box>
         </Alert>
 
-        <DrawerBody>
+        <DrawerBody display="flex" flexDirection="column" overflow="hidden">
           {summary && (
-            <AccordionRoot collapsible variant={"enclosed"} mb={4}>
+            <AccordionRoot
+              collapsible
+              variant={"enclosed"}
+              mb={4}
+              flexShrink={0}
+            >
               <AccordionItem value={"summary"}>
                 <AccordionItemTrigger>
                   Summary of transcript
@@ -65,7 +74,14 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
             </AccordionRoot>
           )}
           {mediaUrl && transcriptUrl && (
-            <Player audio={mediaUrl} transcript={transcriptUrl} />
+            <Box flex="1" minH={0} display="flex" flexDirection="column">
+              <Player
+                audio={mediaUrl}
+                transcript={transcriptUrl}
+                languages={languages}
+                speakers={speakers}
+              />
+            </Box>
           )}
         </DrawerBody>
 

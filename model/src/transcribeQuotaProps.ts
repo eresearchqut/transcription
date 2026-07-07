@@ -1,6 +1,5 @@
-import { Accept } from "react-dropzone";
-
-import { Duration } from "date-fns";
+import type { Duration } from "date-fns";
+import type { Accept } from "react-dropzone";
 
 export interface TranscribeQuotaProps {
   accept: Accept;
@@ -11,6 +10,17 @@ export interface TranscribeQuotaProps {
   storageDuration: Duration;
   supportedFileFormats?: string[];
 }
+
+export const SUPPORTED_FILE_FORMATS = [
+  "mp3",
+  "mp4",
+  "m4a",
+  "wav",
+  "flac",
+  "ogg",
+  "webm",
+  "amr",
+];
 
 const ACCEPTED_FILE_TYPES: Accept = {
   "audio/flac": [],
@@ -38,11 +48,5 @@ export const TRANSCRIBE_QUOTAS: TranscribeQuotaProps = {
   maximumDuration: { hours: 4 },
   maximumFileSizeBytes: 1024 * 1024 * 1024 * 2,
   storageDuration: { days: 14 },
-  supportedFileFormats: Array.from(
-    new Set(
-      Object.keys(ACCEPTED_FILE_TYPES).map(
-        (mimeType) => mimeType.split(/[/.-]/).at(-1) ?? "",
-      ),
-    ).values(),
-  ),
+  supportedFileFormats: SUPPORTED_FILE_FORMATS,
 };

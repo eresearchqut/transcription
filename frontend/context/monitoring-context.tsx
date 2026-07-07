@@ -1,25 +1,29 @@
-import { createContext, FunctionComponent, PropsWithChildren, useCallback, useContext, useEffect } from "react";
-import SplunkOtelWeb, { SplunkOtelWebConfig } from "@splunk/otel-web";
-import SplunkSessionRecorder from "@splunk/otel-web-session-recorder";
-
+import type { SplunkOtelWebConfig } from "@splunk/otel-web";
+import {
+  createContext,
+  type FunctionComponent,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useEffect,
+} from "react";
+import { initialiseSplunk, setSplunkGlobalAttributes } from "../utils/splunk";
 
 export interface MonitoringContextState {
   monitoringEnabled: boolean;
   setAttributes: (attributes: Record<string, any>) => void;
 }
 
-export const MonitoringContext = createContext<MonitoringContextState>(
-  {
-    monitoringEnabled: false,
-    setAttributes: () => undefined
-  }
-);
+export const MonitoringContext = createContext<MonitoringContextState>({
+  monitoringEnabled: false,
+  setAttributes: () => undefined,
+});
 
 const config: SplunkOtelWebConfig = {
   rumAccessToken: process.env.NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN,
   realm: process.env.NEXT_PUBLIC_SPLUNK_REALM,
   applicationName: process.env.NEXT_PUBLIC_SPLUNK_APPLICATION_NAME ?? "",
-  deploymentEnvironment: process.env.NEXT_PUBLIC_ENV ?? ""
+  deploymentEnvironment: process.env.NEXT_PUBLIC_ENV ?? "",
 };
 
 export const useMonitoring = (): MonitoringContextState => {
@@ -27,31 +31,27 @@ export const useMonitoring = (): MonitoringContextState => {
 };
 
 const initialiseMonitoring = () => {
-  if (config.rumAccessToken) {
-    SplunkOtelWeb.init({
-      ...config
-    });
-    SplunkSessionRecorder.init({
-      ...config
-    });
-  }
+  void initialiseSplunk(config);
 };
 
 export const MonitoringProvider: FunctionComponent<PropsWithChildren> = ({
-                                                                           children
-                                                                         }) => {
+  children,
+}) => {
   useEffect(() => {
     initialiseMonitoring();
-  }, [initialiseMonitoring]);
+  }, []);
   const monitoringEnabled = !!config.rumAccessToken;
-  const setAttributes = useCallback((attributes: Record<string, any>) => {
-    if (monitoringEnabled) {
-      SplunkOtelWeb.setGlobalAttributes(attributes)
-    }
-  }, [monitoringEnabled]);
+  const setAttributes = useCallback(
+    (attributes: Record<string, any>) => {
+      if (monitoringEnabled) {
+        setSplunkGlobalAttributes(attributes);
+      }
+    },
+    [monitoringEnabled],
+  );
   const state = {
     monitoringEnabled,
-    setAttributes
+    setAttributes,
   };
   return (
     <MonitoringContext.Provider value={state}>

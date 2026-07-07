@@ -1,4 +1,9 @@
-import { FunctionComponent, useEffect, useState } from "react";
+import { Box, Button, Clipboard, Text } from "@chakra-ui/react";
+import { capitalize, isEmpty, words } from "lodash";
+import { type FunctionComponent, useEffect, useState } from "react";
+import { type FallbackProps, useErrorBoundary } from "react-error-boundary";
+import { ExternalLink } from "@/components/externalLink";
+import { MappedIcon } from "@/components/mappedIcon";
 import {
   DialogBackdrop,
   DialogBody,
@@ -10,12 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Box, Button, Clipboard, Text } from "@chakra-ui/react";
-import { ExternalLink } from "@/components/externalLink";
-import { FallbackProps, useErrorBoundary } from "react-error-boundary";
-import { MappedIcon } from "@/components/mappedIcon";
-import SplunkOtelWeb from "@splunk/otel-web";
-import { capitalize, isEmpty, words } from "lodash";
+import { getSplunkSessionId } from "../../utils/splunk";
 
 export interface ErrorMessageProps extends FallbackProps {
   icon?: string;
@@ -41,7 +41,7 @@ const ErrorMessage: FunctionComponent<ErrorMessageProps & FallbackProps> = ({
       setErrorDetails(
         () =>
           Object.entries({
-            splunkSessionId: SplunkOtelWeb.getSessionId(),
+            splunkSessionId: getSplunkSessionId(),
             timestamp: new Date().toISOString(),
             detail:
               errorDetail?.reason?.toString() ??

@@ -8,7 +8,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
-import { S3Event } from "aws-lambda";
+import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import { jobStarted } from "../service/transcriptionService";
@@ -16,7 +16,6 @@ import { jobStarted } from "../service/transcriptionService";
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const uploadPattern = /^users\/([^/]+)\/([^/]+)\.upload$/;
-const legacyUploadPattern = /^private\/[^/]+\/([^/]+)\/([^/]+)\.upload$/;
 
 const transcribeClient = new TranscribeClient({ region });
 const s3client = new S3Client({ region: process.env.AWS_REGION });
@@ -26,15 +25,17 @@ xray.captureAWSv3Client(s3client);
 
 export const handler = async (event: S3Event) => {
   let uploadsCount = 0;
-  for (const record of event["Records"]) {
+  for (const record of event.Records) {
     try {
-      const objectKey = decodeURIComponent(record["s3"]["object"]["key"]);
-      const key = record["s3"]["object"]["key"].replace(/\+/g, " "); // https://stackoverflow.com/a/61869212
-      const bucketName = record["s3"]["bucket"]["name"];
-      const match = uploadPattern.exec(key) ?? legacyUploadPattern.exec(key);
+      // S3 encodes spaces as "+" and percent-encodes other characters; normalise both. https://stackoverflow.com/a/61869212
+      const objectKey = decodeURIComponent(
+        record.s3.object.key.replace(/\+/g, " "),
+      );
+      const bucketName = record.s3.bucket.name;
+      const match = uploadPattern.exec(objectKey);
 
       if (!match) {
-        console.error("Unexpected key: ", key);
+        console.error("Unexpected key: ", objectKey);
         continue;
       }
 
@@ -42,7 +43,7 @@ export const handler = async (event: S3Event) => {
 
       const headResponse = await s3client.send(
         new HeadObjectCommand({
-          Bucket: record["s3"]["bucket"]["name"],
+          Bucket: record.s3.bucket.name,
           Key: objectKey,
         }),
       );
@@ -51,8 +52,7 @@ export const handler = async (event: S3Event) => {
         continue;
       }
 
-      const languages: string[] =
-        headResponse.Metadata["languages"].split(/,\s?/);
+      const languages: string[] = headResponse.Metadata.languages.split(/,\s?/);
       const enablePiiRedaction: boolean = JSON.parse(
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
@@ -97,7 +97,7 @@ export const handler = async (event: S3Event) => {
         ...languageParams,
         ...piiParams,
         Media: {
-          MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${key}`,
+          MediaFileUri: `https://s3-${region}.amazonaws.com/${bucketName}/${objectKey}`,
         },
         OutputBucketName: transcribeBucket,
         OutputKey: outputKey,
@@ -117,7 +117,7 @@ export const handler = async (event: S3Event) => {
           identityId,
           jobId,
           outputKey,
-          record["s3"],
+          record.s3,
           transcriptionResponse,
           headResponse.Metadata,
         ).then(() => uploadsCount++);

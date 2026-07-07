@@ -1,4 +1,4 @@
-import { Meta, StoryObj } from "@storybook/nextjs";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import MappedIcon from "./mappedIcon";
 
 export default {
@@ -14,6 +14,7 @@ export const ChevronLeft: Story = { args: { icon: "chevron-left" } };
 export const ChevronRight: Story = { args: { icon: "chevron-right" } };
 export const Clock: Story = { args: { icon: "clock" } };
 export const ClockExclamation: Story = { args: { icon: "clock-exclamation" } };
+export const Docx: Story = { args: { icon: "docx" } };
 export const DoubleArrowLeft: Story = { args: { icon: "double-arrow-left" } };
 export const DoubleArrowRight: Story = { args: { icon: "double-arrow-right" } };
 export const EnterOutline: Story = { args: { icon: "enter-outline" } };
@@ -25,6 +26,7 @@ export const ExternalLink: Story = { args: { icon: "external-link" } };
 export const File: Story = { args: { icon: "file" } };
 export const FileCheck: Story = { args: { icon: "file-check" } };
 export const FileAlert: Story = { args: { icon: "file-alert" } };
+export const Info: Story = { args: { icon: "info" } };
 export const PlayOutlineSquare: Story = {
   args: { icon: "play-outline-square" },
 };

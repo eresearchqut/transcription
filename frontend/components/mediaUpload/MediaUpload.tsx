@@ -1,74 +1,116 @@
 "use client";
 
-import { FunctionComponent, useState } from "react";
-import { FilePicker, FilePickerProps } from "../../inputs/filePicker";
 import {
   Box,
-  Code,
-  Field as ChakraField,
+  Button,
+  Group,
+  Heading,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { LanguageInput } from "../../inputs/languageInput";
-import { isArray } from "lodash";
 import { TRANSCRIBE_QUOTAS } from "model";
-import { HelpPopover } from "@/components/helpPopover";
-import { Field } from "@/components/ui/field";
-import { Switch } from "@/components/ui/switch";
-import { CheckedChangeDetails } from "@zag-js/switch";
-import { ExternalLink } from "@/components/externalLink";
-import { NewFeature } from "@/components/newFeature";
-import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
-import features from "@/public/features.json";
+import NextLink from "next/link";
+import { type FunctionComponent, type ReactNode, useState } from "react";
+import { MappedIcon } from "@/components/mappedIcon";
+import { supportedFileFormatsText } from "@/components/quotas/quotas";
+import {
+  StepsContent,
+  StepsItem,
+  StepsList,
+  StepsRoot,
+} from "@/components/ui/steps";
+import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
+import { OptionsSummary } from "./optionsSummary";
+import {
+  type TranscribeProps,
+  TranscriptionOptions,
+  type TranscriptionOptionsValue,
+} from "./transcriptionOptions";
 
-export interface TranscribeProps {
-  languages: string[];
-  enablePiiRedaction: boolean;
-  generateSummary: boolean;
-}
+export type { TranscribeProps };
+
+const STEP_TITLES = [
+  "Overview",
+  "Choose options",
+  "Choose files",
+  "Track progress",
+];
+
+const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
+  props: {
+    languages: ["en-AU"],
+    enablePiiRedaction: false,
+    generateSummary: true,
+    targetLanguage: undefined,
+  },
+  valid: true,
+};
 
 export interface MediaUploadProps {
   onSubmit: (transcribeProps: TranscribeProps, files: File[]) => void;
   identityId?: string;
+  uploadsComplete?: boolean;
+  onClearUploads?: () => void;
+  children?: ReactNode;
 }
 
 export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   onSubmit,
   identityId,
+  uploadsComplete = false,
+  onClearUploads,
+  children,
 }) => {
-  const [languages, setLanguages] = useState<string[]>(["en-AU"]);
-  const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
-  const [generateSummary, setGenerateSummary] = useState<boolean>(true);
-
-  const { showNewFeature } = useNewFeatureStorage({
-    features,
-    identityId,
-  });
-
-  const onLanguageChange = (selectedLanguages: string | string[]) => {
-    setLanguages(
-      isArray(selectedLanguages) ? selectedLanguages : [selectedLanguages],
-    );
-  };
-
-  const onEnablePiiRedactionChange = (d: CheckedChangeDetails) => {
-    const isChecked = d.checked;
-    if (isChecked) {
-      setLanguages(["en-US"]);
-    }
-    setEnablePiiRedaction(isChecked);
-  };
-
-  const onGenerateSummaryChange = (d: CheckedChangeDetails) => {
-    setGenerateSummary(d.checked);
-  };
+  const [step, setStep] = useState<number>(0);
+  const [filePickerKey, setFilePickerKey] = useState<number>(0);
+  const [uploadStarted, setUploadStarted] = useState<boolean>(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [optionsValue, setOptionsValue] =
+    useState<TranscriptionOptionsValue>(DEFAULT_OPTIONS);
 
   const onFilesPicked = (files: File[]) => {
-    onSubmit({ languages, enablePiiRedaction, generateSummary }, files);
+    onSubmit(optionsValue.props, files);
+    setUploadStarted(true);
+    setSelectedFiles([]);
+    setFilePickerKey((key) => key + 1);
+    setStep(3);
   };
 
-  const { accept, maximumFileSizeBytes, maximumFilesCount } = TRANSCRIBE_QUOTAS;
+  const onUploadMore = () => {
+    onClearUploads?.();
+    setUploadStarted(false);
+    setSelectedFiles([]);
+    setFilePickerKey((key) => key + 1);
+    setStep(1);
+  };
+
+  const onStartAgain = () => {
+    onClearUploads?.();
+    setUploadStarted(false);
+    setSelectedFiles([]);
+    setOptionsValue(DEFAULT_OPTIONS);
+    setFilePickerKey((key) => key + 1);
+    setStep(0);
+  };
+
+  const isStepValid = (index: number) => {
+    switch (index) {
+      case 1:
+        return optionsValue.valid;
+      case 2:
+        return uploadStarted;
+      default:
+        return true;
+    }
+  };
+
+  const {
+    accept,
+    maximumFileSizeBytes,
+    maximumFilesCount,
+    supportedFileFormats,
+  } = TRANSCRIBE_QUOTAS;
 
   const filePickerProps: FilePickerProps = {
     accept,
@@ -77,131 +119,171 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onFilesPicked,
   };
 
-  const MAX_LANGUAGE_LIMIT = 5;
-  const languageSizeLimitAchieved = languages.length === MAX_LANGUAGE_LIMIT;
-  const languageSizeLimitExceeded = languages.length > MAX_LANGUAGE_LIMIT;
+  const stepHeading = (index: number) => (
+    <Heading as={"h2"} size={"lg"} hideFrom={"md"}>
+      {STEP_TITLES[index]}
+    </Heading>
+  );
 
   return (
-    <VStack align={"stretch"} gap={4}>
-      <Stack
-        direction={{ base: "column", sm: "row" }}
-        gap={4}
-        alignSelf={"flex-start"}
-        alignItems={{ sm: "center" }}
-      >
-        <NewFeature show={showNewFeature("ERP-2764")}>
-          <Field
-            display={"flex"}
-            flexDirection={"row"}
-            alignItems={"center"}
-            label={
-              <Box as={"span"} whiteSpace={"nowrap"}>
-                Generate Summary
-              </Box>
-            }
-          >
-            <Switch
-              checked={generateSummary}
-              onCheckedChange={onGenerateSummaryChange}
-            />
-            <HelpPopover
-              ariaLabel={"Help with Generate Summary"}
-              header={"Generate Summary"}
-            >
-              <VStack gap={3}>
-                <Text>
-                  This service is powered by{" "}
-                  <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
-                    Amazon Bedrock
-                  </ExternalLink>
-                  . Using generative AI and the Claude Haiku model, a summary is
-                  generated from the transcription of the provided media.
-                  Classifier metrics are used to identify potential violations
-                  of{" "}
-                  <ExternalLink href={"https://aws.amazon.com/aup/"}>
-                    Acceptable Use
-                  </ExternalLink>{" "}
-                  and{" "}
-                  <ExternalLink
-                    href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
-                  >
-                    Responsible Use
-                  </ExternalLink>{" "}
-                  policies.
-                </Text>
-                <Text>
-                  By using this service you are expected to comply with{" "}
-                  <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
-                    Anthropic&apos;s Usage Policy.
-                  </ExternalLink>
-                </Text>
-                <Text>
-                  Please be aware that factual assertions in the output should
-                  not be relied upon without independently checking their
-                  accuracy, as they may be false, incomplete, misleading or not
-                  reflective of recent events or information.
-                </Text>
-              </VStack>
-            </HelpPopover>
-          </Field>
-        </NewFeature>
-        <Field
-          display={"flex"}
-          flexDirection={"row"}
-          alignItems={"center"}
-          label={
-            <Text as={"span"}>
-              Redact{" "}
-              <abbr title={"Personally Identifiable Information"}>PII</abbr>
+    <StepsRoot
+      step={step}
+      onStepChange={(details) => setStep(details.step)}
+      count={4}
+      linear
+      isStepValid={isStepValid}
+      colorPalette={"blue"}
+    >
+      <StepsList>
+        <StepsItem index={0} title={STEP_TITLES[0]} />
+        <StepsItem index={1} title={STEP_TITLES[1]} />
+        <StepsItem index={2} title={STEP_TITLES[2]} />
+        <StepsItem index={3} title={STEP_TITLES[3]} />
+      </StepsList>
+
+      <StepsContent index={0}>
+        <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(0)}
+          <Box>
+            <Text mb={3}>
+              This service transcribes your audio and video files into text. You
+              can optionally translate the transcript into another language,
+              redact personally identifiable information, and generate an
+              AI-powered summary.
             </Text>
-          }
-        >
-          <Switch
-            checked={enablePiiRedaction}
-            onCheckedChange={onEnablePiiRedactionChange}
-          />
-          <HelpPopover
-            ariaLabel={"Help with Redact PII"}
-            header={"Redact Personally Identifiable Information (PII)"}
+            <Text mb={2} fontWeight={"medium"}>
+              To get started:
+            </Text>
+            <Stack as={"ol"} gap={1} pl={5} listStyleType={"decimal"}>
+              <Text as={"li"}>
+                Choose the transcription options that suit your media.
+              </Text>
+              <Text as={"li"}>Upload one or more audio or video files.</Text>
+              <Text as={"li"}>
+                Track the progress of your transcriptions and download the
+                results once they are ready.
+              </Text>
+            </Stack>
+          </Box>
+          <Group
+            justifyContent={"space-between"}
+            alignItems={"center"}
+            flexWrap={"wrap"}
+            gap={3}
           >
-            PII includes names, addresses, phone numbers, and credit card
-            information. When PII redaction is enabled, identified instances of
-            PII will be replaced with <Code>[PII]</Code> in the transcription.
-          </HelpPopover>
-        </Field>
-        <Field
-          display={"flex"}
-          flexDirection={"row"}
-          alignItems={"center"}
-          minWidth={"max-content"}
-          invalid={languageSizeLimitExceeded}
-          label={"Languages"}
-        >
-          <LanguageInput
-            isMulti={true}
-            value={languages}
-            disabled={enablePiiRedaction}
-            onChange={onLanguageChange}
-            maxSize={MAX_LANGUAGE_LIMIT}
-            invalid={languageSizeLimitExceeded}
+            <Button colorPalette={"gray"} variant={"surface"} asChild>
+              <NextLink href={"/classic"}>Revert to classic view</NextLink>
+            </Button>
+            <Button colorPalette={"blue"} onClick={() => setStep(1)}>
+              Get started
+              <MappedIcon icon={"chevron-right"} size={"xs"} />
+            </Button>
+          </Group>
+        </VStack>
+      </StepsContent>
+
+      <StepsContent index={1}>
+        <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(1)}
+          <TranscriptionOptions
+            identityId={identityId}
+            onChange={setOptionsValue}
+            direction={{ base: "column" }}
           />
-          <HelpPopover ariaLabel={"Help with Languages"} header={"Languages"}>
-            Specify up to five (5) languages spoken in your audio files.
-          </HelpPopover>
-          {enablePiiRedaction && (
-            <ChakraField.HelperText whiteSpace={"nowrap"}>
-              PII Redaction only available for English, US.
-            </ChakraField.HelperText>
+          <Group justifyContent={"space-between"}>
+            <Button variant={"outline"} onClick={() => setStep(0)}>
+              <MappedIcon icon={"chevron-left"} size={"xs"} />
+              Back
+            </Button>
+            <Button
+              colorPalette={"blue"}
+              disabled={!optionsValue.valid}
+              onClick={() => setStep(2)}
+            >
+              Next
+              <MappedIcon icon={"chevron-right"} size={"xs"} />
+            </Button>
+          </Group>
+        </VStack>
+      </StepsContent>
+
+      <StepsContent index={2}>
+        <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(2)}
+          <OptionsSummary options={optionsValue.props} />
+          <FilePicker
+            key={filePickerKey}
+            {...filePickerProps}
+            disabled={!optionsValue.valid}
+            onSelectionChange={setSelectedFiles}
+            hideUploadButton
+            description={
+              <>
+                Select the audio or video files you want to transcribe. You can
+                choose multiple files at once, or drag and drop several files
+                together. {supportedFileFormatsText(supportedFileFormats)}
+              </>
+            }
+          />
+          <Group justifyContent={"space-between"}>
+            <Button variant={"outline"} onClick={() => setStep(1)}>
+              <MappedIcon icon={"chevron-left"} size={"xs"} />
+              Back
+            </Button>
+            <Button
+              colorPalette={"blue"}
+              disabled={!optionsValue.valid || selectedFiles.length === 0}
+              onClick={() => onFilesPicked(selectedFiles)}
+            >
+              Upload
+              <MappedIcon icon={"upload"} size={"xs"} />
+            </Button>
+          </Group>
+        </VStack>
+      </StepsContent>
+
+      <StepsContent index={3}>
+        <VStack align={"stretch"} gap={4} pt={4}>
+          {stepHeading(3)}
+          <OptionsSummary options={optionsValue.props} />
+          {children ?? (
+            <Box>
+              <Text>
+                Your files are uploading. Track their progress here once the
+                upload completes.
+              </Text>
+            </Box>
           )}
-          {languageSizeLimitAchieved && (
-            <ChakraField.HelperText whiteSpace={"nowrap"}>
-              A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
-            </ChakraField.HelperText>
-          )}
-        </Field>
-      </Stack>
-      <FilePicker {...filePickerProps} disabled={languageSizeLimitExceeded} />
-    </VStack>
+          <Group justifyContent={"space-between"} flexWrap={"wrap"} gap={3}>
+            <Group flexWrap={"wrap"} gap={3}>
+              <Button
+                variant={"outline"}
+                disabled={!uploadsComplete}
+                onClick={onUploadMore}
+              >
+                Upload more files
+              </Button>
+              <Button
+                variant={"outline"}
+                disabled={!uploadsComplete}
+                onClick={onStartAgain}
+              >
+                Start again
+              </Button>
+            </Group>
+            <Button colorPalette={"blue"} disabled={!uploadsComplete} asChild>
+              {uploadsComplete ? (
+                <NextLink href={"/transcriptions"}>
+                  View transcriptions
+                </NextLink>
+              ) : (
+                <span>View transcriptions</span>
+              )}
+            </Button>
+          </Group>
+        </VStack>
+      </StepsContent>
+    </StepsRoot>
   );
 };
 

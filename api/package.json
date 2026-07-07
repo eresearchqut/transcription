@@ -8,57 +8,36 @@
     "scripts": {
         "clean": "rimraf node_modules",
         "build": "tsc",
-        "test": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_XRAY_LOG_LEVEL=silent jest --maxWorkers 1",
-        "fmt": "prettier --write .",
-        "fmt:check": "prettier --check .",
-        "lint": "eslint --fix '**/*.{ts,tsx}'",
-        "lint:check": "eslint '**/*.{ts,tsx}'"
+        "test": "AWS_XRAY_CONTEXT_MISSING=LOG_ERROR AWS_XRAY_LOG_LEVEL=silent jest --maxWorkers 1"
     },
     "dependencies": {
-        "@aws-sdk/client-bedrock-runtime": "^3.741.0",
-        "@aws-sdk/client-dynamodb": "^3.741.0",
-        "@aws-sdk/client-s3": "^3.741.0",
-        "@aws-sdk/client-transcribe": "^3.741.0",
-        "@aws-sdk/util-dynamodb": "^3.741.0",
-        "@codegenie/serverless-express": "^4.17.1",
-        "aws-xray-sdk": "^3.5.1",
-        "body-parser": "^1.20.4",
-        "cors": "^2.8.5",
-        "express": "^4.21.1",
+        "@aws-sdk/client-bedrock-runtime": "^3.1078.0",
+        "@aws-sdk/client-dynamodb": "^3.1078.0",
+        "@aws-sdk/client-s3": "^3.1078.0",
+        "@aws-sdk/client-transcribe": "^3.1078.0",
+        "@aws-sdk/client-translate": "^3.1078.0",
+        "@aws-sdk/util-dynamodb": "^3.996.5",
+        "@codegenie/serverless-express": "^5.0.0",
+        "aws-xray-sdk": "^3.12.0",
+        "body-parser": "^2.3.0",
+        "cors": "^2.8.6",
+        "express": "^5.2.1",
+        "fast-xml-parser": "^5.9.3",
         "model": "workspace:1.0.0"
     },
     "devDependencies": {
-        "aws-lambda": "^1.0.7",
-        "@smithy/util-stream": "^4.0.2",
-        "@trivago/prettier-plugin-sort-imports": "^4.3.0",
-        "@types/aws-lambda": "^8.10.119",
-        "@types/body-parser": "^1.19.5",
-        "@types/cors": "^2.8.13",
-        "@types/express": "^5.0.0",
-        "@types/jest": "^29.5.14",
-        "@typescript-eslint/parser": "8.50.0",
-        "@typescript-eslint/eslint-plugin": "^8.50.0",
+        "@smithy/util-stream": "^4.7.5",
+        "@types/aws-lambda": "^8.10.162",
+        "@types/body-parser": "^1.19.6",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/jest": "^30.0.0",
         "aws-sdk-client-mock": "^4.1.0",
         "aws-sdk-client-mock-jest": "^4.1.0",
-        "eslint": "^9.39.2",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.4",
-        "jest": "^30.2.0",
+        "jest": "^30.4.2",
         "jest-dynalite": "^3.6.1",
-        "prettier": "^3.0.3",
-        "rimraf": "^6.0.1",
-        "ts-jest": "^29.4.5",
-        "typescript": "^5.9.3"
-    },
-    "prettier": {
-        "importOrder": [
-            "^react",
-            "^[\\w\\d]+",
-            "^[./]"
-        ],
-        "importOrderSeparation": true,
-        "plugins": [
-            "@trivago/prettier-plugin-sort-imports"
-        ]
+        "rimraf": "^6.1.3",
+        "ts-jest": "^29.4.11",
+        "typescript": "^6.0.3"
     }
 }

@@ -1,5 +1,5 @@
-import { merge } from "lodash";
 import { defaultConfig, defineSlotRecipe } from "@chakra-ui/react";
+import { merge } from "lodash";
 
 const chakraCardSlotRecipe = defaultConfig?.theme?.slotRecipes?.card;
 
