@@ -63,9 +63,12 @@ export class FrontEndStack extends cdk.Stack {
         parameters.GlobalCertificateArn,
       ),
       defaultBehavior: {
-        origin: new origins.S3Origin(distributionBucket, {
-          originAccessIdentity,
-        }),
+        origin: origins.S3BucketOrigin.withOriginAccessIdentity(
+          distributionBucket,
+          {
+            originAccessIdentity,
+          },
+        ),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
         edgeLambdas: [
           {
