@@ -37,7 +37,10 @@ export const TranscriptionsContextProvider: FunctionComponent<
     getter({ apiUrl: API_ENDPOINT, resource: "transcription" }).then((data) => {
       setState((current) => ({
         ...current,
-        transcriptions: data,
+        // A transient auth/token failure resolves `getter` to `undefined`; keep
+        // the current (initially empty) list rather than storing `undefined`,
+        // which would break consumers that read `transcriptions.length`.
+        transcriptions: data ?? current.transcriptions,
         transcriptionsLoading: false,
       }));
     });
