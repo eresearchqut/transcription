@@ -1,4 +1,4 @@
-import { fetchAuthSession, signOut } from "aws-amplify/auth";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 export interface FetcherProps {
   apiUrl: string;
@@ -66,8 +66,13 @@ export const getHeaders = async () =>
         "Content-Type": "application/json",
       } as HeadersInit;
     })
-    .catch(async () => {
-      await signOut();
+    .catch(() => {
+      // A missing token here is usually a transient failed token refresh (a
+      // network blip during background polling). Return no headers so the
+      // caller skips this request and retries on its next poll, rather than
+      // forcing a logout. A genuine session loss is surfaced as a `signedOut`
+      // auth event and handled in the auth context.
+      return undefined;
     });
 
 export const getter = (props: FetcherProps) =>
