@@ -106,10 +106,17 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     const handleAuthEvents = async (data: { payload: { event: string } }) => {
       const { event } = data.payload;
       switch (event) {
-        case "tokenRefresh_failure":
         case "signedOut":
           setState({ loading: false, authenticated: false, user: undefined });
           await router.push("/login");
+          break;
+        case "tokenRefresh_failure":
+          // A single failed silent token refresh is usually transient (e.g. a
+          // network blip while the page polls for job progress). Don't force a
+          // logout here: requests skip and retry, and Amplify refreshes again
+          // on the next attempt. A genuine session loss still arrives as a
+          // `signedOut` event and is handled above.
+          console.debug("Token refresh failed; will retry on next request");
           break;
         default:
           console.debug("Unhandled Auth Event:", event);
