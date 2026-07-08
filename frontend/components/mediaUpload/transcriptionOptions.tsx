@@ -184,8 +184,7 @@ export const TranscriptionOptions: FunctionComponent<
             <Text>
               Translation only starts once transcription has finished, so allow
               at least 15 minutes for translated results to be ready. You
-              don&apos;t need to stay on this page while you wait, you can come
-              back to it later.
+              don&apos;t need to stay on this page while you wait.
             </Text>
             <Button
               size={"xs"}
