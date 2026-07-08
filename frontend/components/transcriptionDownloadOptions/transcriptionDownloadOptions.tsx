@@ -39,8 +39,32 @@ export interface DownloadOptionsProps
   ) => void;
 }
 
-const filenameFromFormat = (transcription: Transcription, format: string) =>
-  [transcription.metadata.filename.split(".")[0], format].join(".");
+interface DownloadVariant {
+  key: string;
+  label: string;
+  options: TranscriptOptions;
+}
+
+// Build a filename that includes the variant key, so the name always matches
+// the selected download metadata (plain/speakers/languages) and downloading
+// more than one variant of the same format doesn't collide and get a
+// browser-appended " (1)".
+const variantFilename = (
+  base: string,
+  format: string,
+  variant?: DownloadVariant,
+) => [variant ? `${base}-${variant.key}` : base, format].join(".");
+
+const filenameFromFormat = (
+  transcription: Transcription,
+  format: string,
+  variant?: DownloadVariant,
+) =>
+  variantFilename(
+    transcription.metadata.filename.split(".")[0],
+    format,
+    variant,
+  );
 
 const languageDisplayName = (code: string) =>
   (supportedTranslationLanguages as Record<string, string>)[code] ?? code;
@@ -48,12 +72,12 @@ const languageDisplayName = (code: string) =>
 const transcriptProps = (
   transcription: Transcription,
   format: TranscriptFormat,
-  options?: TranscriptOptions,
+  variant?: DownloadVariant,
 ) => ({
   objectKey: transcription.downloadKey!,
-  filename: filenameFromFormat(transcription, format),
+  filename: filenameFromFormat(transcription, format, variant),
   format,
-  options,
+  options: variant?.options,
 });
 
 const TRANSCRIPT_FORMATS: {
@@ -67,11 +91,7 @@ const TRANSCRIPT_FORMATS: {
   { format: "docx", label: "DOCX", icon: "docx" },
 ];
 
-const DOWNLOAD_VARIANTS: {
-  key: string;
-  label: string;
-  options: TranscriptOptions;
-}[] = [
+const DOWNLOAD_VARIANTS: DownloadVariant[] = [
   {
     key: "plain",
     label: "Plain",
@@ -158,12 +178,12 @@ export const TranscriptionDownloadOptions: FunctionComponent<
     originalLanguageNames && originalLanguageNames.length === 1
       ? `Original (${originalLanguageNames[0]})`
       : "Original transcript";
-  const translatedFilename = (format: string) =>
-    [
-      transcription.metadata.filename.split(".")[0],
-      targetLanguage,
+  const translatedFilename = (format: string, variant?: DownloadVariant) =>
+    variantFilename(
+      `${transcription.metadata.filename.split(".")[0]}-${targetLanguage}`,
       format,
-    ].join(".");
+      variant,
+    );
   const playUnavailable = isUndefined(transcription.downloadKey);
 
   const loadPlayer = (
@@ -267,11 +287,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
                           value={`${format}-${variant.key}`}
                           onClick={() =>
                             downloadTranscript(
-                              transcriptProps(
-                                transcription,
-                                format,
-                                variant.options,
-                              ),
+                              transcriptProps(transcription, format, variant),
                             )
                           }
                         >
@@ -307,7 +323,7 @@ export const TranscriptionDownloadOptions: FunctionComponent<
                             onClick={() =>
                               downloadTranslatedTranscript({
                                 objectKey: transcription.translationKey!,
-                                filename: translatedFilename(format),
+                                filename: translatedFilename(format, variant),
                                 format,
                                 options: variant.options,
                               })

@@ -26,6 +26,7 @@ export const Footer: FunctionComponent = () => {
         <ExternalLink
           href={"https://www.qut.edu.au/about/indigenous"}
           color={"white"}
+          whiteSpace={"normal"}
         >
           QUT acknowledges the Traditional Owners of the lands where QUT now
           stands.

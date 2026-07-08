@@ -20,6 +20,7 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
       target="_blank"
       rel="noopener noreferrer"
       display={"inline"}
+      whiteSpace={"nowrap"}
       color={{ base: "blue.600", _dark: "white" }}
       textDecoration={"underline"}
       textDecorationColor={{ base: "blue.200", _dark: "whiteAlpha.400" }}

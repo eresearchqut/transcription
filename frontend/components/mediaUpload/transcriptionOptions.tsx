@@ -50,6 +50,8 @@ export const TranscriptionOptions: FunctionComponent<
   const [enablePiiRedaction, setEnablePiiRedaction] = useState<boolean>(false);
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
   const [enableTranslation, setEnableTranslation] = useState<boolean>(false);
+  const [translationWarningAcknowledged, setTranslationWarningAcknowledged] =
+    useState<boolean>(false);
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>(
     "en",
   );
@@ -77,6 +79,7 @@ export const TranscriptionOptions: FunctionComponent<
     setEnableTranslation(d.checked);
     if (!d.checked) {
       setTargetLanguage(undefined);
+      setTranslationWarningAcknowledged(false);
     }
   };
 
@@ -148,27 +151,22 @@ export const TranscriptionOptions: FunctionComponent<
           </ChakraField.HelperText>
         )}
       </Field>
-      <NewFeature show={showNewFeature("ERP-4884")}>
-        <Field alignItems={"flex-start"} gap={1.5}>
-          <Heading as={"h3"} size={"md"}>
-            Translation Language
-          </Heading>
-          <Text fontSize={"sm"} color={"fg.muted"}>
-            This feature is powered by{" "}
-            <ExternalLink href={"https://aws.amazon.com/translate/"}>
-              Amazon Translate
-            </ExternalLink>
-            . Once your media is transcribed, the transcript can be
-            automatically translated into another language, with timed subtitles
-            (SRT/VTT), a document (DOCX) and plain text available to download.
-            Please be aware that machine translations may contain inaccuracies
-            and should be reviewed before being relied upon.
-          </Text>
-          <Text fontSize={"sm"} color={"fg.muted"}>
-            Translation runs after transcription has finished, so it takes
-            longer than transcription alone. Allow at least 15 minutes for
-            translated results to be ready.
-          </Text>
+      <Field alignItems={"flex-start"} gap={1.5}>
+        <Heading as={"h3"} size={"md"}>
+          Translation Language
+        </Heading>
+        <Text fontSize={"sm"} color={"fg.muted"}>
+          This feature is powered by{" "}
+          <ExternalLink href={"https://aws.amazon.com/translate/"}>
+            Amazon Translate
+          </ExternalLink>
+          . Once your media is transcribed, the transcript can be automatically
+          translated into another language, with timed subtitles (SRT/VTT), a
+          document (DOCX) and plain text available to download. Please be aware
+          that machine translations may contain inaccuracies and should be
+          reviewed before being relied upon.
+        </Text>
+        <NewFeature show={showNewFeature("ERP-4884")}>
           <Switch
             checked={enableTranslation}
             onCheckedChange={onEnableTranslationChange}
@@ -177,32 +175,52 @@ export const TranscriptionOptions: FunctionComponent<
           >
             Translate
           </Switch>
-          {enableTranslation && (
-            <Stack
-              direction={{ base: "column", sm: "row" }}
-              gap={{ base: 1.5, sm: 3 }}
-              align={{ base: "stretch", sm: "center" }}
-              width={"full"}
+        </NewFeature>
+        {enableTranslation && !translationWarningAcknowledged && (
+          <Alert
+            status={"warning"}
+            title={"Translations take longer than transcription."}
+          >
+            <Text>
+              Translation only starts once transcription has finished, so allow
+              at least 15 minutes for translated results to be ready. You
+              don&apos;t need to stay on this page while you wait.
+            </Text>
+            <Button
+              size={"xs"}
+              colorPalette={"blue"}
+              mt={2}
+              onClick={() => setTranslationWarningAcknowledged(true)}
             >
-              <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
-                Target language
-              </Text>
-              <Box minWidth={{ base: "auto", sm: "15rem" }} width={"full"}>
-                <TranslationLanguageInput
-                  value={targetLanguage}
-                  onChange={(value) => setTargetLanguage(value)}
-                  placeholder={"Select a language..."}
-                />
-              </Box>
-            </Stack>
-          )}
-          {enableTranslation && !targetLanguage && (
-            <ChakraField.HelperText whiteSpace={"nowrap"}>
-              Select a language to translate into.
-            </ChakraField.HelperText>
-          )}
-        </Field>
-      </NewFeature>
+              I understand
+            </Button>
+          </Alert>
+        )}
+        {enableTranslation && (
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            gap={{ base: 1.5, sm: 3 }}
+            align={{ base: "stretch", sm: "center" }}
+            width={"full"}
+          >
+            <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
+              Target language
+            </Text>
+            <Box minWidth={{ base: "auto", sm: "15rem" }} width={"full"}>
+              <TranslationLanguageInput
+                value={targetLanguage}
+                onChange={(value) => setTargetLanguage(value)}
+                placeholder={"Select a language..."}
+              />
+            </Box>
+          </Stack>
+        )}
+        {enableTranslation && !targetLanguage && (
+          <ChakraField.HelperText whiteSpace={"nowrap"}>
+            Select a language to translate into.
+          </ChakraField.HelperText>
+        )}
+      </Field>
       <Field alignItems={"flex-start"} gap={1.5}>
         <Heading as={"h3"} size={"md"}>
           PII Redaction
