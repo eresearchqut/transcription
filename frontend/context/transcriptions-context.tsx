@@ -34,16 +34,24 @@ export const TranscriptionsContextProvider: FunctionComponent<
   });
 
   useEffect(() => {
-    getter({ apiUrl: API_ENDPOINT, resource: "transcription" }).then((data) => {
-      setState((current) => ({
-        ...current,
-        // A transient auth/token failure resolves `getter` to `undefined`; keep
-        // the current (initially empty) list rather than storing `undefined`,
-        // which would break consumers that read `transcriptions.length`.
-        transcriptions: data ?? current.transcriptions,
-        transcriptionsLoading: false,
-      }));
-    });
+    getter({ apiUrl: API_ENDPOINT, resource: "transcription" })
+      .then((data) => {
+        setState((current) => ({
+          ...current,
+          // A transient auth/token failure resolves `getter` to `undefined`;
+          // keep the current (initially empty) list rather than storing
+          // `undefined`, which would break consumers that read
+          // `transcriptions.length`.
+          transcriptions: data ?? current.transcriptions,
+          transcriptionsLoading: false,
+        }));
+      })
+      .catch((error) => {
+        // Network error or API rejection: clear the loading state so the page
+        // recovers (shows the empty state) instead of the spinner forever.
+        console.debug("Failed to load transcriptions", error);
+        setState((current) => ({ ...current, transcriptionsLoading: false }));
+      });
   }, []);
 
   return (
