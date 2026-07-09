@@ -615,11 +615,6 @@ export class ApiStack extends cdk.Stack {
               actions: ["cognito-identity:*"],
               resources: ["*"],
             }),
-            new iam.PolicyStatement({
-              actions: ["lambda:InvokeFunction"],
-              resources: ["*"],
-              // resources: [apiFunction.functionArn],
-            }),
           ],
         }),
         "s3-authorized-policy": new iam.PolicyDocument({
