@@ -1,20 +1,22 @@
-import * as React from "react";
-import { FunctionComponent } from "react";
 import { Box, Spinner, Stack, Text, VStack } from "@chakra-ui/react";
 import { lowerCase } from "lodash";
-import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import {
   enableGenerateSummary,
+  enableTranslation,
+  isTranslationFailed,
   mapTranscriptionStatus,
+  SUPPORTED_TRANSLATION_LANGUAGES as supportedTranslationLanguages,
   TranscriptionJobStatus,
 } from "model";
+import type { FunctionComponent } from "react";
 import {
+  type UseTranscriptionProps,
   useTranscription,
-  UseTranscriptionProps,
 } from "../../hooks/useTranscription";
-import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 import { MappedIcon } from "../mappedIcon";
+import { TranscriptionDownloadOptions } from "../transcriptionDownloadOptions/transcriptionDownloadOptions";
 import { Alert } from "../ui/alert";
+import { ProgressBar, ProgressLabel, ProgressRoot } from "../ui/progress";
 
 export interface TranscriptionJobProgress {
   status?: TranscriptionJobStatus;
@@ -24,23 +26,37 @@ export interface FileTranscriptionProgressProps
   extends Pick<UseTranscriptionProps, "jobId"> {
   filename: string;
   uploadProgress: number;
+  isPreparingUpload?: boolean;
   onPlayClick: (
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
+    languages?: (string | undefined)[],
+    speakers?: string[],
   ) => void;
 }
 
 const isUploadComplete = (progress: number) => progress === 100;
 const UploadProgressStatus = ({
+  isPreparingUpload,
   progress,
   processingText,
   completedText,
 }: {
+  isPreparingUpload?: boolean;
   progress: number;
   processingText: string;
   completedText: string;
 }) => {
+  if (isPreparingUpload) {
+    return (
+      <Text>
+        <Spinner mr={2} size={"sm"} />
+        Preparing upload...
+      </Text>
+    );
+  }
+
   return progress < 100 ? (
     <ProgressRoot width={"full"} striped value={progress}>
       <ProgressLabel>{processingText}</ProgressLabel>
@@ -105,9 +121,55 @@ const GenerateSummaryStatus = ({
   );
 };
 
+const TranslationStatus = ({
+  targetLanguage,
+  translationKey,
+  failed,
+}: {
+  targetLanguage: string | undefined;
+  translationKey: string | undefined;
+  failed: boolean;
+}) => {
+  const iconProps = { mr: 2, mb: 1 };
+  const languageName =
+    (supportedTranslationLanguages as Record<string, string>)[
+      targetLanguage ?? ""
+    ] ?? targetLanguage;
+  if (failed) {
+    return (
+      <Box>
+        <MappedIcon
+          icon={"exclamation-circle"}
+          {...iconProps}
+          color={"red.600"}
+        />
+        Translation to {languageName} failed
+      </Box>
+    );
+  }
+  return (
+    <Box>
+      {!translationKey ? (
+        <>
+          <Spinner size={"sm"} mr={1} /> Translating to {languageName}
+        </>
+      ) : (
+        <>
+          <MappedIcon
+            icon={"check-circle"}
+            {...iconProps}
+            color={"green.600"}
+          />
+          Translation ready
+        </>
+      )}
+    </Box>
+  );
+};
+
 export const TranscriptionProgress: FunctionComponent<
   FileTranscriptionProgressProps
-> = ({ jobId, filename, uploadProgress, onPlayClick }) => {
+> = ({ jobId, filename, uploadProgress, isPreparingUpload, onPlayClick }) => {
   const { transcription, isTranscribeCompleted, isPipelineCompleted } =
     useTranscription({ jobId });
   const transcriptionStatus = mapTranscriptionStatus(transcription);
@@ -118,7 +180,7 @@ export const TranscriptionProgress: FunctionComponent<
     <Alert
       key={filename}
       title={
-        <Text pl={2} fontSize={"lg"}>
+        <Text pl={2} fontSize={"lg"} wordBreak={"break-word"}>
           {filename}
         </Text>
       }
@@ -150,6 +212,7 @@ export const TranscriptionProgress: FunctionComponent<
       >
         <VStack align={"flex-start"} gap={0} flexGrow={2}>
           <UploadProgressStatus
+            isPreparingUpload={isPreparingUpload}
             progress={uploadProgress}
             processingText={"Uploading. Please do not close your browser..."}
             completedText={"Upload successful"}
@@ -161,6 +224,13 @@ export const TranscriptionProgress: FunctionComponent<
             enableGenerateSummary(transcription!) && (
               <GenerateSummaryStatus summaryKey={transcription?.summaryKey} />
             )}
+          {isTranscribeJobCompleted && enableTranslation(transcription!) && (
+            <TranslationStatus
+              targetLanguage={transcription?.metadata.targetlanguage}
+              translationKey={transcription?.translationKey}
+              failed={isTranslationFailed(transcription!)}
+            />
+          )}
         </VStack>
         {isTranscribeCompleted && (
           <TranscriptionDownloadOptions

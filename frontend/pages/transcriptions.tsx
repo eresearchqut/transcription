@@ -1,43 +1,45 @@
-import { useContext, useState } from "react";
 import {
   AlertIndicator,
   AlertRoot,
   AlertTitle,
+  Badge,
   Box,
+  Button,
   Flex,
   HStack,
-  IconButton,
   Input,
   Link,
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { ColumnDef, SortingState } from "@tanstack/react-table";
-import DataTable from "@/components/dataTable";
-import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
-import { TRANSCRIBE_QUOTAS, Transcription } from "model";
-import { TranscriptionStatus } from "@/components/transcriptionStatus";
-import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
-import { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
-import NextLink from "next/link";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import type { OpenChangeDetails } from "@zag-js/dialog";
 import { add, set } from "date-fns";
+import { TRANSCRIBE_QUOTAS, type Transcription } from "model";
+import NextLink from "next/link";
+import { useContext, useState } from "react";
+import DataTable from "@/components/dataTable";
+import { MappedIcon } from "@/components/mappedIcon";
+import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
+import type { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
+import { TranscriptionDownloadOptions } from "@/components/transcriptionDownloadOptions";
 import {
   languagesFromTranscription,
   TranscriptionLanguages,
 } from "@/components/transcriptionLanguages";
-import { OpenChangeDetails } from "@zag-js/dialog";
-import { MappedIcon } from "@/components/mappedIcon";
+import { TranscriptionStatus } from "@/components/transcriptionStatus";
+import { TranscriptionSummary } from "@/components/transcriptionSummary";
 import { Alert } from "@/components/ui/alert";
-import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
 import { InputGroup } from "@/components/ui/input-group";
-import { NextPageWithLayout } from "@/pages/_app";
+import { ProgressBar, ProgressRoot } from "@/components/ui/progress";
+import { ToggleTip } from "@/components/ui/toggle-tip";
+import type { NextPageWithLayout } from "@/pages/_app";
 import {
   TranscriptionsContext,
   TranscriptionsContextProvider,
 } from "../context/transcriptions-context";
-import { ToggleTip } from "@/components/ui/toggle-tip";
-import { TranscriptionSummary } from "@/components/transcriptionSummary";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
+import { decodeFilename } from "../utils/filename";
 
 const Transcriptions: NextPageWithLayout = () => {
   const [open, setOpen] = useState(false);
@@ -45,17 +47,24 @@ const Transcriptions: NextPageWithLayout = () => {
     TranscriptionsContext,
   );
   const [play, setPlay] = useState<
-    Pick<MediaPlayerDrawerProps, "mediaUrl" | "transcriptUrl" | "summary">
+    Pick<
+      MediaPlayerDrawerProps,
+      "mediaUrl" | "transcriptUrl" | "summary" | "languages" | "speakers"
+    >
   >({} as MediaPlayerDrawerProps);
   const handlePlayClick = (
     mediaUrl: string,
     transcriptUrl: string,
     summary?: string,
+    languages?: (string | undefined)[],
+    speakers?: string[],
   ) => {
     setPlay({
       mediaUrl,
       transcriptUrl,
       summary,
+      languages,
+      speakers,
     });
     setOpen(true);
   };
@@ -66,10 +75,14 @@ const Transcriptions: NextPageWithLayout = () => {
   const [filter, setFilter] = useState<string>("");
   const searchInputPlaceholder = "Search transcriptions";
 
-  const formatFilename = (filename: string) => decodeURIComponent(filename);
   const formatDate = (isoDateString: string) => {
-    return new Date(isoDateString).toLocaleString("default");
+    return new Date(isoDateString).toLocaleString(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
   };
+  const formatExpiryDate = (date: Date) =>
+    date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   const startOfDay = (isoDateString: string) =>
     set(isoDateString, { hours: 0, minutes: 0, seconds: 0 });
   const isExpiringSoon = (isoDateString: string) => {
@@ -82,34 +95,48 @@ const Transcriptions: NextPageWithLayout = () => {
     });
     return estimatedDateExpiry < expiringSoonBoundary;
   };
+  const fitColumn = {
+    cellProps: { w: "1%", whiteSpace: "nowrap" },
+    headerProps: { w: "1%", whiteSpace: "nowrap" },
+  };
 
   const columns: ColumnDef<Transcription>[] = [
     {
       id: "dateUploaded",
       header: "Date Uploaded",
       accessorFn: (transcription) => transcription.date,
+      meta: fitColumn,
       cell: (props) => {
         const ttl = new Date(props.row.original.ttl * 1000);
         const formattedTtl = formatDate(ttl.toISOString());
         return (
-          <HStack wrap={"wrap"}>
-            <Flex align={"flex-start"}>
+          <HStack
+            gap={3}
+            w={{ base: "auto", xl: "100%" }}
+            justify={{ base: "flex-start", xl: "space-between" }}
+          >
+            <Flex whiteSpace={{ base: "normal", xl: "nowrap" }}>
               {formatDate(props.row.original.date)}
             </Flex>
             {isExpiringSoon(props.row.original.date) && (
-              <Flex align={"flex-start"}>
-                <ToggleTip
-                  content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+              <ToggleTip
+                content={`This transcription is expiring and will no longer be available to download after ${formattedTtl}.`}
+              >
+                <Badge
+                  asChild
+                  colorPalette={"orange"}
+                  variant={"solid"}
+                  rounded={"full"}
+                  cursor={"pointer"}
+                  flexShrink={0}
+                  gap={1}
                 >
-                  <IconButton size={"xs"} rounded={"full"} variant={"ghost"}>
-                    <MappedIcon
-                      icon={"clock-exclamation"}
-                      aria-label={"Expiring soon"}
-                      color={"yellow.500"}
-                    />
-                  </IconButton>
-                </ToggleTip>
-              </Flex>
+                  <button type={"button"} aria-label={"Expiring soon"}>
+                    <MappedIcon icon={"clock-exclamation"} />
+                    Expires {formatExpiryDate(ttl)}
+                  </button>
+                </Badge>
+              </ToggleTip>
             )}
           </HStack>
         );
@@ -118,25 +145,38 @@ const Transcriptions: NextPageWithLayout = () => {
     {
       header: "File Name",
       accessorFn: (transcription) => transcription.metadata.filename,
+      meta: {
+        cellProps: { whiteSpace: "normal", w: "auto" },
+        headerProps: { whiteSpace: "nowrap", w: "auto" },
+      },
       cell: (props) => {
         const transcription = props.row.original as Transcription;
-        const filename = formatFilename(transcription.metadata.filename);
+        const filename = decodeFilename(transcription.metadata.filename);
+
+        return <Text overflowWrap={"anywhere"}>{filename}</Text>;
+      },
+    },
+    {
+      id: "summary",
+      header: "Summary",
+      enableSorting: false,
+      meta: fitColumn,
+      cell: (props) => {
+        const transcription = props.row.original as Transcription;
 
         return (
-          <HStack>
-            <Text>{filename}</Text>
-            <TranscriptionSummary
-              jobId={transcription.sk}
-              initialTranscription={transcription}
-            />
-          </HStack>
+          <TranscriptionSummary
+            jobId={transcription.sk}
+            initialTranscription={transcription}
+          />
         );
       },
     },
     {
       id: "language",
-      header: "Language",
+      header: "Source Language",
       accessorFn: (transcription) => languagesFromTranscription(transcription),
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.row.original as Transcription;
         return (
@@ -150,6 +190,7 @@ const Transcriptions: NextPageWithLayout = () => {
     {
       header: "Status",
       accessorFn: (transcription) => transcription,
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.getValue() as Transcription;
         return (
@@ -164,6 +205,7 @@ const Transcriptions: NextPageWithLayout = () => {
       id: "actions",
       header: "Transcription Actions",
       enableSorting: false,
+      meta: fitColumn,
       cell: (props) => {
         const transcription = props.row.original;
 
@@ -211,16 +253,14 @@ const Transcriptions: NextPageWithLayout = () => {
         {!transcriptionsLoading &&
           transcriptions &&
           transcriptions.length === 0 && (
-            <>
-              <Alert status="info" title={"Getting Started"}>
-                <Box>
-                  <Link as={NextLink} href={"/transcription/upload"}>
-                    Upload Media
-                  </Link>{" "}
-                  to start the transcription process.
-                </Box>
-              </Alert>
-            </>
+            <Alert status="info" title={"Getting Started"}>
+              <Box>
+                <Link as={NextLink} href={"/"}>
+                  Upload Media
+                </Link>{" "}
+                to start the transcription process.
+              </Box>
+            </Alert>
           )}
         {!transcriptionsLoading &&
           transcriptions &&
@@ -248,6 +288,8 @@ const Transcriptions: NextPageWithLayout = () => {
         mediaUrl={play?.mediaUrl}
         transcriptUrl={play?.transcriptUrl}
         summary={play?.summary}
+        languages={play?.languages}
+        speakers={play?.speakers}
         open={open}
         onOpenChange={onMediaPlayerOpenChange}
       />
@@ -257,7 +299,18 @@ const Transcriptions: NextPageWithLayout = () => {
 
 Transcriptions.getLayout = (page) => {
   return (
-    <AuthenticatedLayout pageTitle={"My Transcriptions"} isLanding={false}>
+    <AuthenticatedLayout
+      pageTitle={"My Transcriptions"}
+      headerAction={
+        <Button colorPalette={"blue"} asChild>
+          <NextLink href={"/"}>
+            <MappedIcon icon={"upload"} />
+            New transcription
+          </NextLink>
+        </Button>
+      }
+      isLanding={false}
+    >
       <TranscriptionsContextProvider>{page}</TranscriptionsContextProvider>
     </AuthenticatedLayout>
   );

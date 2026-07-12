@@ -1,13 +1,12 @@
-import { FunctionComponent } from "react";
-import {
-  useTranscription,
-  UseTranscriptionProps,
-} from "../../hooks/useTranscription";
-import { List, ListItem } from "@chakra-ui/react";
+import { Badge, List, ListItem } from "@chakra-ui/react";
 import { get, isUndefined } from "lodash";
-import supportedLanguages from "@/public/supported_languages.json";
-import { Transcription } from "model";
-import { Tag } from "../ui/tag";
+import type { Transcription } from "model";
+import { SUPPORTED_TRANSCRIPTION_LANGUAGES as supportedLanguages } from "model";
+import type { FunctionComponent } from "react";
+import {
+  type UseTranscriptionProps,
+  useTranscription,
+} from "../../hooks/useTranscription";
 
 export const languagesFromTranscription = (
   transcription: Transcription | undefined,
@@ -37,21 +36,41 @@ export const TranscriptionLanguages: FunctionComponent<
       ?.RedactionType,
   );
 
-  if (isTranscribeFailed) return <Tag colorPalette={"red"}>FAILED</Tag>;
-  if (!isTranscribeCompleted) return <Tag>LOADING...</Tag>;
+  if (isTranscribeFailed) {
+    return (
+      <Badge colorPalette={"red"} minW={"max-content"} variant={"surface"}>
+        FAILED
+      </Badge>
+    );
+  }
+
+  if (!isTranscribeCompleted) {
+    return (
+      <Badge minW={"max-content"} variant={"surface"}>
+        LOADING...
+      </Badge>
+    );
+  }
 
   return (
     <List.Root variant={"plain"}>
       {languagesFromTranscription(transcription)?.map((lang) => (
         <ListItem key={lang} display={"inline-list-item"}>
-          <Tag mr={2}>{lang?.toUpperCase()}</Tag>
+          <Badge minW={"max-content"} mr={2} variant={"surface"}>
+            {lang?.toUpperCase()}
+          </Badge>
         </ListItem>
       ))}
       {piiRedacted && (
         <ListItem display={"inline-list-item"}>
-          <Tag mr={2} variant={"outline"} colorPalette={"red"}>
+          <Badge
+            colorPalette={"red"}
+            minW={"max-content"}
+            mr={2}
+            variant={"outline"}
+          >
             PII REDACTED
-          </Tag>
+          </Badge>
         </ListItem>
       )}
     </List.Root>

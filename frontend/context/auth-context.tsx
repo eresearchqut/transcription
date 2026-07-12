@@ -1,18 +1,22 @@
-import React, {
+import {
+  type AuthSession,
+  fetchAuthSession,
+  fetchUserAttributes,
+  signOut,
+} from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
+import { useRouter } from "next/router";
+import {
   createContext,
-  FunctionComponent,
-  PropsWithChildren,
+  type FunctionComponent,
+  type PropsWithChildren,
   useCallback,
   useContext,
   useEffect,
-  useState
+  useState,
 } from "react";
-
-import { useRouter } from "next/router";
-import { AuthSession, fetchAuthSession, fetchUserAttributes, signOut } from "aws-amplify/auth";
-import { Hub } from "aws-amplify/utils";
-import { useAnalytics } from "./analytics-context";
 import { LoadingPage } from "@/components/loadingPage";
+import { useAnalytics } from "./analytics-context";
 import { useMonitoring } from "./monitoring-context";
 
 export type UserAttributes = {
@@ -34,7 +38,7 @@ export interface AuthContextState {
 export const DefaultAuthContextState = {
   loading: true,
   authenticated: false,
-  user: undefined
+  user: undefined,
 };
 
 export interface AuthContextOperations {
@@ -52,23 +56,31 @@ export const useAuth = (): AuthContextState & AuthContextOperations => {
 };
 
 const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
-
-  const [state, setState] = useState<AuthContextState>({ ...DefaultAuthContextState });
+  const [state, setState] = useState<AuthContextState>({
+    ...DefaultAuthContextState,
+  });
   const { identify } = useAnalytics();
   const { setAttributes } = useMonitoring();
 
   useEffect(() => {
-    fetchUserAttributes().then((userAttributes) => {
-      const { "custom:qutIdentityId": id, "custom:uid": username } = userAttributes as UserAttributes;
-      setState((current) => ({
-        ...current,
-        user: { username, id },
-        loading: false,
-        authenticated: true
-      }));
-    }).catch(() => {
-      setState(() => ({ loading: false, authenticated: false, user: undefined }));
-    });
+    fetchUserAttributes()
+      .then((userAttributes) => {
+        const { "custom:qutIdentityId": id, "custom:uid": username } =
+          userAttributes as UserAttributes;
+        setState((current) => ({
+          ...current,
+          user: { username, id },
+          loading: false,
+          authenticated: true,
+        }));
+      })
+      .catch(() => {
+        setState(() => ({
+          loading: false,
+          authenticated: false,
+          user: undefined,
+        }));
+      });
   }, []);
 
   const getCurrentSession = useCallback(async () => {
@@ -77,16 +89,16 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
       await signOut();
     }
     return authSession;
-  }, []);
+  }, [state.authenticated]);
 
   useEffect(() => {
     if (state.user?.id) {
       setAttributes({
-        "auth.username": state.user?.username
+        "auth.username": state.user?.username,
       });
       identify(state.user?.id);
     }
-  }, [state]);
+  }, [state, identify, setAttributes]);
 
   const router = useRouter();
 
@@ -94,9 +106,17 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     const handleAuthEvents = async (data: { payload: { event: string } }) => {
       const { event } = data.payload;
       switch (event) {
-        case "tokenRefresh_failure":
         case "signedOut":
+          setState({ loading: false, authenticated: false, user: undefined });
           await router.push("/login");
+          break;
+        case "tokenRefresh_failure":
+          // A single failed silent token refresh is usually transient (e.g. a
+          // network blip while the page polls for job progress). Don't force a
+          // logout here: requests skip and retry, and Amplify refreshes again
+          // on the next attempt. A genuine session loss still arrives as a
+          // `signedOut` event and is handled above.
+          console.debug("Token refresh failed; will retry on next request");
           break;
         default:
           console.debug("Unhandled Auth Event:", event);
@@ -104,13 +124,17 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     };
     // Subscribe to Auth events
     return Hub.listen("auth", handleAuthEvents);
-  }, []);
+  }, [router.push]);
 
   if (state.loading) {
     return <LoadingPage label={"Loading..."} />;
   }
 
-  return <AuthContext.Provider value={{ ...state, getCurrentSession }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ ...state, getCurrentSession }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export { AuthProvider, AuthContext };
+export { AuthContext, AuthProvider };

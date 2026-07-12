@@ -1,7 +1,7 @@
-import { Meta, StoryObj } from "@storybook/nextjs";
-import { NewFeature } from ".";
+import type { Meta, StoryObj } from "@storybook/nextjs";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
+import { NewFeature } from ".";
 
 export default {
   title: "Components/NewFeatureFlag",

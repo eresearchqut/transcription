@@ -1,30 +1,32 @@
-import React, {
-  ComponentType,
-  ForwardedRef,
-  forwardRef,
-  SVGProps,
-} from "react";
+import { Icon, type IconProps } from "@chakra-ui/react";
+import { get, isEmpty } from "lodash";
+import type React from "react";
 import {
+  type ComponentType,
+  type ForwardedRef,
+  forwardRef,
+  type SVGProps,
+} from "react";
+import { AiOutlinePlaySquare } from "react-icons/ai";
+import {
+  FaBars,
   FaCheckCircle,
   FaChevronDown,
   FaChevronLeft,
   FaChevronRight,
   FaExclamationCircle,
   FaExternalLinkAlt,
+  FaHome,
+  FaInfoCircle,
   FaPhotoVideo,
   FaQuestion,
   FaReadme,
 } from "react-icons/fa";
-import { Icon, IconProps } from "@chakra-ui/react";
-import { get, isEmpty } from "lodash";
-import { AiOutlinePlaySquare } from "react-icons/ai";
-import {
-  TbClock,
-  TbClockExclamation,
-  TbFile,
-  TbFileAlert,
-  TbFileCheck,
-} from "react-icons/tb";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { GoTriangleDown, GoTriangleUp } from "react-icons/go";
+import { HiMiniSparkles } from "react-icons/hi2";
+import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
+import { LuUpload } from "react-icons/lu";
 import {
   MdChecklist,
   MdKeyboardDoubleArrowLeft,
@@ -32,13 +34,16 @@ import {
   MdOutlineSearch,
   MdOutlineSubtitles,
 } from "react-icons/md";
-import { GoTriangleDown, GoTriangleUp } from "react-icons/go";
-import { LuUpload } from "react-icons/lu";
-import { FiPlus } from "react-icons/fi";
-import { IoEnterOutline, IoExitOutline } from "react-icons/io5";
 import { RiPlayList2Fill } from "react-icons/ri";
+import {
+  TbClock,
+  TbClockExclamation,
+  TbFile,
+  TbFileAlert,
+  TbFileCheck,
+  TbFileText,
+} from "react-icons/tb";
 import { VscJson } from "react-icons/vsc";
-import { HiMiniSparkles } from "react-icons/hi2";
 
 const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "check-circle": FaCheckCircle,
@@ -47,6 +52,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "chevron-right": FaChevronRight,
   clock: TbClock,
   "clock-exclamation": TbClockExclamation,
+  docx: TbFileText,
   "double-arrow-left": MdKeyboardDoubleArrowLeft,
   "double-arrow-right": MdKeyboardDoubleArrowRight,
   "enter-outline": IoEnterOutline,
@@ -57,7 +63,10 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   "file-check": TbFileCheck,
   "file-alert": TbFileAlert,
   generated: MdChecklist,
+  home: FaHome,
+  info: FaInfoCircle,
   json: VscJson,
+  menu: FaBars,
   movie: FaPhotoVideo,
   "play-outline-square": AiOutlinePlaySquare,
   playlist: RiPlayList2Fill,
@@ -67,6 +76,7 @@ const iconsMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   search: MdOutlineSearch,
   sparkle: HiMiniSparkles,
   subtitle: MdOutlineSubtitles,
+  trash: FiTrash2,
   "triangle-down": GoTriangleDown,
   "triangle-up": GoTriangleUp,
   upload: LuUpload,
@@ -94,7 +104,7 @@ export interface AccessibleIconProps extends IconProps {
 
 const AccessibleIcon = forwardRef<SVGSVGElement, AccessibleIconProps>(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  (props: AccessibleIconProps, ref: ForwardedRef<SVGSVGElement>) => {
+  (props: AccessibleIconProps, _ref: ForwardedRef<SVGSVGElement>) => {
     const {
       "aria-label": ariaLabel,
       role,
@@ -121,10 +131,9 @@ const AccessibleIcon = forwardRef<SVGSVGElement, AccessibleIconProps>(
 );
 
 const WrappedIcon = forwardRef<SVGSVGElement, MappedIconProps>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   ({ icon, ...props }, ref) => {
     const WrappedIconType = get(wrappedIconsMap, icon);
-    return <WrappedIconType {...props} />;
+    return <WrappedIconType {...props} ref={ref} />;
   },
 );
 

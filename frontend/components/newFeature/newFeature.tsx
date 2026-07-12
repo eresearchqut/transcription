@@ -1,5 +1,5 @@
-import { FunctionComponent, PropsWithChildren } from "react";
 import { HStack, Text } from "@chakra-ui/react";
+import type { FunctionComponent, PropsWithChildren } from "react";
 import { MappedIcon } from "@/components/mappedIcon";
 
 export interface NewFeatureProps {
@@ -12,7 +12,7 @@ export const NewFeature: FunctionComponent<
   return show ? (
     <HStack
       pos={"relative"}
-      w={"full"}
+      w={"fit-content"}
       borderColor={"purple.300"}
       borderWidth={2}
       p={2}

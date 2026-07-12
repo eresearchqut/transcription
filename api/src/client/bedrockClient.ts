@@ -1,5 +1,5 @@
 import {
-  BedrockRuntimeClient,
+  type BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 

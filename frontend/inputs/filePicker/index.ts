@@ -1,5 +1,5 @@
 export {
+  bytesToSize,
   default as FilePicker,
   type FilePickerProps,
-  bytesToSize,
 } from "./filePicker";

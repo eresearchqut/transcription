@@ -1,0 +1,67 @@
+import { Box, Steps as ChakraSteps } from "@chakra-ui/react";
+import * as React from "react";
+import { LuCheck } from "react-icons/lu";
+
+interface StepInfoProps {
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+}
+
+export interface StepsItemProps
+  extends Omit<ChakraSteps.ItemProps, "title">,
+    StepInfoProps {
+  completedIcon?: React.ReactNode;
+  icon?: React.ReactNode;
+}
+
+export const StepsItem = React.forwardRef<HTMLDivElement, StepsItemProps>(
+  function StepsItem(props, ref) {
+    const { title, description, completedIcon, icon, ...rest } = props;
+    const accessibleName = typeof title === "string" ? title : undefined;
+    return (
+      <ChakraSteps.Item {...rest} ref={ref}>
+        <ChakraSteps.Trigger aria-label={accessibleName}>
+          <ChakraSteps.Indicator>
+            <ChakraSteps.Status
+              complete={completedIcon || <LuCheck />}
+              incomplete={icon || <ChakraSteps.Number />}
+            />
+          </ChakraSteps.Indicator>
+          <StepInfo title={title} description={description} />
+        </ChakraSteps.Trigger>
+        <ChakraSteps.Separator />
+      </ChakraSteps.Item>
+    );
+  },
+);
+
+const StepInfo = (props: StepInfoProps) => {
+  const { title, description } = props;
+  if (title && description) {
+    return (
+      <Box hideBelow={"md"}>
+        {title && <ChakraSteps.Title>{title}</ChakraSteps.Title>}
+        {description && (
+          <ChakraSteps.Description>{description}</ChakraSteps.Description>
+        )}
+      </Box>
+    );
+  }
+  return (
+    <>
+      {title && <ChakraSteps.Title hideBelow={"md"}>{title}</ChakraSteps.Title>}
+      {description && (
+        <ChakraSteps.Description hideBelow={"md"}>
+          {description}
+        </ChakraSteps.Description>
+      )}
+    </>
+  );
+};
+
+export const StepsRoot = ChakraSteps.Root;
+export const StepsList = ChakraSteps.List;
+export const StepsContent = ChakraSteps.Content;
+export const StepsCompletedContent = ChakraSteps.CompletedContent;
+export const StepsNextTrigger = ChakraSteps.NextTrigger;
+export const StepsPrevTrigger = ChakraSteps.PrevTrigger;

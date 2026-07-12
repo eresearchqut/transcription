@@ -1,3 +1,4 @@
+import type { AttributeValue } from "@aws-sdk/client-dynamodb";
 import {
   DeleteItemCommand,
   GetItemCommand,
@@ -5,7 +6,6 @@ import {
   QueryCommand,
   UpdateItemCommand,
 } from "@aws-sdk/client-dynamodb";
-import { AttributeValue } from "@aws-sdk/client-dynamodb/dist-types/models/models_0";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import dynamoDBClient from "./dynamoDBClient";
@@ -37,7 +37,7 @@ export const putResource = (
           sk,
           ...attributes,
           date: new Date().toISOString(),
-          ttl: Math.floor(+new Date() / 1000) + TTL_DELTA,
+          ttl: Math.floor(Date.now() / 1000) + TTL_DELTA,
         },
         { removeUndefinedValues: true },
       ),
@@ -66,7 +66,7 @@ export const updateResource = (
         {
           ":attributeValue": attributeValue,
           ":date": new Date().toISOString(),
-          ":ttl": Math.floor(+new Date() / 1000) + TTL_DELTA,
+          ":ttl": Math.floor(Date.now() / 1000) + TTL_DELTA,
         },
         { removeUndefinedValues: true },
       ),
@@ -86,7 +86,7 @@ export const getResources = async (
   exclusiveStartKey?: Record<string, AttributeValue>,
 ) => {
   const items: Record<string, any> = [];
-  let lastEvaluatedKey;
+  let lastEvaluatedKey: Record<string, AttributeValue> | undefined;
   do {
     const { LastEvaluatedKey, Items } = await dynamoDBClient.send(
       new QueryCommand({
@@ -101,9 +101,9 @@ export const getResources = async (
         }),
       }),
     );
-    (Items ?? [])
-      .map((item) => unmarshall(item))
-      .forEach((item) => items.push(item));
+    for (const item of Items ?? []) {
+      items.push(unmarshall(item));
+    }
     lastEvaluatedKey = LastEvaluatedKey;
   } while (lastEvaluatedKey);
   return items;

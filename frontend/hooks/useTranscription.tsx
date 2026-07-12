@@ -1,15 +1,17 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { downloadData } from "aws-amplify/storage";
+import { isEmpty, isUndefined } from "lodash";
 import {
   enableGenerateSummary,
+  enableTranslation,
+  isTranslationFailed,
   mapTranscriptionStatus,
-  Transcription,
+  type Transcription,
   TranscriptionJobStatus,
 } from "model";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { getter } from "../client/fetchers";
-import { isEmpty, isUndefined } from "lodash";
 import { useAuth } from "../context/auth-context";
-import { downloadData } from "aws-amplify/storage";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -52,6 +54,10 @@ export const useTranscription = ({
       isTranscribeCompleted &&
       (enableGenerateSummary(transcription)
         ? !isEmpty(transcription?.summaryKey)
+        : true) &&
+      (enableTranslation(transcription)
+        ? !isEmpty(transcription?.translationKey) ||
+          isTranslationFailed(transcription)
         : true));
   const { data } = useQuery({
     enabled: !isPipelineCompleted,
@@ -73,11 +79,7 @@ export const useTranscription = ({
         ? getCurrentSession()
             .then(() => {
               const summaryKey = transcription!.summaryKey!;
-              const path: string | (({ identityId }: { identityId?: string }) => string) =
-                summaryKey.startsWith("users/")
-                  ? summaryKey
-                  : ({ identityId }) => `private/${identityId}/${summaryKey}`;
-              return downloadData({ path });
+              return downloadData({ path: summaryKey });
             })
             .then((downloadDataOutput) => downloadDataOutput.result)
             .then((downloadDataOutputResult) =>

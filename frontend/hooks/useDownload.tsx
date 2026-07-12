@@ -1,22 +1,39 @@
-import { useState } from "react";
-import { useAuth } from "../context/auth-context";
-import transcriptDocument, {
-  TranscriptJob,
-} from "../components/transcriptDocument";
-import { Packer } from "docx";
-import srtConvert from "aws-transcription-to-srt";
-import toWebVTT from "srt-webvtt";
 import { downloadData, getUrl } from "aws-amplify/storage";
+import { Packer } from "docx";
+import { useState } from "react";
+import toWebVTT from "srt-webvtt";
+import {
+  segmentsToSrt,
+  segmentsToText,
+  speakerLabels,
+} from "../components/segmentSubtitles";
+import transcriptDocument, {
+  type TranscriptJob,
+} from "../components/transcriptDocument";
+import { languageCodesFromTranscript } from "../components/transcriptLanguages";
 import { useAnalytics } from "../context/analytics-context";
+import { useAuth } from "../context/auth-context";
+import { decodeFilename } from "../utils/filename";
 
 export interface DownloadProps {
   filename: string;
   objectKey: string;
 }
 
-export type TranscriptFormat = "srt" | "vtt" | "docx";
+export type TranscriptFormat = "srt" | "vtt" | "docx" | "txt";
+export interface TranscriptOptions {
+  includeSpeakers?: boolean;
+  includeLanguages?: boolean;
+}
 export interface DownloadTranscriptProps extends DownloadProps {
   format: TranscriptFormat;
+  options?: TranscriptOptions;
+}
+
+export type TranslatedTranscriptFormat = "srt" | "vtt" | "docx" | "txt";
+export interface DownloadTranslatedTranscriptProps extends DownloadProps {
+  format: TranslatedTranscriptFormat;
+  options?: TranscriptOptions;
 }
 
 export const useDownload = () => {
@@ -28,7 +45,7 @@ export const useDownload = () => {
     const link = document.createElement("a");
 
     link.href = url;
-    link.setAttribute("download", fileName);
+    link.setAttribute("download", decodeFilename(fileName));
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -56,35 +73,150 @@ export const useDownload = () => {
   ): Promise<string> =>
     getCurrentSession().then(() =>
       getUrl({
-        path: objectKey.startsWith("users/")
-          ? objectKey
-          : ({ identityId }) => `private/${identityId}/${objectKey}`,
+        path: objectKey,
         options: {
           contentDisposition: `attachment; filename = ${fileName}`,
         },
       }).then((output) => output.url.href),
     );
 
+  const downloadTranscriptJob = (objectKey: string): Promise<TranscriptJob> =>
+    getCurrentSession()
+      .then(() =>
+        downloadData({
+          path: objectKey,
+        }),
+      )
+      .then((downloadDataOutput) => downloadDataOutput.result)
+      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
+      .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob);
+
   const fetchTranscriptUrl = async (
     objectKey: string,
-    format: "srt" | "vtt" | "docx",
+    format: TranscriptFormat,
+    {
+      includeSpeakers = false,
+      includeLanguages = false,
+    }: TranscriptOptions = {},
+  ): Promise<string> => {
+    return downloadTranscriptJob(objectKey)
+      .then((transcriptJob) => {
+        switch (format) {
+          case "docx":
+            return Packer.toBlob(
+              transcriptDocument(transcriptJob, {
+                includeSpeakers,
+                includeLanguages,
+              }),
+            );
+          case "txt":
+            return new Blob(
+              [
+                segmentsToText(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
+          default:
+            return new Blob(
+              [
+                segmentsToSrt(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
+        }
+      })
+      .then((blob) =>
+        format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
+      );
+  };
+
+  const fetchTranscriptForPlayer = async (
+    objectKey: string,
+  ): Promise<{
+    url: string;
+    languages: (string | undefined)[];
+    speakers: string[];
+  }> => {
+    return downloadTranscriptJob(objectKey).then(async (transcriptJob) => {
+      const blob = new Blob(
+        [segmentsToSrt(transcriptJob, { includeSpeakers: false })],
+        {
+          type: "text/plain",
+        },
+      );
+      return {
+        url: await toWebVTT(blob),
+        languages: languageCodesFromTranscript(transcriptJob),
+        speakers: speakerLabels(transcriptJob),
+      };
+    });
+  };
+
+  // Translations are stored as a Transcribe-shaped JSON with translated SEGMENTS
+  // (no word-level items), so subtitles are rebuilt from segment timings, the
+  // same segment-based approach used for the original transcript.
+  const fetchTranslatedTranscriptUrl = async (
+    objectKey: string,
+    format: TranslatedTranscriptFormat,
+    {
+      includeSpeakers = false,
+      includeLanguages = false,
+    }: TranscriptOptions = {},
   ): Promise<string> => {
     return getCurrentSession()
       .then(() =>
         downloadData({
-          path: objectKey.startsWith("users/")
-            ? objectKey
-            : ({ identityId }) => `private/${identityId}/${objectKey}`,
+          path: objectKey,
         }),
       )
       .then((downloadDataOutput) => downloadDataOutput.result)
       .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
       .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
-      .then((transcriptJob) =>
-        format === "docx"
-          ? Packer.toBlob(transcriptDocument(transcriptJob))
-          : new Blob([srtConvert(transcriptJob)], { type: "text/plain" }),
-      )
+      .then((transcriptJob) => {
+        switch (format) {
+          case "docx":
+            return Packer.toBlob(
+              transcriptDocument(transcriptJob, {
+                includeSpeakers,
+                includeLanguages,
+              }),
+            );
+          case "txt":
+            return new Blob(
+              [
+                segmentsToText(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
+          default:
+            return new Blob(
+              [
+                segmentsToSrt(transcriptJob, {
+                  includeSpeakers,
+                  includeLanguages,
+                }),
+              ],
+              {
+                type: "text/plain",
+              },
+            );
+        }
+      })
       .then((blob) =>
         format === "vtt" ? toWebVTT(blob) : URL.createObjectURL(blob),
       );
@@ -101,10 +233,38 @@ export const useDownload = () => {
     objectKey,
     filename,
     format,
+    options,
   }: DownloadTranscriptProps) => {
-    track("download-transcript", { format });
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-transcript", { format, ...transcriptOptions });
     download({
-      downloadUrl: fetchTranscriptUrl(objectKey, format),
+      downloadUrl: fetchTranscriptUrl(objectKey, format, transcriptOptions),
+      filename,
+    });
+  };
+
+  const downloadTranslatedTranscript = ({
+    objectKey,
+    filename,
+    format,
+    options,
+  }: DownloadTranslatedTranscriptProps) => {
+    const transcriptOptions: Required<TranscriptOptions> = {
+      includeSpeakers: false,
+      includeLanguages: false,
+      ...options,
+    };
+    track("download-translation", { format, ...transcriptOptions });
+    download({
+      downloadUrl: fetchTranslatedTranscriptUrl(
+        objectKey,
+        format,
+        transcriptOptions,
+      ),
       filename,
     });
   };
@@ -112,8 +272,11 @@ export const useDownload = () => {
   return {
     fetchMediaUrl,
     fetchTranscriptUrl,
+    fetchTranscriptForPlayer,
+    fetchTranslatedTranscriptUrl,
     downloadFile,
     downloadTranscript,
+    downloadTranslatedTranscript,
     isLoading,
   };
 };

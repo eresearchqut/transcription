@@ -1,5 +1,5 @@
-import { Link, LinkProps } from "@chakra-ui/react";
-import React from "react";
+import { Link, type LinkProps } from "@chakra-ui/react";
+import type React from "react";
 import { MappedIcon } from "@/components/mappedIcon";
 
 interface ExternalLinkProps extends LinkProps {
@@ -19,7 +19,12 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
+      display={"inline"}
+      whiteSpace={"nowrap"}
       color={{ base: "blue.600", _dark: "white" }}
+      textDecoration={"underline"}
+      textDecorationColor={{ base: "blue.200", _dark: "whiteAlpha.400" }}
+      _hover={{ textDecorationColor: "currentColor" }}
       {...rest}
     >
       {children}{" "}

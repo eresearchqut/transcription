@@ -1,8 +1,8 @@
 import addonA11y from "@storybook/addon-a11y";
 import addonDocs from "@storybook/addon-docs";
 import { definePreview } from "@storybook/nextjs";
-import { AuthProvider } from "../context/auth-context";
 import { Provider } from "@/components/ui/provider";
+import { AuthProvider } from "../context/auth-context";
 
 const withChakra = (Story: any, context: any) => (
   <Provider forcedTheme={context.globals.backgrounds.value}>
