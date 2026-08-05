@@ -576,6 +576,10 @@ export class ApiStack extends cdk.Stack {
           "http://localhost:3000/",
           `https://${props.parameters.FrontEndDomainName}/`,
         ],
+        flows: {
+          authorizationCodeGrant: true,
+          implicitCodeGrant: false,
+        },
       },
     });
     (
