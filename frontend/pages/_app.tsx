@@ -43,7 +43,7 @@ Amplify.configure({
           ],
           redirectSignIn: [process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT!],
           redirectSignOut: [process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT!],
-          responseType: "token",
+          responseType: "code",
         },
       },
       identityPoolId: process.env.NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID!,
