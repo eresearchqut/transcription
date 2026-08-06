@@ -15,6 +15,7 @@ import * as route53targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 
 /**
@@ -31,6 +32,9 @@ export interface ApiStackProps extends cdk.StackProps {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
+    DmpApiUrl: string;
+    DmpCredentialsParameter: string;
+    DmpTokenUrl: string;
     Environment: string;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
@@ -105,6 +109,13 @@ export class ApiStack extends cdk.Stack {
     const vpc = ec2.Vpc.fromLookup(this, "Vpc", {
       vpcId: props.parameters.VpcId,
     });
+
+    const dmpCredentials =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        "DmpCredentials",
+        { parameterName: props.parameters.DmpCredentialsParameter },
+      );
     const apiSecurityGroup = new ec2.SecurityGroup(this, "ApiSecurityGroup", {
       description: `Security group for ${props.parameters.ApplicationName} api function`,
       vpc: vpc,
@@ -113,7 +124,7 @@ export class ApiStack extends cdk.Stack {
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
       description: "Serve the HTTP API",
-      timeout: cdk.Duration.seconds(15),
+      timeout: cdk.Duration.seconds(30),
       memorySize: 1024,
       entry: "../api/src/api/apiHandler.ts",
       handler: "handler",
@@ -127,6 +138,9 @@ export class ApiStack extends cdk.Stack {
         BUCKET_NAME: dataBucket.bucketName,
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
+        DMP_API_URL: props.parameters.DmpApiUrl,
+        DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
+        DMP_CREDENTIALS_PARAMETER: props.parameters.DmpCredentialsParameter,
       },
       vpc: vpc,
       securityGroups: [apiSecurityGroup],
@@ -137,6 +151,7 @@ export class ApiStack extends cdk.Stack {
       },
     });
     dataTable.grantReadWriteData(apiFunction);
+    dmpCredentials.grantRead(apiFunction);
 
     const userPoolArn = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolArn`,
@@ -199,7 +214,7 @@ export class ApiStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_24_X,
         description: "Starts transcription jobs when triggered by S3 events",
-        timeout: cdk.Duration.seconds(15),
+        timeout: cdk.Duration.seconds(60),
         memorySize: 1024,
         entry: "../api/src/event/fileUploadHandler.ts",
         handler: "handler",
@@ -213,6 +228,9 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          DMP_API_URL: props.parameters.DmpApiUrl,
+          DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
+          DMP_CREDENTIALS_PARAMETER: props.parameters.DmpCredentialsParameter,
         },
       },
     );
@@ -228,6 +246,7 @@ export class ApiStack extends cdk.Stack {
     );
     dataTable.grantReadWriteData(jobStartFunction);
     dataBucket.grantReadWrite(jobStartFunction);
+    dmpCredentials.grantRead(jobStartFunction);
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),

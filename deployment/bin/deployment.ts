@@ -17,6 +17,9 @@ interface EnvironmentConfig {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
+    DmpApiUrl: string;
+    DmpCredentialsParameter: string;
+    DmpTokenUrl: string;
     Environment: Environment;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
