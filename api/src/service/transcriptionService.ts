@@ -6,6 +6,7 @@ import {
   getResources,
   putResource,
   updateResource,
+  updateResources,
 } from "../repository/repository";
 
 export const normaliseJobId = (jobId: string): string =>
@@ -18,12 +19,16 @@ export const jobStarted = (
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
+  rpidPayload?: Record<string, unknown>,
 ) =>
   putResource(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
+    ...(rpidPayload && {
+      rpidPayload: JSON.parse(JSON.stringify(rpidPayload)),
+    }),
   });
 
 /**
@@ -64,15 +69,23 @@ export const downloadKey = (
   identityId: string,
   jobId: string,
   downloadKey: string,
+  audioSeconds?: number,
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "downloadKey", downloadKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    downloadKey,
+    audioSeconds,
+  });
 
 export const summaryKey = (
   identityId: string,
   jobId: string,
   summaryKey: string,
+  summaryUsage?: { inputTokens?: number; outputTokens?: number },
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "summaryKey", summaryKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    summaryKey,
+    summaryUsage,
+  });
 
 export const translationKey = (
   identityId: string,
@@ -90,13 +103,12 @@ export const translationJob = (
   identityId: string,
   jobId: string,
   translationJob: { jobId: string; status: string; message?: string },
+  translationCharacters?: number,
 ) =>
-  updateResource(
-    identityId,
-    normaliseJobId(jobId),
-    "translationJob",
+  updateResources(identityId, normaliseJobId(jobId), {
     translationJob,
-  );
+    translationCharacters,
+  });
 
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);

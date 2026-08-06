@@ -14,6 +14,7 @@ export interface Transcription {
   metadata: {
     filetype: string;
     languagecode: string;
+    languages?: string;
     mimetype: string;
     filename: string;
     generatesummary: string;
@@ -22,9 +23,16 @@ export interface Transcription {
     rpid?: string;
   };
   date: string;
+  rpidPayload?: Record<string, unknown>;
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
+  audioSeconds?: number;
+  summaryUsage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+  translationCharacters?: number;
   translationJob?: {
     jobId: string;
     status: string;

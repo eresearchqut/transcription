@@ -16,11 +16,19 @@ interface ContentBlock {
   text?: string;
 }
 
+export interface ModelInvocation {
+  text: string;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+}
+
 export const invokeModel = async (
   client: BedrockRuntimeClient,
   prompt: string,
   modelId: string = BEDROCK_MODEL_ID,
-): Promise<string> => {
+): Promise<ModelInvocation> => {
   // Prepare the payload for the model.
   const payload = {
     anthropic_version: ANTHROPIC_VERSION,
@@ -51,5 +59,12 @@ export const invokeModel = async (
       `Model returned no text (stop_reason: ${responseBody.stop_reason})`,
     );
   }
-  return text;
+  const { input_tokens: inputTokens, output_tokens: outputTokens } =
+    responseBody.usage ?? {};
+  return {
+    text,
+    ...(inputTokens !== undefined || outputTokens !== undefined
+      ? { usage: { inputTokens, outputTokens } }
+      : {}),
+  };
 };

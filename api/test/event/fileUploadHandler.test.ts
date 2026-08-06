@@ -4,6 +4,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import { mockClient } from "aws-sdk-client-mock";
 import { FEATURES_OFF } from "model";
 
@@ -17,6 +18,14 @@ import fileUploadEvent from "./fileUploadEvent.json";
 const IDENTITY_ID = "76c65a59-1c57-489b-be96-020ceaa9675a";
 const JOB_ID = "2e9b38b5-1df0-4841-8308-f174fb88aac7";
 const RPID = "RPID-1234";
+
+const project: RpidDto = {
+  rpid: RPID,
+  title: "My Research Project",
+  createdDate: "2026-03-02T00:00:00.000Z",
+  lead: { id: "1", name: "Jane Citizen" },
+  faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
+};
 
 jest.mock("../../src/client/dmpClient", () => ({
   getRpid: jest.fn(),
@@ -51,12 +60,7 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    mockGetRpid.mockResolvedValue({
-      rpid: RPID,
-      title: "Project",
-      createdDate: "2026-03-02T00:00:00.000Z",
-      lead: { id: "1", name: "Jane Citizen" },
-    });
+    mockGetRpid.mockResolvedValue(project);
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
 
@@ -67,6 +71,7 @@ describe("fileUploadHandler", () => {
     expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
       expect.objectContaining({
         metadata: expect.objectContaining({ rpid: RPID }),
+        rpidPayload: project,
       }),
     );
   });

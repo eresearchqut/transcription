@@ -8,6 +8,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
@@ -26,25 +27,33 @@ xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
 /**
- * The reason to refuse the upload, shown to the user as the job's failure
- * reason, or undefined when the RPID is one of their active plans that they
- * can use for transcription.
+ * Finds the upload's RPID among the user's active projects, or gives the
+ * reason to refuse the upload, which is shown to the user as the job's
+ * failure reason.
  */
-const rpidRejection = async (
+const checkRpid = async (
   identityId: string,
   rpid: string | undefined,
-): Promise<string | undefined> => {
+): Promise<{ project: RpidDto } | { rejection: string }> => {
   if (!rpid) {
-    return "A Research Plan ID (RPID) is required to start a transcription.";
+    return {
+      rejection:
+        "A Research Plan ID (RPID) is required to start a transcription.",
+    };
   }
   try {
-    if (await getRpid(identityId, rpid)) {
-      return undefined;
+    const project = await getRpid(identityId, rpid);
+    if (project) {
+      return { project };
     }
-    return `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`;
+    return {
+      rejection: `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`,
+    };
   } catch (error) {
     console.error(`Failed to validate RPID ${rpid}`, error);
-    return `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`;
+    return {
+      rejection: `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`,
+    };
   }
 };
 
@@ -85,16 +94,16 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
 
-      const rejection = rpidRequired
-        ? await rpidRejection(identityId, headResponse.Metadata.rpid)
-        : undefined;
-      if (rejection) {
+      const rpidCheck = rpidRequired
+        ? await checkRpid(identityId, headResponse.Metadata.rpid)
+        : { project: undefined };
+      if ("rejection" in rpidCheck) {
         const recorded = await jobRejected(
           identityId,
           jobId,
           record.s3,
           headResponse.Metadata,
-          rejection,
+          rpidCheck.rejection,
         );
         if (!recorded) {
           console.log(
@@ -167,6 +176,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
+          rpidCheck.project as unknown as Record<string, unknown>,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

@@ -102,7 +102,13 @@ describe("summariseTranscriptionHandler", () => {
     });
     bedrockClientMock.on(InvokeModelCommand).resolves({
       body: new Uint8ArrayBlobAdapter(
-        Buffer.from(JSON.stringify({ content, stop_reason: "end_turn" })),
+        Buffer.from(
+          JSON.stringify({
+            content,
+            stop_reason: "end_turn",
+            usage: { input_tokens: 900, output_tokens: 120 },
+          }),
+        ),
       ),
     });
 
@@ -161,6 +167,10 @@ describe("summariseTranscriptionHandler", () => {
       "2e9b38b5-1df0-4841-8308-f174fb88aac7",
     )) as Transcription;
     expect(transcription.summaryKey).toEqual(expectedSummaryKey);
+    expect(transcription.summaryUsage).toEqual({
+      inputTokens: 900,
+      outputTokens: 120,
+    });
   });
 
   test("does not store a summary when the model returns no text", async () => {
