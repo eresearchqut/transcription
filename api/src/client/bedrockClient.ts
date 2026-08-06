@@ -11,11 +11,19 @@ const ANTHROPIC_VERSION = process.env.ANTHROPIC_VERSION ?? "bedrock-2023-05-31";
 const BEDROCK_MODEL_ID =
   process.env.BEDROCK_MODEL_ID ?? "anthropic.claude-3-haiku-20240307-v1:0";
 
+export interface ModelInvocation {
+  text: string;
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+}
+
 export const invokeModel = async (
   client: BedrockRuntimeClient,
   prompt: string,
   modelId: string = BEDROCK_MODEL_ID,
-): Promise<string> => {
+): Promise<ModelInvocation> => {
   // Prepare the payload for the model.
   const payload = {
     anthropic_version: ANTHROPIC_VERSION,
@@ -38,5 +46,12 @@ export const invokeModel = async (
 
   // Decode and return the response(s)
   const responseBody = JSON.parse(new TextDecoder().decode(apiResponse.body));
-  return responseBody.content[0].text;
+  const { input_tokens: inputTokens, output_tokens: outputTokens } =
+    responseBody.usage ?? {};
+  return {
+    text: responseBody.content[0].text,
+    ...(inputTokens !== undefined || outputTokens !== undefined
+      ? { usage: { inputTokens, outputTokens } }
+      : {}),
+  };
 };

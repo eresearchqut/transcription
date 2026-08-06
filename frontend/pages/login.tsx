@@ -248,6 +248,42 @@ const Login: NextPageWithLayout = () => {
             </Box>
             <Box>
               <Heading as={"h3"} fontSize={"md"} pb={1}>
+                Usage information
+              </Heading>
+              <Text>
+                So we can report on how the service is used and what it costs,
+                we keep a record of each transcription after the media and
+                transcript themselves have been deleted. This record is kept
+                indefinitely and covers:
+              </Text>
+              <List.Root listStylePosition={"inside"}>
+                <List.Item>
+                  The research project (RPID) the transcription was assigned to,
+                  and its faculty and supervisor
+                </List.Item>
+                <List.Item>
+                  Who submitted it, and when it started and finished
+                </List.Item>
+                <List.Item>
+                  The languages, media format, and options chosen, such as PII
+                  redaction, summaries, and translation
+                </List.Item>
+                <List.Item>
+                  How much was processed: minutes of audio, bytes uploaded,
+                  summary tokens, and translated characters
+                </List.Item>
+                <List.Item>
+                  Whether the transcription succeeded, and why it failed if it
+                  did not
+                </List.Item>
+              </List.Root>
+              <Text mt={2}>
+                It never includes your media, transcripts, translations,
+                summaries, or file names.
+              </Text>
+            </Box>
+            <Box>
+              <Heading as={"h3"} fontSize={"md"} pb={1}>
                 PII redaction
               </Heading>
               <Text>
