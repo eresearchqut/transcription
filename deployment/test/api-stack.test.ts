@@ -219,7 +219,7 @@ describe("ApiStack", () => {
       const applicationFunctions = Object.values(
         localTemplate().findResources("AWS::Lambda::Function"),
       ).filter((fn) => fn.Properties.Environment?.Variables?.APPLICATION_NAME);
-      expect(applicationFunctions).toHaveLength(7);
+      expect(applicationFunctions).toHaveLength(8);
       applicationFunctions.forEach((fn) => {
         expect(fn.Properties.Environment.Variables).toMatchObject({
           AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",

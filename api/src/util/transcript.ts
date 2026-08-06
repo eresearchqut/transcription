@@ -27,6 +27,35 @@ export const segmentTexts = (doc: TranscriptDocument): string[] =>
     (segment) => segment.alternatives?.[0]?.transcript ?? "",
   );
 
+export const translationCharacterCount = (doc: TranscriptDocument): number =>
+  segmentTexts(doc).reduce((total, text) => total + text.length, 0);
+
+export const transcriptDurationSeconds = (
+  doc: TranscriptDocument,
+): number | undefined => {
+  const timed = [
+    doc.results.segments,
+    doc.results.items,
+    (doc.results as { audio_segments?: unknown }).audio_segments,
+  ];
+  let longest: number | undefined;
+  for (const entries of timed) {
+    if (!Array.isArray(entries)) {
+      continue;
+    }
+    for (const entry of entries) {
+      const endTime = Number((entry as { end_time?: string })?.end_time);
+      if (
+        Number.isFinite(endTime) &&
+        (longest === undefined || endTime > longest)
+      ) {
+        longest = endTime;
+      }
+    }
+  }
+  return longest;
+};
+
 /**
  * Rebuild a Transcribe-shaped document with translated segment text, keyed by
  * segment index. Segment timings and speaker labels are preserved; the full
