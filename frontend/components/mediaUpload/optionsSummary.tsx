@@ -23,7 +23,7 @@ interface OptionBadgeProps {
   value: string;
 }
 
-const OptionBadge = ({ label, value }: OptionBadgeProps) => (
+export const OptionBadge = ({ label, value }: OptionBadgeProps) => (
   <Group attached>
     <Badge variant={"solid"} colorPalette={"gray"} fontSize={"xs"}>
       {label}
@@ -35,7 +35,13 @@ const OptionBadge = ({ label, value }: OptionBadgeProps) => (
 );
 
 export const OptionsSummary: FunctionComponent<OptionsSummaryProps> = ({
-  options: { languages, enablePiiRedaction, generateSummary, targetLanguage },
+  options: {
+    languages,
+    enablePiiRedaction,
+    generateSummary,
+    targetLanguage,
+    rpid,
+  },
 }) => {
   return (
     <Flex alignItems={"center"} gap={2} flexWrap={"wrap"}>
@@ -43,6 +49,7 @@ export const OptionsSummary: FunctionComponent<OptionsSummaryProps> = ({
         Selected options:
       </Text>
       <Wrap gap={2}>
+        <OptionBadge label={"Research Project"} value={rpid ?? "None"} />
         <OptionBadge
           label={"Source languages"}
           value={languages
