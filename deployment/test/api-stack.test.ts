@@ -6,6 +6,9 @@ const parameters: ApiStackProps["parameters"] = {
   ApiDomainName: "transcription-api.example.com",
   ApplicationName: "Transcription",
   AwsRoute53CloudFrontHostedZoneId: "Z2FDTNDATAQYW2",
+  DmpApiUrl: "https://dmp-api.example.com",
+  DmpCredentialsParameter: "/app/dev/transcription/dmp-credentials",
+  DmpTokenUrl: "https://dmp-auth.example.com/oauth2/token",
   Environment: "dev",
   FrontEndDomainName: "transcription.example.com",
   GlobalCertificateArn:

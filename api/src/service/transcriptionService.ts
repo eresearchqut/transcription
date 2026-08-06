@@ -25,6 +25,24 @@ export const jobStarted = (
     metadata: JSON.parse(JSON.stringify(metadata)),
   });
 
+export const jobRejected = (
+  identityId: string,
+  jobId: string,
+  uploadEvent: Record<string, unknown>,
+  metadata: Record<string, unknown>,
+  failureReason: string,
+) =>
+  putResource(identityId, jobId, {
+    uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
+    metadata: JSON.parse(JSON.stringify(metadata)),
+    jobStatusUpdated: {
+      detail: {
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: failureReason,
+      },
+    },
+  });
+
 export const jobStatusUpdated = (
   identityId: string,
   jobId: string,
