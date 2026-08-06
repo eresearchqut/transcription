@@ -10,6 +10,7 @@ import {
 
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
+import type { Rpid } from "model";
 
 import { getRpid } from "../client/dmpClient";
 import { jobRejected, jobStarted } from "../service/transcriptionService";
@@ -70,8 +71,9 @@ export const handler = async (event: S3Event) => {
         );
         continue;
       }
+      let rpidPayload: Rpid;
       try {
-        await getRpid(identityId, rpid);
+        rpidPayload = await getRpid(identityId, rpid);
       } catch (error) {
         console.error(`Failed to validate rpid ${rpid}`, error);
         await jobRejected(
@@ -147,6 +149,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
+          rpidPayload as unknown as Record<string, unknown>,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

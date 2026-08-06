@@ -58,9 +58,13 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    fetchMock
-      .mockResolvedValueOnce(tokenResponse)
-      .mockResolvedValueOnce(jsonResponse(200, { encodedId: RPID }));
+    fetchMock.mockResolvedValueOnce(tokenResponse).mockResolvedValueOnce(
+      jsonResponse(200, {
+        encodedId: RPID,
+        title: "My Research Project",
+        organisation: "Faculty of Science",
+      }),
+    );
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
 
@@ -78,6 +82,11 @@ describe("fileUploadHandler", () => {
     expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
       expect.objectContaining({
         metadata: expect.objectContaining({ rpid: RPID }),
+        rpidPayload: {
+          encodedId: RPID,
+          title: "My Research Project",
+          organisation: "Faculty of Science",
+        },
       }),
     );
   });

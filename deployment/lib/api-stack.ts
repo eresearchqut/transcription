@@ -9,12 +9,14 @@ import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 
@@ -73,6 +75,33 @@ export class ApiStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.RETAIN,
     });
     (dataTable.node.defaultChild! as ddb.CfnTable).overrideLogicalId("Table");
+
+    const usageTable = new ddb.Table(this, "UsageTable", {
+      partitionKey: {
+        name: "pk",
+        type: ddb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: "sk",
+        type: ddb.AttributeType.STRING,
+      },
+      billingMode: ddb.BillingMode.PAY_PER_REQUEST,
+      pointInTimeRecoverySpecification: {
+        pointInTimeRecoveryEnabled: true,
+      },
+      deletionProtection: true,
+      removalPolicy: cdk.RemovalPolicy.RETAIN,
+    });
+    usageTable.addGlobalSecondaryIndex({
+      indexName: "byRpid",
+      partitionKey: { name: "rpid", type: ddb.AttributeType.STRING },
+      sortKey: { name: "startedAt", type: ddb.AttributeType.STRING },
+    });
+    usageTable.addGlobalSecondaryIndex({
+      indexName: "byPeriod",
+      partitionKey: { name: "usageMonth", type: ddb.AttributeType.STRING },
+      sortKey: { name: "startedAt", type: ddb.AttributeType.STRING },
+    });
 
     const dataBucket = new s3.Bucket(this, "TranscriptionBucket", {
       bucketName:
@@ -305,8 +334,8 @@ export class ApiStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_24_X,
       description:
         "Copies transcription job output to the user's readable folder",
-      timeout: cdk.Duration.seconds(15),
-      memorySize: 1024,
+      timeout: cdk.Duration.seconds(60),
+      memorySize: 2048,
       entry: "../api/src/event/copyOutputHandler.ts",
       handler: "handler",
       bundling: {
@@ -580,6 +609,47 @@ export class ApiStack extends cdk.Stack {
         sourceArn: translateJobStateChangeRule.ruleArn,
       },
     );
+
+    const usageProjectionFunction = new NodejsFunction(
+      this,
+      "UsageProjectionFunction",
+      {
+        runtime: lambda.Runtime.NODEJS_24_X,
+        description:
+          "Projects transcription records into the permanent usage table",
+        timeout: cdk.Duration.seconds(30),
+        memorySize: 512,
+        entry: "../api/src/event/usageProjectionHandler.ts",
+        handler: "handler",
+        bundling: {
+          minify: true,
+          sourceMap: true,
+          target: "es2020",
+        },
+        environment: {
+          USAGE_TABLE_NAME: usageTable.tableName,
+          APPLICATION_NAME: props.parameters.ApplicationName,
+          ENVIRONMENT: props.parameters.Environment,
+        },
+      },
+    );
+    const usageProjectionDlq = new sqs.Queue(this, "UsageProjectionDlq", {
+      retentionPeriod: cdk.Duration.days(14),
+      enforceSSL: true,
+    });
+
+    usageProjectionFunction.addEventSource(
+      new eventsources.DynamoEventSource(dataTable, {
+        startingPosition: lambda.StartingPosition.LATEST,
+        batchSize: 100,
+        maxBatchingWindow: cdk.Duration.seconds(10),
+        retryAttempts: 3,
+        bisectBatchOnError: true,
+        reportBatchItemFailures: true,
+        onFailure: new eventsources.SqsDlq(usageProjectionDlq),
+      }),
+    );
+    usageTable.grantWriteData(usageProjectionFunction);
 
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders:

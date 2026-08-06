@@ -85,6 +85,7 @@ describe("summariseTranscriptionHandler", () => {
         Buffer.from(
           JSON.stringify({
             content: [{ text: "dummy output transcription summary" }],
+            usage: { input_tokens: 900, output_tokens: 120 },
           }),
         ),
       ),
@@ -145,5 +146,9 @@ describe("summariseTranscriptionHandler", () => {
       "2e9b38b5-1df0-4841-8308-f174fb88aac7",
     )) as Transcription;
     expect(transcription.summaryKey).toEqual(expectedSummaryKey);
+    expect(transcription.summaryUsage).toEqual({
+      inputTokens: 900,
+      outputTokens: 120,
+    });
   });
 });

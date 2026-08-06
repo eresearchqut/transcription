@@ -80,16 +80,16 @@ export const handler = async (event: S3Event) => {
                   `${GENERATE_SUMMARY_PROMPT} <transcript>${transcript}</transcript> ${NO_PREAMBLE_PROMPT}`,
                 ),
               )
-              .then((summary: string) =>
-                s3Client.send(
+              .then(async ({ text, usage }) => {
+                await s3Client.send(
                   new PutObjectCommand({
                     Bucket: bucketName,
                     Key: summaryKey,
-                    Body: summary,
+                    Body: text,
                   }),
-                ),
-              )
-              .then(() => updateSummaryKey(identityId, jobId, summaryKey));
+                );
+                return updateSummaryKey(identityId, jobId, summaryKey, usage);
+              });
           } else {
             return Promise.resolve({});
           }
