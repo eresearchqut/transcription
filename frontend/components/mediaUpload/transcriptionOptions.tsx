@@ -20,7 +20,9 @@ import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
+import { useRpids } from "../../hooks/useRpids";
 import { LanguageInput } from "../../inputs/languageInput";
+import { RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
 
 export interface TranscribeProps {
@@ -28,6 +30,7 @@ export interface TranscribeProps {
   enablePiiRedaction: boolean;
   generateSummary: boolean;
   targetLanguage?: string;
+  rpid?: string;
 }
 
 export interface TranscriptionOptionsValue {
@@ -55,6 +58,9 @@ export const TranscriptionOptions: FunctionComponent<
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>(
     "en",
   );
+  const [rpid, setRpid] = useState<string | undefined>();
+
+  const { rpids, isLoading: rpidsLoading, isError: rpidsError } = useRpids();
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -89,6 +95,7 @@ export const TranscriptionOptions: FunctionComponent<
 
   useEffect(() => {
     const valid =
+      !!rpid &&
       !languageSizeLimitExceeded &&
       !(enableTranslation && !targetLanguage) &&
       !(enablePiiRedaction && !piiLanguageValid);
@@ -98,6 +105,7 @@ export const TranscriptionOptions: FunctionComponent<
         enablePiiRedaction,
         generateSummary,
         targetLanguage: enableTranslation ? targetLanguage : undefined,
+        rpid,
       },
       valid,
     });
@@ -108,6 +116,7 @@ export const TranscriptionOptions: FunctionComponent<
     generateSummary,
     enableTranslation,
     targetLanguage,
+    rpid,
     piiLanguageValid,
     onChange,
     languageSizeLimitExceeded,
@@ -115,6 +124,61 @@ export const TranscriptionOptions: FunctionComponent<
 
   return (
     <Stack direction={direction} gap={6} alignSelf={"stretch"}>
+      <Field invalid={rpidsError} alignItems={"flex-start"} gap={1.5}>
+        <Heading as={"h3"} size={"md"}>
+          Research Project
+        </Heading>
+        <Text fontSize={"sm"} color={"fg.muted"}>
+          Every transcription must be assigned to one of your research projects.
+          Your Research Project IDs (RPIDs) are sourced from the{" "}
+          <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
+            Data Management Planning tool
+          </ExternalLink>
+          .
+        </Text>
+        <Stack
+          direction={{ base: "column", sm: "row" }}
+          gap={{ base: 1.5, sm: 3 }}
+          align={{ base: "stretch", sm: "center" }}
+          width={"full"}
+        >
+          <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
+            Research Project ID
+          </Text>
+          <Box flex={"1"} minWidth={0} width={"full"}>
+            <RpidInput
+              rpids={rpids}
+              value={rpid}
+              onChange={setRpid}
+              isLoading={rpidsLoading}
+              placeholder={"Select a research project..."}
+            />
+          </Box>
+        </Stack>
+        {rpidsError && (
+          <Alert
+            status={"error"}
+            title={"Your research projects could not be retrieved."}
+          >
+            <Text>
+              Please try again later. If the problem persists, contact eResearch
+              support.
+            </Text>
+          </Alert>
+        )}
+        {!rpidsError && !rpidsLoading && rpids?.length === 0 && (
+          <Alert status={"warning"} title={"You have no research projects."}>
+            <Text>
+              A Research Project ID (RPID) is required to use this service.
+              Create a data management plan in the{" "}
+              <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
+                Data Management Planning tool
+              </ExternalLink>{" "}
+              to obtain one.
+            </Text>
+          </Alert>
+        )}
+      </Field>
       <Field
         invalid={languageSizeLimitExceeded}
         alignItems={"flex-start"}

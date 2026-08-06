@@ -11,7 +11,8 @@ import {
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
-import { jobStarted } from "../service/transcriptionService";
+import { getRpid } from "../client/dmpClient";
+import { jobRejected, jobStarted } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
@@ -56,6 +57,32 @@ export const handler = async (event: S3Event) => {
       const enablePiiRedaction: boolean = JSON.parse(
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
+
+      const rpid = headResponse.Metadata.rpid;
+      if (!rpid) {
+        console.error("Missing rpid metadata for upload", objectKey);
+        await jobRejected(
+          identityId,
+          jobId,
+          record.s3,
+          headResponse.Metadata,
+          "A Research Project ID (RPID) is required to start a transcription.",
+        );
+        continue;
+      }
+      try {
+        await getRpid(identityId, rpid);
+      } catch (error) {
+        console.error(`Failed to validate rpid ${rpid}`, error);
+        await jobRejected(
+          identityId,
+          jobId,
+          record.s3,
+          headResponse.Metadata,
+          `The Research Project ID (RPID) ${rpid} could not be validated.`,
+        );
+        continue;
+      }
 
       const languageParams = {
         ...(enablePiiRedaction

@@ -64,6 +64,7 @@ const Upload: NextPageWithLayout = () => {
         enablePiiRedaction,
         generateSummary,
         targetLanguage,
+        rpid,
       }: TranscribeProps,
     ) => {
       const id = uuid();
@@ -76,6 +77,7 @@ const Upload: NextPageWithLayout = () => {
         enablePiiRedaction: JSON.stringify(enablePiiRedaction),
         generateSummary: JSON.stringify(generateSummary),
         targetLanguage: targetLanguage ?? "",
+        rpid: rpid ?? "",
       };
 
       track(
@@ -86,6 +88,7 @@ const Upload: NextPageWithLayout = () => {
           "enablePiiRedaction",
           "generateSummary",
           "targetLanguage",
+          "rpid",
         ]),
       );
 
