@@ -26,6 +26,11 @@ const envFormat = (vars: { [key: string]: string | number }): string =>
     .join("\n");
 
 export interface ApiStackProps extends cdk.StackProps {
+  /**
+   * Deploying against a local AWS emulator rather than real AWS. Resources with
+   * no local equivalent are skipped when set. Defaults to a real deployment.
+   */
+  localDeploy?: boolean;
   parameters: {
     ApiAliasRecordName?: string;
     ApiDomainName: string;
