@@ -16,6 +16,20 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
+import type { IConstruct } from "constructs";
+
+/**
+ * Handlers wrap their AWS clients with `xray.captureAWSv3Client` at module
+ * load, which throws when no X-Ray daemon is listening. `api` already uses the
+ * same escape hatch to run its tests.
+ */
+class TolerateMissingXrayDaemon implements cdk.IAspect {
+  visit(node: IConstruct): void {
+    if (node instanceof lambda.Function) {
+      node.addEnvironment("AWS_XRAY_CONTEXT_MISSING", "LOG_ERROR");
+    }
+  }
+}
 
 /**
  * Format environment variables for use in a shell script
@@ -58,6 +72,12 @@ export interface ApiStackProps extends cdk.StackProps {
 export class ApiStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: ApiStackProps) {
     super(scope, id, props);
+
+    const localDeploy = props.localDeploy ?? false;
+
+    if (localDeploy) {
+      cdk.Aspects.of(this).add(new TolerateMissingXrayDaemon());
+    }
 
     const dataTable = new ddb.Table(this, "Table", {
       partitionKey: {
@@ -107,13 +127,29 @@ export class ApiStack extends cdk.Stack {
       expiration: Duration.days(14),
     });
 
-    const vpc = ec2.Vpc.fromLookup(this, "Vpc", {
-      vpcId: props.parameters.VpcId,
-    });
-    const apiSecurityGroup = new ec2.SecurityGroup(this, "ApiSecurityGroup", {
-      description: `Security group for ${props.parameters.ApplicationName} api function`,
-      vpc: vpc,
-    });
+    // Vpc.fromLookup is a context lookup that hits real AWS at synth time and
+    // ignores AWS_ENDPOINT_URL, and locally invoked Lambdas need no VPC.
+    const vpcConfiguration = localDeploy
+      ? {}
+      : (() => {
+          const vpc = ec2.Vpc.fromLookup(this, "Vpc", {
+            vpcId: props.parameters.VpcId,
+          });
+          return {
+            vpc,
+            securityGroups: [
+              new ec2.SecurityGroup(this, "ApiSecurityGroup", {
+                description: `Security group for ${props.parameters.ApplicationName} api function`,
+                vpc: vpc,
+              }),
+            ],
+            vpcSubnets: {
+              subnets: props.parameters.SubnetIds.map((subnetId) =>
+                ec2.Subnet.fromSubnetId(this, subnetId, subnetId),
+              ),
+            },
+          };
+        })();
 
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
@@ -133,13 +169,7 @@ export class ApiStack extends cdk.Stack {
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
       },
-      vpc: vpc,
-      securityGroups: [apiSecurityGroup],
-      vpcSubnets: {
-        subnets: props.parameters.SubnetIds.map((subnetId) =>
-          ec2.Subnet.fromSubnetId(this, subnetId, subnetId),
-        ),
-      },
+      ...vpcConfiguration,
     });
     dataTable.grantReadWriteData(apiFunction);
 
@@ -154,16 +184,22 @@ export class ApiStack extends cdk.Stack {
     const auth = new apigateway.CognitoUserPoolsAuthorizer(this, "Authorizer", {
       cognitoUserPools: [userPool],
     });
-    const apiCertificate = certificatemanager.Certificate.fromCertificateArn(
-      this,
-      "Certificate",
-      props.parameters.RegionalCertificateArn,
-    );
+    // ACM certificates, custom domain names, WAF and Route 53 have no local
+    // equivalent, so the local API is reached on the emulator endpoint.
+    const domainConfiguration = localDeploy
+      ? {}
+      : {
+          domainName: {
+            domainName: props.parameters.ApiDomainName,
+            certificate: certificatemanager.Certificate.fromCertificateArn(
+              this,
+              "Certificate",
+              props.parameters.RegionalCertificateArn,
+            ),
+          },
+        };
     const api = new apigateway.RestApi(this, "Api", {
-      domainName: {
-        domainName: props.parameters.ApiDomainName,
-        certificate: apiCertificate,
-      },
+      ...domainConfiguration,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
@@ -179,24 +215,32 @@ export class ApiStack extends cdk.Stack {
       authorizer: auth,
     });
 
-    new wafv2.CfnWebACLAssociation(this, "ApiWebACLAssociation", {
-      webAclArn: props.parameters.RegionalWafArn,
-      resourceArn: api.deploymentStage.stageArn,
-    });
+    if (!localDeploy) {
+      new wafv2.CfnWebACLAssociation(this, "ApiWebACLAssociation", {
+        webAclArn: props.parameters.RegionalWafArn,
+        resourceArn: api.deploymentStage.stageArn,
+      });
 
-    const apiHostedZone = route53.HostedZone.fromLookup(this, "ApiHostedZone", {
-      domainName: props.parameters.HostedZoneName,
-      privateZone: false,
-    });
+      // HostedZone.fromLookup is a context lookup that hits real AWS at synth
+      // time and ignores AWS_ENDPOINT_URL.
+      const apiHostedZone = route53.HostedZone.fromLookup(
+        this,
+        "ApiHostedZone",
+        {
+          domainName: props.parameters.HostedZoneName,
+          privateZone: false,
+        },
+      );
 
-    const apiTarget = new route53targets.ApiGateway(api);
+      const apiTarget = new route53targets.ApiGateway(api);
 
-    new route53.ARecord(this, "ApiAliasRecord", {
-      recordName:
-        props.parameters.ApiAliasRecordName ?? props.parameters.ApiDomainName,
-      zone: apiHostedZone,
-      target: route53.RecordTarget.fromAlias(apiTarget),
-    });
+      new route53.ARecord(this, "ApiAliasRecord", {
+        recordName:
+          props.parameters.ApiAliasRecordName ?? props.parameters.ApiDomainName,
+        zone: apiHostedZone,
+        target: route53.RecordTarget.fromAlias(apiTarget),
+      });
+    }
 
     const jobStartFunction = new NodejsFunction(
       this,
