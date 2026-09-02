@@ -19,7 +19,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "fmt": "biome format --write .",
-    "fmt:check": "biome format ."
+    "fmt:check": "biome format .",
+    "ministack:probe": "node scripts/ministack/transcribe-probe.mjs"
   },
   "author": "eResearch",
   "license": "MIT",
