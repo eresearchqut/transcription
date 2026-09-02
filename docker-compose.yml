@@ -1,0 +1,45 @@
+services:
+  transcription-ministack:
+    container_name: "${TRANSCRIPTION_MINISTACK_DOCKER_NAME:-transcription-ministack}"
+    privileged: true
+    # Pinned so local behaviour is reproducible; override MINISTACK_IMAGE to
+    # test a newer release or a locally-built image.
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.4}
+    ports:
+      - "24566:4566"
+    environment:
+      # MiniStack configuration: https://github.com/ministackorg/ministack
+      - MINISTACK_REGION=ap-southeast-2
+      # Run each Lambda invocation in a sibling container (via the mounted
+      # Docker socket) attached to the shared compose network, so the handlers
+      # can reach the gateway.
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_DOCKER_NETWORK=transcription-network
+      # Lambdas reach the gateway by its in-network name. Without this MiniStack
+      # falls back to host.docker.internal:4566, which is not published here.
+      - AWS_ENDPOINT_URL=http://transcription-ministack:4566
+      # Keep idle warm Lambda containers in the pool for an hour so the
+      # transcription chain reuses them instead of cold-starting per event.
+      - LAMBDA_WARM_TTL_SECONDS=3600
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      # /_ministack/ready returns 200 only once the gateway is serving (503
+      # otherwise). The image ships python3 but not curl.
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/ready')
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 40
+    networks:
+      - transcription-network
+
+networks:
+  transcription-network:
+    # Explicit name so LAMBDA_DOCKER_NETWORK can reference the network
+    # deterministically (independent of the compose project name).
+    name: transcription-network
