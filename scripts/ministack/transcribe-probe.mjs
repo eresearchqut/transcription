@@ -286,6 +286,8 @@ const scenarios = [
     languageParams: { LanguageCode: LanguageCode.EN_AU },
     piiParams: {},
     redacted: false,
+    // Real AWS returns a scalar LanguageCode for an explicitly specified language.
+    expectLanguageCodes: false,
   },
   {
     name: "multi-language identification (IdentifyMultipleLanguages)",
@@ -296,6 +298,8 @@ const scenarios = [
     },
     piiParams: {},
     redacted: false,
+    // Real AWS populates the LanguageCodes array for multi-language jobs.
+    expectLanguageCodes: true,
   },
   {
     name: "automatic identification (IdentifyLanguage)",
@@ -303,6 +307,8 @@ const scenarios = [
     languageParams: { IdentifyLanguage: true },
     piiParams: {},
     redacted: false,
+    // Single-language identification resolves to a scalar LanguageCode.
+    expectLanguageCodes: false,
   },
   {
     name: "PII redaction (ContentRedaction)",
@@ -316,6 +322,7 @@ const scenarios = [
       },
     },
     redacted: true,
+    expectLanguageCodes: false,
   },
 ];
 
@@ -383,6 +390,31 @@ const main = async () => {
       Boolean(language),
       language,
     );
+
+    // Which field carries it matters: code written against the documented
+    // shape reads LanguageCodes for multi-language jobs and LanguageCode
+    // otherwise, so assert the field rather than just the value.
+    const hasArray = Array.isArray(job?.LanguageCodes);
+    record(
+      `language reported in the expected field: ${scenario.name}`,
+      hasArray === scenario.expectLanguageCodes,
+      `LanguageCode=${job?.LanguageCode ?? "absent"} LanguageCodes=${
+        hasArray
+          ? JSON.stringify(job.LanguageCodes.map((entry) => entry.LanguageCode))
+          : "absent"
+      }`,
+    );
+    if (scenario.expectLanguageCodes) {
+      // A duplicate LanguageOptions entry must not produce duplicate results.
+      const codes = (job?.LanguageCodes ?? []).map(
+        (entry) => entry.LanguageCode,
+      );
+      record(
+        `LanguageCodes has no duplicates: ${scenario.name}`,
+        new Set(codes).size === codes.length,
+        codes.join(", "),
+      );
+    }
 
     if (scenario.redacted) {
       record(
