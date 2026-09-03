@@ -7,6 +7,7 @@ import * as cdk from "aws-cdk-lib";
 import { ApiStack } from "../lib/api-stack";
 import { FrontEndStack } from "../lib/front-end-stack";
 import { GitHubStack } from "../lib/github-stack";
+import { LocalUserPoolStack } from "../lib/local-user-pool-stack";
 
 const devDeployOverride = process.env.DEV_DEPLOY_OVERRIDE;
 const GIT_CURRENT_BRANCH_COMMAND = "git rev-parse --abbrev-ref HEAD";
@@ -50,7 +51,15 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
   ? JSON.parse(process.env.LOCAL_DEPLOY)
   : false;
 
-const readLocalEnvironmentConfig = (): EnvironmentConfig =>
+/**
+ * The local emulator endpoint. Only present in the local configuration, since
+ * real deployments address AWS directly.
+ */
+interface LocalEnvironmentConfig extends EnvironmentConfig {
+  endpoint: string;
+}
+
+const readLocalEnvironmentConfig = (): LocalEnvironmentConfig =>
   JSON.parse(
     readFileSync(resolve(__dirname, "../config/local.json"), {
       encoding: "utf8",
@@ -80,6 +89,19 @@ const app = new cdk.App({});
 if (isLocalDeploy) {
   const env = readLocalEnvironmentConfig();
 
+  // ApiStack imports the user pool from an externally managed stack, which has
+  // no local counterpart, so stand one up under the same exported names.
+  const userPoolStack = new LocalUserPoolStack(
+    app,
+    "TranscriptionUserPoolStack",
+    {
+      stackName: env.parameters.UserPoolStackName,
+      exportPrefix: env.parameters.UserPoolStackName,
+      hostedUiDomain: new URL(env.endpoint).host,
+      env: { account: env.account, region: env.region },
+    },
+  );
+
   // The default synthesizer uses the bootstrapped asset bucket, so no real
   // file-assets bucket is required. The GitHub stacks and the us-east-1
   // FrontEndStack are deliberately not created locally.
@@ -89,8 +111,11 @@ if (isLocalDeploy) {
     parameters: env.parameters,
     env: { account: env.account, region: env.region },
   });
+  apiStack.addDependency(userPoolStack);
 
-  cdk.Tags.of(apiStack).add("EresCdkApp", repo);
+  [apiStack, userPoolStack].forEach((stack) => {
+    cdk.Tags.of(stack).add("EresCdkApp", repo);
+  });
 } else {
   new SSMClient()
     .send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/env` }))

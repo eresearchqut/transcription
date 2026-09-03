@@ -1,0 +1,26 @@
+[
+  {
+    "username": "localuser",
+    "password": "Local-Password-1",
+    "attributes": {
+      "email": "localuser@example.com",
+      "email_verified": "true",
+      "custom:qutIdentityId": "localuser001",
+      "custom:uid": "localuser",
+      "custom:username": "localuser",
+      "custom:eResearchGroups": "transcription"
+    }
+  },
+  {
+    "username": "otheruser",
+    "password": "Local-Password-1",
+    "attributes": {
+      "email": "otheruser@example.com",
+      "email_verified": "true",
+      "custom:qutIdentityId": "otheruser002",
+      "custom:uid": "otheruser",
+      "custom:username": "otheruser",
+      "custom:eResearchGroups": "transcription"
+    }
+  }
+]
