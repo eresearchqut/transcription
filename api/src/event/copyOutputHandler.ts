@@ -3,12 +3,13 @@ import { CopyObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { S3Handler } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
+import { s3ClientConfig } from "../client/s3Client";
 import { downloadKey } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const outputPattern = /^transcription\/([^/]+)\/([^/]+)$/;
 
-const s3Client = new S3Client({ region });
+const s3Client = new S3Client(s3ClientConfig);
 
 xray.captureAWSv3Client(s3Client);
 

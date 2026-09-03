@@ -11,6 +11,7 @@ import {
 import xray from "aws-xray-sdk";
 import type { Transcription } from "model";
 
+import { s3ClientConfig } from "../client/s3Client";
 import {
   getTranscription,
   normaliseJobId,
@@ -26,7 +27,7 @@ import { parseXliffTargets, XLIFF_FILE_NAME } from "../util/xliff";
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 
-const s3Client = new S3Client({ region });
+const s3Client = new S3Client(s3ClientConfig);
 const translateClient = new TranslateClient({ region });
 
 if (process.env.NODE_ENV !== "test") {

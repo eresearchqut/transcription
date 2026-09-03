@@ -79,6 +79,14 @@ export class ApiStack extends cdk.Stack {
       cdk.Aspects.of(this).add(new TolerateMissingXrayDaemon());
     }
 
+    // The SDK addresses S3 virtual-host style by default, so a handler resolves
+    // <bucket>.<endpoint-host>. A local emulator has no wildcard DNS entry for
+    // that, so handlers force path-style addressing instead. See
+    // api/src/client/s3Client.ts.
+    const localHandlerEnvironment: Record<string, string> = localDeploy
+      ? { S3_FORCE_PATH_STYLE: "true" }
+      : {};
+
     const dataTable = new ddb.Table(this, "Table", {
       partitionKey: {
         name: "pk",
@@ -168,6 +176,7 @@ export class ApiStack extends cdk.Stack {
         BUCKET_NAME: dataBucket.bucketName,
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
+        ...localHandlerEnvironment,
       },
       ...vpcConfiguration,
     });
@@ -262,6 +271,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...localHandlerEnvironment,
         },
       },
     );
@@ -305,6 +315,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...localHandlerEnvironment,
         },
       },
     );
@@ -349,6 +360,7 @@ export class ApiStack extends cdk.Stack {
         BUCKET_NAME: dataBucket.bucketName,
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
+        ...localHandlerEnvironment,
       },
     });
     copyOutputFunction.addToRolePolicy(
@@ -393,6 +405,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...localHandlerEnvironment,
         },
       },
     );
@@ -499,6 +512,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...localHandlerEnvironment,
           TRANSLATE_DATA_ACCESS_ROLE_ARN: translateDataAccessRole.roleArn,
         },
       },
@@ -568,6 +582,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...localHandlerEnvironment,
         },
       },
     );

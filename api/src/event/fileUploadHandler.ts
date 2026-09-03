@@ -11,6 +11,7 @@ import {
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
+import { s3ClientConfig } from "../client/s3Client";
 import { jobStarted } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
@@ -18,7 +19,7 @@ const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const uploadPattern = /^users\/([^/]+)\/([^/]+)\.upload$/;
 
 const transcribeClient = new TranscribeClient({ region });
-const s3client = new S3Client({ region: process.env.AWS_REGION });
+const s3client = new S3Client(s3ClientConfig);
 
 xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
