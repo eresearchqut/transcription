@@ -4,7 +4,7 @@ services:
     privileged: true
     # Pinned so local behaviour is reproducible; override MINISTACK_IMAGE to
     # test a newer release or a locally-built image.
-    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.4}
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.6}
     ports:
       - "24566:4566"
     environment:
