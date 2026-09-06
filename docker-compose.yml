@@ -4,7 +4,7 @@ services:
     privileged: true
     # Pinned so local behaviour is reproducible; override MINISTACK_IMAGE to
     # test a newer release or a locally-built image.
-    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.6}
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.8}
     ports:
       - "24566:4566"
     environment:
@@ -41,7 +41,72 @@ services:
       start_period: 30s
       retries: 40
     networks:
+      transcription-network:
+        aliases:
+          # cdklocal addresses the CDK asset bucket virtual-host style during
+          # publish, and AWS_S3_FORCE_PATH_STYLE is not honoured on that path.
+          # The bucket name is deterministic locally (fixed qualifier, account
+          # and region), so resolve the subdomain to the gateway directly.
+          - cdk-hnb659fds-assets-000000000000-ap-southeast-2.transcription-ministack
+
+  # Deploys the CDK app once MiniStack is serving, so there is no race between
+  # the emulator starting and the deploy, then watches for Lambda code changes.
+  transcription-bootstrap:
+    container_name: "${TRANSCRIPTION_BOOTSTRAP_DOCKER_NAME:-transcription-bootstrap}"
+    build:
+      context: .
+      dockerfile: scripts/ministack/Dockerfile
+    volumes:
+      - ".:/app"
+      # pnpm links native binaries (notably esbuild, which the CDK uses to
+      # bundle the handlers) for the host platform, so the container installs
+      # its own dependencies here rather than reusing the bind-mounted tree.
+      # Named volumes also keep the host's node_modules untouched.
+      - "transcription-root-modules:/app/node_modules"
+      - "transcription-api-modules:/app/api/node_modules"
+      - "transcription-deployment-modules:/app/deployment/node_modules"
+      - "transcription-model-modules:/app/model/node_modules"
+      - "transcription-pnpm-store:/pnpm-store"
+    command: >
+      bash -c "cd /app &&
+               pnpm install --frozen-lockfile --filter deployment... --filter api... &&
+               cd deployment &&
+               rm -rf cdk.out &&
+               cdklocal bootstrap &&
+               cdklocal deploy --all --require-approval never &&
+               cdklocal watch --all --require-approval never"
+    environment:
+      # Use config/local.json, the default synthesizer and the local-safe stack.
+      - LOCAL_DEPLOY=true
+      - AWS_ENDPOINT_URL=http://transcription-ministack:4566
+      - AWS_ENDPOINT_URL_S3=http://transcription-ministack:4566
+      # cdklocal publishes assets virtual-host style unless told otherwise, and
+      # a Docker network name has no wildcard DNS, so asset publishing dies on
+      # <bucket>.transcription-ministack. Its default endpoint assumes the
+      # public s3.localhost.localstack.cloud wildcard, which does not apply
+      # here. This is the documented opt-in.
+      - AWS_S3_FORCE_PATH_STYLE=true
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=ap-southeast-2
+      - AWS_DEFAULT_REGION=ap-southeast-2
+      # Without this MiniStack strips these before they reach the Lambda
+      # containers, and the handlers cannot find the gateway.
+      # cdklocal strips every AWS_* var not listed here before it reads its own
+      # settings, so AWS_S3_FORCE_PATH_STYLE has to be allowlisted to survive.
+      - AWS_ENVAR_ALLOWLIST=AWS_DEFAULT_REGION,AWS_ENDPOINT_URL_S3,AWS_ENDPOINT_URL,AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_S3_FORCE_PATH_STYLE
+    depends_on:
+      transcription-ministack:
+        condition: service_healthy
+    networks:
       - transcription-network
+
+volumes:
+  transcription-root-modules:
+  transcription-api-modules:
+  transcription-deployment-modules:
+  transcription-model-modules:
+  transcription-pnpm-store:
 
 networks:
   transcription-network:

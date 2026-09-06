@@ -1,0 +1,10 @@
+# The bootstrap image copies nothing; the repo is bind-mounted at run time.
+# Keeping the context small avoids sending node_modules and build output to the
+# daemon on every build.
+node_modules
+**/node_modules
+**/cdk.out
+**/.next
+**/dist
+**/coverage
+.git

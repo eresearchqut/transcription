@@ -23,10 +23,13 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 ```
 NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
 ```
-3. Start the app
+3. Start the app against the deployed dev environment
 ```
-pnpm dev
+pnpm dev:frontend
 ```
+
+To run the app against the local MiniStack emulator instead, use `pnpm dev`,
+which starts the emulator and CDK deploy first and then the Next server.
 
 ## Linting and Formatting
 
