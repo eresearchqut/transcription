@@ -14,8 +14,8 @@
   "scripts": {
     "clean": "pnpm recursive run clean && rimraf node_modules",
     "build": "pnpm recursive run build",
-    "dev": "pnpm ministack:up && pnpm dev:frontend",
-    "dev:frontend": "pnpm --filter frontend dev",
+    "dev": "pnpm ministack:up && pnpm ministack:env && pnpm ministack:seed-users && pnpm dev:frontend",
+    "dev:frontend": "pnpm --filter \"frontend^...\" build && pnpm --filter frontend dev",
     "test": "pnpm recursive run test",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -23,6 +23,7 @@
     "fmt:check": "biome format .",
     "ministack:probe": "node scripts/ministack/transcribe-probe.mjs",
     "ministack:seed-users": "node scripts/ministack/seed-cognito-users.mjs",
+    "ministack:env": "node scripts/ministack/write-frontend-env.mjs",
     "ministack:up": "docker compose up -d --build",
     "ministack:down": "docker compose down",
     "ministack:logs": "docker compose logs -f transcription-bootstrap",
