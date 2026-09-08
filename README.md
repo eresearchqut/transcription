@@ -11,6 +11,7 @@ This application is monorepo using a pnpm workspace.
 * `pnpm build`
 * `pnpm install`
 * `pnpm test`
+* `pnpm test:integration` (needs a running local stack, see below)
 
 ## Local frontend development
 1. Copy the dev environment variables into your local `.env.local`
@@ -62,6 +63,25 @@ Be aware that MiniStack falls back to the canned reply **silently** when the
 proxy is unreachable. A stopped or misaddressed proxy looks like a working run
 with placeholder text, not an error. Check for the `[ministack mock` prefix
 before trusting a summary, and before asserting on one in a test.
+
+### Integration tests against the local stack
+
+`pnpm test` mocks the AWS SDK throughout and needs no Docker. It therefore
+never checks that the S3 notification filters, EventBridge rules and IAM grants
+in `deployment/lib/api-stack.ts` reach the handlers.
+
+`pnpm test:integration` covers that. It uploads to the running local stack and
+follows the chain to a stored transcript, summary and translation. Start the
+stack first:
+
+```
+docker compose up -d      # wait for the deploy, watch with pnpm ministack:logs
+pnpm test:integration
+```
+
+It targets whatever stack is already up rather than starting its own, so it
+does not run in CI. `api/test/integration/README.md` records that decision and
+what the suite deliberately leaves uncovered.
 
 ## Linting and Formatting
 

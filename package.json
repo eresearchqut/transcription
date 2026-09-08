@@ -17,6 +17,7 @@
     "dev": "pnpm ministack:up && pnpm ministack:env && pnpm ministack:seed-users && pnpm dev:frontend",
     "dev:frontend": "pnpm --filter \"frontend^...\" build && pnpm --filter frontend dev",
     "test": "pnpm recursive run test",
+    "test:integration": "pnpm --filter api test:integration",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "fmt": "biome format --write .",
