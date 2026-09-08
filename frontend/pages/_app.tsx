@@ -50,12 +50,6 @@ Amplify.configure({
       allowGuestAccess: false,
     },
   },
-  Storage: {
-    S3: {
-      bucket: process.env.NEXT_PUBLIC_TRANSCRIPTION_BUCKET,
-      region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2",
-    },
-  },
 });
 
 export const handleLogin = async () => {
