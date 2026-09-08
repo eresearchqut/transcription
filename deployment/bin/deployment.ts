@@ -66,6 +66,35 @@ const readLocalEnvironmentConfig = (): LocalEnvironmentConfig =>
     }),
   );
 
+/**
+ * Parameters whose absence makes ApiStack skip the resource that depends on
+ * them. Empty is meaningful only for a local deploy, which has no VPC, custom
+ * domain, WAF or hosted zone. In a real environment an empty value means the
+ * SSM parameter is incomplete, so fail rather than quietly deploy an API with
+ * no WAF in front of it.
+ */
+const REQUIRED_DEPLOYED_PARAMETERS = [
+  "ApiDomainName",
+  "HostedZoneName",
+  "RegionalCertificateArn",
+  "RegionalWafArn",
+  "VpcId",
+] as const;
+
+const assertDeployedParameters = (
+  envName: Environment,
+  parameters: EnvironmentConfig["parameters"],
+): void => {
+  const missing = REQUIRED_DEPLOYED_PARAMETERS.filter(
+    (name) => !parameters[name],
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip the VPC, custom domain, WAF or DNS record.`,
+    );
+  }
+};
+
 const githubFilters = process.env.GITHUB_FILTERS
   ? process.env.GITHUB_FILTERS.split(",")
   : undefined;
@@ -107,7 +136,7 @@ if (isLocalDeploy) {
   // FrontEndStack are deliberately not created locally.
   const apiStack = new ApiStack(app, "TranscriptionStack", {
     stackName: apiStackName,
-    localDeploy: true,
+    emulator: { endpoint: env.endpoint },
     parameters: env.parameters,
     env: { account: env.account, region: env.region },
   });
@@ -121,6 +150,7 @@ if (isLocalDeploy) {
     .send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/env` }))
     .then(({ Parameter }) => JSON.parse(Parameter?.Value ?? "{}"))
     .then((env: EnvironmentConfig) => {
+      assertDeployedParameters(envName, env.parameters);
       const apiGitHubStack = new GitHubStack(app, "TranscriptionGitHubStack", {
         envName,
         owner,

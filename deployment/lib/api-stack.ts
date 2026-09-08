@@ -32,6 +32,13 @@ class TolerateMissingXrayDaemon implements cdk.IAspect {
 }
 
 /**
+ * REST API id pinned under a local deploy, so the emulator's execute-api URL
+ * does not change every time the stack is rebuilt. Must be unique within the
+ * local account.
+ */
+const LOCAL_REST_API_ID = "transcription";
+
+/**
  * Format environment variables for use in a shell script
  */
 const envFormat = (vars: { [key: string]: string | number }): string =>
@@ -40,11 +47,6 @@ const envFormat = (vars: { [key: string]: string | number }): string =>
     .join("\n");
 
 export interface ApiStackProps extends cdk.StackProps {
-  /**
-   * Deploying against a local AWS emulator rather than real AWS. Resources with
-   * no local equivalent are skipped when set. Defaults to a real deployment.
-   */
-  localDeploy?: boolean;
   parameters: {
     ApiAliasRecordName?: string;
     ApiDomainName: string;
@@ -67,25 +69,70 @@ export interface ApiStackProps extends cdk.StackProps {
     UserPoolStackName: string;
     VpcId: string;
   };
+  /**
+   * Set only when deploying against a local emulator rather than real AWS,
+   * carrying the browser-reachable address of the emulator gateway. Every
+   * concession the emulator requires is derived from this in one block at the
+   * top of the stack constructor; resources that simply have no local
+   * counterpart are driven by their own parameter being empty instead.
+   */
+  emulator?: { endpoint: string };
 }
 
 export class ApiStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const localDeploy = props.localDeploy ?? false;
+    const emulator = props.emulator;
 
-    if (localDeploy) {
-      cdk.Aspects.of(this).add(new TolerateMissingXrayDaemon());
-    }
+    // Everything that differs when the target is a local emulator rather than
+    // AWS, collected here so the rest of the stack reads AWS-first. Only the
+    // three cases that cannot be expressed as a value are branched on below:
+    // the X-Ray aspect, the REST API id tag, and the API endpoint, which needs
+    // the API to exist first.
 
     // The SDK addresses S3 virtual-host style by default, so a handler resolves
     // <bucket>.<endpoint-host>. A local emulator has no wildcard DNS entry for
     // that, so handlers force path-style addressing instead. See
     // api/src/client/s3Client.ts.
-    const localHandlerEnvironment: Record<string, string> = localDeploy
+    const localHandlerEnvironment: Record<string, string> = emulator
       ? { S3_FORCE_PATH_STYLE: "true" }
       : {};
+
+    // The emulator does not model integration responses, so the mock OPTIONS
+    // integration these options generate answers a preflight with no CORS
+    // headers and the browser blocks every call. Leaving them off there lets
+    // OPTIONS reach the proxy integration, where the API's own `cors()`
+    // middleware answers it.
+    const corsPreflightOptions = emulator
+      ? undefined
+      : {
+          allowOrigins: apigateway.Cors.ALL_ORIGINS,
+          allowMethods: apigateway.Cors.ALL_METHODS,
+          allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+          maxAge: cdk.Duration.days(10),
+        };
+
+    // The hosted UI needs TLS, which the local emulator does not serve, so a
+    // local deploy signs in with a username and password instead.
+    const explicitAuthFlows = emulator
+      ? ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH"]
+      : ["ALLOW_REFRESH_TOKEN_AUTH"];
+
+    // Real deployments are fronted by a custom domain over TLS. The emulator
+    // has no domain or certificate, so the frontend is served by `next dev`
+    // over http.
+    const frontEndScheme = emulator ? "http" : "https";
+
+    // The AWS SDK talks to the real AWS endpoints unless it is told otherwise,
+    // which a local deploy has to override to reach the emulator.
+    const emulatorFrontEndEnvironment: Record<string, string> = emulator
+      ? { NEXT_PUBLIC_AWS_ENDPOINT: emulator.endpoint }
+      : {};
+
+    if (emulator) {
+      cdk.Aspects.of(this).add(new TolerateMissingXrayDaemon());
+    }
 
     const dataTable = new ddb.Table(this, "Table", {
       partitionKey: {
@@ -136,10 +183,10 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Vpc.fromLookup is a context lookup that hits real AWS at synth time and
-    // ignores AWS_ENDPOINT_URL, and locally invoked Lambdas need no VPC.
-    const vpcConfiguration = localDeploy
-      ? {}
-      : (() => {
+    // ignores AWS_ENDPOINT_URL. An environment with no VpcId runs the handlers
+    // outside a VPC, which is what a local deploy does.
+    const vpcConfiguration = props.parameters.VpcId
+      ? (() => {
           const vpc = ec2.Vpc.fromLookup(this, "Vpc", {
             vpcId: props.parameters.VpcId,
           });
@@ -157,7 +204,8 @@ export class ApiStack extends cdk.Stack {
               ),
             },
           };
-        })();
+        })()
+      : {};
 
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
@@ -193,11 +241,10 @@ export class ApiStack extends cdk.Stack {
     const auth = new apigateway.CognitoUserPoolsAuthorizer(this, "Authorizer", {
       cognitoUserPools: [userPool],
     });
-    // ACM certificates, custom domain names, WAF and Route 53 have no local
-    // equivalent, so the local API is reached on the emulator endpoint.
-    const domainConfiguration = localDeploy
-      ? {}
-      : {
+    // An environment with no ApiDomainName is reached on the API's own endpoint
+    // rather than through a custom domain, which is what a local deploy does.
+    const domainConfiguration = props.parameters.ApiDomainName
+      ? {
           domainName: {
             domainName: props.parameters.ApiDomainName,
             certificate: certificatemanager.Certificate.fromCertificateArn(
@@ -206,16 +253,20 @@ export class ApiStack extends cdk.Stack {
               props.parameters.RegionalCertificateArn,
             ),
           },
-        };
+        }
+      : {};
     const api = new apigateway.RestApi(this, "Api", {
       ...domainConfiguration,
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
-        maxAge: cdk.Duration.days(10),
-      },
+      defaultCorsPreflightOptions: corsPreflightOptions,
     });
+
+    // MiniStack assigns a random REST API id on every deploy, which changes the
+    // execute-api URL the local frontend is built against. The ms-custom-id tag
+    // pins it so frontend/.env.local stays valid across a rebuilt stack. Real
+    // deployments have no such tag, and AWS would just carry it as metadata.
+    if (emulator) {
+      cdk.Tags.of(api).add("ms-custom-id", LOCAL_REST_API_ID);
+    }
     const apiFunctionIntegration = new apigateway.LambdaIntegration(
       apiFunction,
     );
@@ -224,14 +275,17 @@ export class ApiStack extends cdk.Stack {
       authorizer: auth,
     });
 
-    if (!localDeploy) {
+    if (props.parameters.RegionalWafArn) {
       new wafv2.CfnWebACLAssociation(this, "ApiWebACLAssociation", {
         webAclArn: props.parameters.RegionalWafArn,
         resourceArn: api.deploymentStage.stageArn,
       });
+    }
 
-      // HostedZone.fromLookup is a context lookup that hits real AWS at synth
-      // time and ignores AWS_ENDPOINT_URL.
+    // HostedZone.fromLookup is a context lookup that hits real AWS at synth
+    // time and ignores AWS_ENDPOINT_URL. An environment with no HostedZoneName
+    // publishes no alias record, which is what a local deploy does.
+    if (props.parameters.HostedZoneName) {
       const apiHostedZone = route53.HostedZone.fromLookup(
         this,
         "ApiHostedZone",
@@ -648,7 +702,7 @@ export class ApiStack extends cdk.Stack {
     });
     (
       userPoolClient.node.defaultChild as cognito.CfnUserPoolClient
-    ).explicitAuthFlows = ["ALLOW_REFRESH_TOKEN_AUTH"];
+    ).explicitAuthFlows = explicitAuthFlows;
 
     const providerName = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolProviderName`,
@@ -745,21 +799,30 @@ export class ApiStack extends cdk.Stack {
       },
     });
 
+    // The emulator has no custom domain or certificate, so the API is reached
+    // on its execute-api route rather than behind the real deployment's TLS
+    // fronted domain.
+    const apiEndpoint = emulator
+      ? `${emulator.endpoint.replace(/\/$/, "")}/_aws/execute-api/${api.restApiId}/${api.deploymentStage.stageName}`
+      : `https://${props.parameters.ApiDomainName}`;
+    const frontEndOrigin = `${frontEndScheme}://${props.parameters.FrontEndDomainName}/`;
+
     new cdk.CfnOutput(this, "FrontEndEnvironment", {
       description: "The environment variables to build the front end",
       value: envFormat({
         NEXT_PUBLIC_ENV: props.parameters.Environment,
         NEXT_PUBLIC_APPLICATION_NAME: props.parameters.ApplicationName,
-        NEXT_PUBLIC_API_ENDPOINT: `https://${props.parameters.ApiDomainName}`,
+        NEXT_PUBLIC_API_ENDPOINT: apiEndpoint,
         NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID: identityPool.ref,
         NEXT_PUBLIC_AUTH_USER_POOL_ID: userPool.userPoolId,
         NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
-        NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT: `https://${props.parameters.FrontEndDomainName}/`,
-        NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT: `https://${props.parameters.FrontEndDomainName}/`,
+        NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT: frontEndOrigin,
+        NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT: frontEndOrigin,
         NEXT_PUBLIC_AUTH_DOMAIN: cdk.Fn.importValue(
           `${props.parameters.UserPoolStackName}-DomainName`,
         ),
         NEXT_PUBLIC_TRANSCRIPTION_BUCKET: dataBucket.bucketName,
+        ...emulatorFrontEndEnvironment,
         ...(props.parameters.SplunkRumAccessToken
           ? {
               NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN:

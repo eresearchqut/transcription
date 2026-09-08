@@ -27,6 +27,26 @@ const parameters: ApiStackProps["parameters"] = {
 
 const env = { account: "111111111111", region: "ap-southeast-2" };
 
+/**
+ * A local deploy is described by its configuration, not by a flag: the emulator
+ * endpoint is set and the parameters for resources with no local counterpart
+ * are empty. Mirrors deployment/config/local.json.
+ */
+const localProps: Partial<ApiStackProps> = {
+  emulator: { endpoint: "http://localhost:24566" },
+  parameters: {
+    ...parameters,
+    ApiDomainName: "",
+    Environment: "local",
+    FrontEndDomainName: "localhost:3000",
+    HostedZoneName: "",
+    RegionalCertificateArn: "",
+    RegionalWafArn: "",
+    SubnetIds: [],
+    VpcId: "",
+  },
+};
+
 const synthesise = (props?: Partial<ApiStackProps>): Template => {
   const app = new cdk.App();
   const stack = new ApiStack(app, "TranscriptionStack", {
@@ -78,10 +98,42 @@ describe("ApiStack", () => {
         },
       );
     });
+
+    it("answers cors preflights from api gateway", () => {
+      template().hasResourceProperties("AWS::ApiGateway::Method", {
+        HttpMethod: "OPTIONS",
+      });
+    });
+
+    it("allows only refresh token auth", () => {
+      template().hasResourceProperties("AWS::Cognito::UserPoolClient", {
+        ExplicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
+      });
+    });
+  });
+
+  describe("with an individual parameter left empty", () => {
+    it("omits only the web acl when no regional waf is configured", () => {
+      const template = synthesise({
+        parameters: { ...parameters, RegionalWafArn: "" },
+      });
+      template.resourceCountIs("AWS::WAFv2::WebACLAssociation", 0);
+      template.resourceCountIs("AWS::Route53::RecordSet", 1);
+      template.resourceCountIs("AWS::ApiGateway::DomainName", 1);
+    });
+
+    it("omits only the alias record when no hosted zone is configured", () => {
+      const template = synthesise({
+        parameters: { ...parameters, HostedZoneName: "" },
+      });
+      template.resourceCountIs("AWS::Route53::RecordSet", 0);
+      template.resourceCountIs("AWS::WAFv2::WebACLAssociation", 1);
+      template.resourceCountIs("AWS::ApiGateway::DomainName", 1);
+    });
   });
 
   describe("under local deploy", () => {
-    const localTemplate = () => synthesise({ localDeploy: true });
+    const localTemplate = () => synthesise(localProps);
 
     it("does not put the api function in a vpc", () => {
       localTemplate().resourceCountIs("AWS::EC2::SecurityGroup", 0);
@@ -110,6 +162,35 @@ describe("ApiStack", () => {
           AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",
         });
       });
+    });
+
+    it("leaves cors preflights to the proxy integration", () => {
+      const methods = localTemplate().findResources("AWS::ApiGateway::Method");
+      expect(
+        Object.values(methods).map((method) => method.Properties.HttpMethod),
+      ).not.toContain("OPTIONS");
+    });
+
+    it("allows password auth in place of the hosted ui", () => {
+      localTemplate().hasResourceProperties("AWS::Cognito::UserPoolClient", {
+        ExplicitAuthFlows: [
+          "ALLOW_REFRESH_TOKEN_AUTH",
+          "ALLOW_USER_PASSWORD_AUTH",
+        ],
+      });
+    });
+
+    it("points the front end at the emulator over http", () => {
+      const output = JSON.stringify(
+        localTemplate().findOutputs("FrontEndEnvironment"),
+      );
+      expect(output).toContain(
+        "NEXT_PUBLIC_AWS_ENDPOINT=http://localhost:24566",
+      );
+      expect(output).toContain(
+        "NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/",
+      );
+      expect(output).toContain("/_aws/execute-api/");
     });
   });
 });
