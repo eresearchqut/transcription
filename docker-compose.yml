@@ -4,7 +4,7 @@ services:
     privileged: true
     # Pinned so local behaviour is reproducible; override MINISTACK_IMAGE to
     # test a newer release or a locally-built image.
-    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.8}
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.9}
     ports:
       - "24566:4566"
     environment:
@@ -33,9 +33,6 @@ services:
       # host.docker.internal:4566 and so misses this gateway entirely (nothing
       # is published on 4566). Custom resources then hang until ServiceTimeout.
       - MINISTACK_HOST=transcription-ministack
-      # Keep idle warm Lambda containers in the pool for an hour so the
-      # transcription chain reuses them instead of cold-starting per event.
-      - LAMBDA_WARM_TTL_SECONDS=3600
       # Summarisation goes to Bedrock, which MiniStack answers with a canned
       # Anthropic-shaped reply by default. Point this at any OpenAI-compatible
       # /chat/completions endpoint (Ollama, llama.cpp, vLLM) for real
