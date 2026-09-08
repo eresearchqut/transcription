@@ -1,25 +1,25 @@
 [
   {
-    "username": "localuser",
-    "password": "Local-Password-1",
+    "username": "researcher1",
+    "password": "password",
     "attributes": {
-      "email": "localuser@example.com",
+      "email": "researcher1@example.com",
       "email_verified": "true",
-      "custom:qutIdentityId": "localuser001",
-      "custom:uid": "localuser",
-      "custom:username": "localuser",
+      "custom:qutIdentityId": "researcher1001",
+      "custom:uid": "researcher1",
+      "custom:username": "researcher1",
       "custom:eResearchGroups": "transcription"
     }
   },
   {
-    "username": "otheruser",
-    "password": "Local-Password-1",
+    "username": "researcher2",
+    "password": "password",
     "attributes": {
-      "email": "otheruser@example.com",
+      "email": "researcher2@example.com",
       "email_verified": "true",
-      "custom:qutIdentityId": "otheruser002",
-      "custom:uid": "otheruser",
-      "custom:username": "otheruser",
+      "custom:qutIdentityId": "researcher2002",
+      "custom:uid": "researcher2",
+      "custom:username": "researcher2",
       "custom:eResearchGroups": "transcription"
     }
   }

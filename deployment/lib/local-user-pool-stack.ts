@@ -45,6 +45,16 @@ export class LocalUserPoolStack extends cdk.Stack {
     this.userPool = new cognito.UserPool(this, "UserPool", {
       userPoolName: props.exportPrefix,
       signInAliases: { username: true, email: true },
+      // Nothing sensitive is behind these accounts and they are typed by hand
+      // every time the stack is recreated, so drop the complexity requirements
+      // the default policy imposes.
+      passwordPolicy: {
+        minLength: 6,
+        requireLowercase: false,
+        requireUppercase: false,
+        requireDigits: false,
+        requireSymbols: false,
+      },
       customAttributes: Object.fromEntries(
         CUSTOM_ATTRIBUTES.map((name) => [
           name,
