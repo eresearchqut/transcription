@@ -13,6 +13,16 @@ services:
       # Run each Lambda invocation in a sibling container (via the mounted
       # Docker socket) attached to the shared compose network, so the handlers
       # can reach the gateway.
+      #
+      # MiniStack's default warm executor runs handlers as Node subprocesses
+      # inside this container and stubs only the modules it knows about, so
+      # every handler here dies on init with "no stub for @aws-sdk/client-s3".
+      # NodejsFunction marks the AWS SDK external because the real Lambda
+      # runtime provides it, and bundling it instead would change what we ship
+      # to AWS. The docker executor is therefore the only option, at the cost
+      # of X-Ray: AWS RIE does not implement it, so TolerateMissingXrayDaemon
+      # in deployment/lib/api-stack.ts stops the handlers erroring on the
+      # missing daemon.
       - LAMBDA_EXECUTOR=docker
       - LAMBDA_DOCKER_NETWORK=transcription-network
       # Lambdas reach the gateway by its in-network name. Without this MiniStack
