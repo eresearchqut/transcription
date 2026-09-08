@@ -36,6 +36,16 @@ services:
       # Keep idle warm Lambda containers in the pool for an hour so the
       # transcription chain reuses them instead of cold-starting per event.
       - LAMBDA_WARM_TTL_SECONDS=3600
+      # Summarisation goes to Bedrock, which MiniStack answers with a canned
+      # Anthropic-shaped reply by default. Point this at any OpenAI-compatible
+      # /chat/completions endpoint (Ollama, llama.cpp, vLLM) for real
+      # completions; see the local development section of README.md. Unset by
+      # default, so summarisation needs nothing installed.
+      #
+      # MiniStack falls back to the canned reply *silently* when the proxy is
+      # unreachable, so a stopped proxy looks like a working run with
+      # placeholder text rather than an error.
+      - MINISTACK_BEDROCK_PROXY_URL=${MINISTACK_BEDROCK_PROXY_URL:-}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     healthcheck:

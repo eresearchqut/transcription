@@ -31,6 +31,38 @@ pnpm dev:frontend
 To run the app against the local MiniStack emulator instead, use `pnpm dev`,
 which starts the emulator and CDK deploy first and then the Next server.
 
+### Summarisation against the local stack
+
+Summarisation calls Bedrock, which MiniStack answers with a canned
+Anthropic-shaped reply. Nothing needs installing: an upload with "generate
+summary" enabled produces a summary object, and its text reads
+
+```
+[ministack mock anthropic anthropic.claude-3-haiku-20240307-v1:0] reply for prompt#23d42284
+```
+
+The shape is right and the content is a digest of the prompt, so the chain can
+be exercised but the summary itself means nothing. That is usually what you
+want locally.
+
+For real summaries, point MiniStack at any OpenAI-compatible
+`/chat/completions` endpoint. With [Ollama](https://ollama.com) serving on its
+default port:
+
+```
+MINISTACK_BEDROCK_PROXY_URL=http://host.docker.internal:11434 pnpm ministack:up
+```
+
+Give the base URL only; MiniStack appends `/v1/chat/completions`. The variable
+is read at startup, so it must be set when the container is created rather than
+exported later. Recreating the container wipes the emulator's state, so a
+redeploy follows.
+
+Be aware that MiniStack falls back to the canned reply **silently** when the
+proxy is unreachable. A stopped or misaddressed proxy looks like a working run
+with placeholder text, not an error. Check for the `[ministack mock` prefix
+before trusting a summary, and before asserting on one in a test.
+
 ## Linting and Formatting
 
 ### Frontend
