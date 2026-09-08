@@ -21,6 +21,7 @@
     "lint:fix": "biome check --write .",
     "fmt": "biome format --write .",
     "fmt:check": "biome format .",
+    "fixtures": "node api/test/fixtures/build-transcribe-fixtures.mts",
     "ministack:probe": "node scripts/ministack/transcribe-probe.mjs",
     "ministack:seed-users": "node scripts/ministack/seed-cognito-users.mjs",
     "ministack:env": "node scripts/ministack/write-frontend-env.mjs",
