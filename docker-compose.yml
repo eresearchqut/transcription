@@ -6,6 +6,11 @@ services:
     # test a newer release or a locally-built image.
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.9}
     ports:
+      # Deliberately not the standard 4566: data-management-checklist publishes
+      # that and spaces takes 14566, so this allocation lets all three stacks
+      # run at once. Two consequences follow, handled below, because MiniStack
+      # builds its container-facing URLs from the in-container GATEWAY_PORT
+      # (always 4566) and assumes the host publishes the same port.
       - "24566:4566"
     environment:
       # MiniStack configuration: https://github.com/ministackorg/ministack
@@ -25,13 +30,17 @@ services:
       # missing daemon.
       - LAMBDA_EXECUTOR=docker
       - LAMBDA_DOCKER_NETWORK=transcription-network
-      # Lambdas reach the gateway by its in-network name. Without this MiniStack
-      # falls back to host.docker.internal:4566, which is not published here.
+      # Consequence one of the non-standard port: handlers are given
+      # AWS_ENDPOINT_URL, and MiniStack would otherwise default it to
+      # host.docker.internal:4566, i.e. the host, where nothing is listening.
+      # The in-network name keeps the traffic container-to-container and makes
+      # the wiring independent of whichever port is published.
       - AWS_ENDPOINT_URL=http://transcription-ministack:4566
-      # CloudFormation custom resources are handed a ResponseURL built from this
-      # host. It defaults to localhost, which a Lambda container rewrites to
-      # host.docker.internal:4566 and so misses this gateway entirely (nothing
-      # is published on 4566). Custom resources then hang until ServiceTimeout.
+      # Consequence two: a CloudFormation custom resource is handed a
+      # ResponseURL built from this host, defaulting to localhost, which a
+      # Lambda container rewrites to the same unreachable
+      # host.docker.internal:4566. The failure is silent until the custom
+      # resource gives up at ServiceTimeout, so the deploy just hangs.
       - MINISTACK_HOST=transcription-ministack
       # Summarisation goes to Bedrock, which MiniStack answers with a canned
       # Anthropic-shaped reply by default. Point this at any OpenAI-compatible
