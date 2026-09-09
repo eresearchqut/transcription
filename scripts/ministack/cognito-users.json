@@ -1,0 +1,24 @@
+[
+  {
+    "username": "researcher1",
+    "password": "password",
+    "attributes": {
+      "email": "researcher1@example.com",
+      "email_verified": "true",
+      "custom:qutIdentityId": "researcher1001",
+      "custom:uid": "researcher1",
+      "custom:username": "researcher1"
+    }
+  },
+  {
+    "username": "researcher2",
+    "password": "password",
+    "attributes": {
+      "email": "researcher2@example.com",
+      "email_verified": "true",
+      "custom:qutIdentityId": "researcher2002",
+      "custom:uid": "researcher2",
+      "custom:username": "researcher2"
+    }
+  }
+]

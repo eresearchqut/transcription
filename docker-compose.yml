@@ -1,0 +1,141 @@
+services:
+  transcription-ministack:
+    container_name: "${TRANSCRIPTION_MINISTACK_DOCKER_NAME:-transcription-ministack}"
+    privileged: true
+    # Pinned so local behaviour is reproducible; override MINISTACK_IMAGE to
+    # test a newer release or a locally-built image.
+    image: ${MINISTACK_IMAGE:-ministackorg/ministack:1.5.9}
+    ports:
+      # Deliberately not the standard 4566: data-management-checklist publishes
+      # that and spaces takes 14566, so this allocation lets all three stacks
+      # run at once. Two consequences follow, handled below, because MiniStack
+      # builds its container-facing URLs from the in-container GATEWAY_PORT
+      # (always 4566) and assumes the host publishes the same port.
+      - "24566:4566"
+    environment:
+      # MiniStack configuration: https://github.com/ministackorg/ministack
+      - MINISTACK_REGION=ap-southeast-2
+      # Run each Lambda invocation in a sibling container (via the mounted
+      # Docker socket) attached to the shared compose network, so the handlers
+      # can reach the gateway.
+      #
+      # MiniStack's default warm executor runs handlers as Node subprocesses
+      # inside this container and stubs only the modules it knows about, so
+      # every handler here dies on init with "no stub for @aws-sdk/client-s3".
+      # NodejsFunction marks the AWS SDK external because the real Lambda
+      # runtime provides it, and bundling it instead would change what we ship
+      # to AWS. The docker executor is therefore the only option, at the cost
+      # of X-Ray: AWS RIE does not implement it, so TolerateMissingXrayDaemon
+      # in deployment/lib/api-stack.ts stops the handlers erroring on the
+      # missing daemon.
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_DOCKER_NETWORK=transcription-network
+      # Consequence one of the non-standard port: handlers are given
+      # AWS_ENDPOINT_URL, and MiniStack would otherwise default it to
+      # host.docker.internal:4566, i.e. the host, where nothing is listening.
+      # The in-network name keeps the traffic container-to-container and makes
+      # the wiring independent of whichever port is published.
+      - AWS_ENDPOINT_URL=http://transcription-ministack:4566
+      # Consequence two: a CloudFormation custom resource is handed a
+      # ResponseURL built from this host, defaulting to localhost, which a
+      # Lambda container rewrites to the same unreachable
+      # host.docker.internal:4566. The failure is silent until the custom
+      # resource gives up at ServiceTimeout, so the deploy just hangs.
+      - MINISTACK_HOST=transcription-ministack
+      # Summarisation goes to Bedrock, which MiniStack answers with a canned
+      # Anthropic-shaped reply by default. Point this at any OpenAI-compatible
+      # /chat/completions endpoint (Ollama, llama.cpp, vLLM) for real
+      # completions; see the local development section of README.md. Unset by
+      # default, so summarisation needs nothing installed.
+      #
+      # MiniStack falls back to the canned reply *silently* when the proxy is
+      # unreachable, so a stopped proxy looks like a working run with
+      # placeholder text rather than an error.
+      - MINISTACK_BEDROCK_PROXY_URL=${MINISTACK_BEDROCK_PROXY_URL:-}
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      # /_ministack/ready returns 200 only once the gateway is serving (503
+      # otherwise). The image ships python3 but not curl.
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://localhost:4566/_ministack/ready')
+      interval: 5s
+      timeout: 5s
+      start_period: 30s
+      retries: 40
+    networks:
+      transcription-network:
+        aliases:
+          # cdklocal addresses the CDK asset bucket virtual-host style during
+          # publish, and AWS_S3_FORCE_PATH_STYLE is not honoured on that path.
+          # The bucket name is deterministic locally (fixed qualifier, account
+          # and region), so resolve the subdomain to the gateway directly.
+          - cdk-hnb659fds-assets-000000000000-ap-southeast-2.transcription-ministack
+
+  # Deploys the CDK app once MiniStack is serving, so there is no race between
+  # the emulator starting and the deploy, then watches for Lambda code changes.
+  transcription-bootstrap:
+    container_name: "${TRANSCRIPTION_BOOTSTRAP_DOCKER_NAME:-transcription-bootstrap}"
+    build:
+      context: .
+      dockerfile: scripts/ministack/Dockerfile
+    volumes:
+      - ".:/app"
+      # pnpm links native binaries (notably esbuild, which the CDK uses to
+      # bundle the handlers) for the host platform, so the container installs
+      # its own dependencies here rather than reusing the bind-mounted tree.
+      # Named volumes also keep the host's node_modules untouched.
+      - "transcription-root-modules:/app/node_modules"
+      - "transcription-api-modules:/app/api/node_modules"
+      - "transcription-deployment-modules:/app/deployment/node_modules"
+      - "transcription-model-modules:/app/model/node_modules"
+      - "transcription-pnpm-store:/pnpm-store"
+    command: >
+      bash -c "cd /app &&
+               pnpm install --frozen-lockfile --filter deployment... --filter api... &&
+               cd deployment &&
+               rm -rf cdk.out &&
+               cdklocal bootstrap &&
+               cdklocal deploy --all --require-approval never &&
+               cdklocal watch --all --require-approval never"
+    environment:
+      # Use config/local.json, the default synthesizer and the local-safe stack.
+      - LOCAL_DEPLOY=true
+      - AWS_ENDPOINT_URL=http://transcription-ministack:4566
+      - AWS_ENDPOINT_URL_S3=http://transcription-ministack:4566
+      # cdklocal publishes assets virtual-host style unless told otherwise, and
+      # a Docker network name has no wildcard DNS, so asset publishing dies on
+      # <bucket>.transcription-ministack. Its default endpoint assumes the
+      # public s3.localhost.localstack.cloud wildcard, which does not apply
+      # here. This is the documented opt-in.
+      - AWS_S3_FORCE_PATH_STYLE=true
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=ap-southeast-2
+      - AWS_DEFAULT_REGION=ap-southeast-2
+      # Without this MiniStack strips these before they reach the Lambda
+      # containers, and the handlers cannot find the gateway.
+      # cdklocal strips every AWS_* var not listed here before it reads its own
+      # settings, so AWS_S3_FORCE_PATH_STYLE has to be allowlisted to survive.
+      - AWS_ENVAR_ALLOWLIST=AWS_DEFAULT_REGION,AWS_ENDPOINT_URL_S3,AWS_ENDPOINT_URL,AWS_REGION,AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_S3_FORCE_PATH_STYLE
+    depends_on:
+      transcription-ministack:
+        condition: service_healthy
+    networks:
+      - transcription-network
+
+volumes:
+  transcription-root-modules:
+  transcription-api-modules:
+  transcription-deployment-modules:
+  transcription-model-modules:
+  transcription-pnpm-store:
+
+networks:
+  transcription-network:
+    # Explicit name so LAMBDA_DOCKER_NETWORK can reference the network
+    # deterministically (independent of the compose project name).
+    name: transcription-network
