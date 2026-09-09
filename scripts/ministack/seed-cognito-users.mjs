@@ -6,6 +6,13 @@
  * The pool is discovered from the CloudFormation export that ApiStack imports,
  * so the script stays correct if the stack is renamed.
  *
+ * `custom:eResearchGroups` is deliberately not seeded. LocalUserPoolStack
+ * declares the attribute so the local pool matches the real schema, but the
+ * value is set by the identity provider on the externally managed pool and its
+ * format is not known here. Seeding a guess would look like coverage without
+ * being any: getRoles is the only reader, its output reaches the /user route
+ * alone, and nothing calls that route.
+ *
  * Usage:
  *   docker compose up -d --wait
  *   pnpm ministack:seed-users

@@ -7,8 +7,7 @@
       "email_verified": "true",
       "custom:qutIdentityId": "researcher1001",
       "custom:uid": "researcher1",
-      "custom:username": "researcher1",
-      "custom:eResearchGroups": "transcription"
+      "custom:username": "researcher1"
     }
   },
   {
@@ -19,8 +18,7 @@
       "email_verified": "true",
       "custom:qutIdentityId": "researcher2002",
       "custom:uid": "researcher2",
-      "custom:username": "researcher2",
-      "custom:eResearchGroups": "transcription"
+      "custom:username": "researcher2"
     }
   }
 ]
