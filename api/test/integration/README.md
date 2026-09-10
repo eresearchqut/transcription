@@ -18,9 +18,13 @@ pnpm test:integration
 
 It is excluded from `pnpm test`, which stays offline and needs no Docker.
 
-Artifacts are written under `users/researcher1001/` and removed afterwards, so
-a run leaves the stack as it found it. A crashed run may leave objects behind;
-they are harmless and appear as extra uploads in the UI.
+The batch translation test needs a MiniStack build that implements Amazon
+Translate, which arrived in 1.5.10. That test fails against an older image.
+
+Artifacts are written under `users/researcher1001/`, `transcription/` and
+`translations/`, and removed afterwards, so a run leaves the stack as it found
+it. A crashed run may leave objects behind; they are harmless and appear as
+extra uploads in the UI.
 
 ## Why not Testcontainers
 
@@ -45,19 +49,25 @@ rather than the test's responsibility.
 
 ## What it does not cover
 
-Amazon Translate is not implemented in MiniStack (ERP-5116), so a real batch
-translation cannot run locally. `translateStartHandler` fails cleanly against
-the emulator, recording a `FAILED` translation job.
+Translation is covered on both paths: the source-equals-target short circuit,
+where `translateStartHandler` copies the transcript rather than starting a job,
+and the full batch leg, where it writes XLIFF, Translate produces output under
+the `{account}-TranslateText-{JobId}/` folder AWS uses, and
+`translateJobStateChangeHandler` merges the result back onto the transcript.
 
-The suite therefore covers the translation leg through the branch that does
-work: `en-AU` resolves to the Translate source code `en`, so asking for `en`
-takes the source-equals-target path, which copies the transcript to the
-translation key. That proves the second EventBridge rule fires and the handler
-reads and writes the right keys. It does not exercise XLIFF generation or the
-batch job, which `translateStartHandler.test.ts` and `xliff.test.ts` cover with
-mocks.
+The batch test asserts structure rather than text: same segment count, same
+`start_time` values, and every segment's text changed. MiniStack's translation
+is a deterministic language-tagged transformation rather than real machine
+translation, so asserting the text itself would pin the test to the emulator's
+marker format without testing anything more.
 
 Summary text is not asserted. MiniStack answers Bedrock with a canned reply
 prefixed `[ministack mock` unless `MINISTACK_BEDROCK_PROXY_URL` points at an
 OpenAI-compatible endpoint, so only the presence of a non-empty summary object
 is meaningful here.
+
+Nothing asserts the frontend's handling of a translated document, which is
+where ERP-5140 surfaces: `assembleTranslatedDocument` keeps `audio_segments`
+from the source, so their `language_code` and `transcript` still describe the
+original audio. The local stack reproduces this, but there is no frontend test
+runner to assert it against.

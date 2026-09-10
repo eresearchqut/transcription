@@ -195,6 +195,9 @@ afterAll(async () => {
     for (const prefix of [
       `users/${identityId}/`,
       `transcription/${identityId}/`,
+      // A batch translation leaves the XLIFF it submitted and the job output.
+      `translations/input/${identityId}/`,
+      `translations/output/${identityId}/`,
     ]) {
       const { Contents = [] } = await s3.send(
         new ListObjectsV2Command({ Bucket: bucket, Prefix: prefix }),
@@ -250,7 +253,7 @@ describe("upload chain", () => {
       const transcript = JSON.parse(
         (await getObject(record.downloadKey as string)) ?? "",
       ) as TranscriptDocument;
-      expect(transcript.results.transcripts.length).toBeGreaterThan(0);
+      expect(transcript.results.transcripts?.length).toBeGreaterThan(0);
 
       // summariseTranscriptionHandler ran, so the users/*.json filter fires and
       // the handler reached Bedrock. The body is not asserted: MiniStack
@@ -266,10 +269,8 @@ describe("upload chain", () => {
     "stores a translation when the target language matches the source",
     async () => {
       // en-AU maps to the Translate source code "en", so translateStartHandler
-      // takes its source-equals-target branch and copies the transcript to the
-      // translation key. That branch is the whole translation leg that can run
-      // locally, because MiniStack has no Translate service (ERP-5116); a
-      // foreign target language is covered by the unit tests instead.
+      // short-circuits: no batch job, it just copies the transcript to the
+      // translation key so the UI still has an artifact to offer.
       const jobId = await upload({ targetLanguage: "en" });
 
       const record = await waitForRecord(
@@ -279,13 +280,62 @@ describe("upload chain", () => {
       );
 
       expect(record.translationJob?.status).toBe("COMPLETED");
+      expect(record.translationJob?.jobId).toBe("");
       expect(record.translationKey).toBe(
         `users/${identityId}/translations/${jobId}/en`,
       );
       const translated = JSON.parse(
         (await getObject(record.translationKey as string)) ?? "",
       ) as TranscriptDocument;
-      expect(translated.results.transcripts.length).toBeGreaterThan(0);
+      expect(translated.results.transcripts?.length).toBeGreaterThan(0);
+    },
+    CHAIN_TIMEOUT_MS,
+  );
+
+  it(
+    "translates through a batch job when the target language differs",
+    async () => {
+      // The full leg: translateStartHandler writes XLIFF and starts a batch
+      // job, and translateJobStateChangeHandler merges the result back onto
+      // the transcript. Needs a MiniStack build with the Translate service.
+      const jobId = await upload({ targetLanguage: "es" });
+
+      const record = await waitForRecord(
+        jobId,
+        (r) => Boolean(r.translationKey && r.downloadKey),
+        "the batch translation to finish",
+      );
+
+      expect(record.translationJob?.status).toBe("COMPLETED");
+      // A real batch job, unlike the source-equals-target short circuit.
+      expect(record.translationJob?.jobId).not.toBe("");
+      expect(record.translationKey).toBe(
+        `users/${identityId}/translations/${jobId}/es`,
+      );
+
+      const source = JSON.parse(
+        (await getObject(record.downloadKey as string)) ?? "",
+      ) as TranscriptDocument;
+      const translated = JSON.parse(
+        (await getObject(record.translationKey as string)) ?? "",
+      ) as TranscriptDocument;
+
+      // The round trip has to land translated text back on the same segments.
+      // Asserting the structure rather than the text keeps this independent of
+      // however the emulator marks a translation.
+      const sourceSegments = source.results.segments ?? [];
+      const translatedSegments = translated.results.segments ?? [];
+      expect(translatedSegments).toHaveLength(sourceSegments.length);
+      expect(translatedSegments.length).toBeGreaterThan(0);
+      expect(translatedSegments.map((s) => s.start_time)).toEqual(
+        sourceSegments.map((s) => s.start_time),
+      );
+      for (const [index, segment] of translatedSegments.entries()) {
+        const before = sourceSegments[index].alternatives[0].transcript;
+        const after = segment.alternatives[0].transcript;
+        expect(after).not.toBe(before);
+        expect(after.length).toBeGreaterThan(0);
+      }
     },
     CHAIN_TIMEOUT_MS,
   );

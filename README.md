@@ -32,6 +32,10 @@ pnpm dev:frontend
 To run the app against the local MiniStack emulator instead, use `pnpm dev`,
 which starts the emulator and CDK deploy first and then the Next server.
 
+`docker-compose.yml` runs `ministackorg/ministack:latest`. 1.5.10 is the
+earliest release that carries Amazon Translate, so translation is broken
+locally against anything older; set `MINISTACK_IMAGE` to pin a specific release.
+
 ### Summarisation against the local stack
 
 Summarisation calls Bedrock, which MiniStack answers with a canned
