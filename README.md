@@ -13,7 +13,7 @@ This application is monorepo using a pnpm workspace.
 * `pnpm test`
 * `pnpm test:integration` (needs a running local stack, see below)
 
-## Local frontend development
+## Local frontend development against the deployed dev environment
 1. Copy the dev environment variables into your local `.env.local`
 ```
 cd frontend
@@ -29,12 +29,49 @@ NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
 pnpm dev:frontend
 ```
 
-To run the app against the local MiniStack emulator instead, use `pnpm dev`,
-which starts the emulator and CDK deploy first and then the Next server.
+## Running the whole stack locally
 
-`docker-compose.yml` runs `ministackorg/ministack:latest`. 1.5.10 is the
-earliest release that carries Amazon Translate, so translation is broken
-locally against anything older; set `MINISTACK_IMAGE` to pin a specific release.
+The CDK app deploys against [MiniStack](https://ministack.org), a local AWS emulator, so the same `deployment/lib/api-stack.ts` that provisions dev and prod provisions your laptop. Nothing is hand-written to mirror the real stack, which is the point: a resource that only exists in the deployed environment cannot drift out of the local one.
+
+Speech-to-text and machine translation are emulated rather than real. Transcribe returns a committed fixture transcript and Translate applies a deterministic language-tagged transformation, so runs are fast and tests are repeatable. Neither says anything about transcription or translation quality.
+
+`FrontEndStack` is out of scope. It is CloudFront plus Lambda@Edge in us-east-1; locally the frontend runs under `next dev` against the local API.
+
+### Prerequisites
+
+Docker, with the daemon running and its socket readable, since handlers execute in sibling containers. Then `pnpm install` at the repo root. Nothing else: no AWS account, no credentials, no deployed stack.
+
+### Start it
+
+```
+pnpm dev
+```
+
+That starts the emulator, deploys both stacks, writes `frontend/.env.local`, seeds two Cognito users, and starts the Next server on http://localhost:3000. It takes about a minute from cold, most of it the first CDK deploy, and the environment step blocks until the deploy finishes rather than racing it.
+
+Log in takes you to `/local-login` rather than the hosted UI, which needs TLS and the QUT identity provider. Sign in there as `researcher1` or `researcher2` with the password `password`. The seeded accounts guard nothing and are recreated whenever the stack is.
+
+### Everyday commands
+
+| Command | What it does |
+| --- | --- |
+| `pnpm ministack:up` | Start the emulator and deploy, without the frontend |
+| `pnpm ministack:logs` | Follow the deploy, which is where CDK errors surface |
+| `pnpm ministack:deploy` | Redeploy by hand; `cdklocal watch` already redeploys on handler changes |
+| `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
+| `pnpm ministack:seed-users` | Recreate the two Cognito users |
+| `pnpm ministack:probe` | Inspect the emulated Transcribe service |
+| `pnpm ministack:down` | Stop the stack, keeping its state |
+
+`docker compose down -v` discards the emulator's state, so the next start redeploys from scratch and every id changes. When that happens, `frontend/.env.local` still holds the previous user pool client id, and the failure surfaces as `Client ... not found` rather than anything pointing at the env file. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
+
+The gateway is published on 24566 rather than the usual 4566, so this stack, data-management-checklist and spaces can run at once.
+
+### Keeping the emulator image current
+
+`docker-compose.yml` runs `ministackorg/ministack:latest`, but Compose reuses whatever copy is already cached rather than checking for a newer one, so `latest` goes stale without any sign that it has. A months-old image presents as broken application code, since a service added since the pull is simply absent. Refresh it with `docker compose pull` when something that should work does not.
+
+1.5.10 is the floor: earlier releases have no Translate service, and they let any token through the REST API authorizer, including a forged one. `MINISTACK_IMAGE` pins a specific release or points at a locally-built image.
 
 ### Summarisation against the local stack
 
@@ -79,13 +116,23 @@ follows the chain to a stored transcript, summary and translation. Start the
 stack first:
 
 ```
-docker compose up -d      # wait for the deploy, watch with pnpm ministack:logs
+pnpm ministack:up     # wait for the deploy, watch with pnpm ministack:logs
 pnpm test:integration
 ```
 
 It targets whatever stack is already up rather than starting its own, so it
 does not run in CI. `api/test/integration/README.md` records that decision and
 what the suite deliberately leaves uncovered.
+
+The first run against a freshly deployed stack can fail on Lambda cold starts, since every handler in the chain builds its container on the first invocation. Run it again before investigating.
+
+## Contributing to MiniStack
+
+Local gaps are usually fixed upstream rather than worked around here. MiniStack is open source at [ministackorg/ministack](https://github.com/ministackorg/ministack), and the Transcribe, Translate and REST API authorizer support this stack depends on all arrived that way.
+
+Work from a personal fork with `upstream` pointing at `ministackorg/ministack`, and follow its conventions rather than this repo's: ruff and pytest, not Biome and Jest, and one file per service under `ministack/services/`. A new service also needs registering in `ministack/app.py`, detection patterns in `ministack/core/router.py`, a fixture in `tests/conftest.py`, a row in its README table and a CHANGELOG entry. Its `CONTRIBUTING.md` carries the full checklist.
+
+Resist adding a defensive workaround to this repo for emulator behaviour that AWS does not produce. It would outlive the emulator bug and mislead the next reader about what the real service does.
 
 ## Linting and Formatting
 
