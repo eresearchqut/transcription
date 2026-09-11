@@ -39,9 +39,6 @@ const LocalLoginPage: NextPageWithLayout = () => {
       options: { authFlowType: "USER_PASSWORD_AUTH" },
     })
       .then(() => setSignInError(undefined))
-      .then(() => {
-        router.push("/");
-      })
       .catch((error: Error) => setSignInError(error));
 
   if (singleSignOn || authenticated) {
