@@ -8,7 +8,8 @@
     "skipLibCheck": true,
     "moduleResolution": "nodenext",
     "resolveJsonModule": true,
-    "lib": ["es2022"]
+    "lib": ["es2022"],
+    "noEmit": true
   },
   "include": ["src/**/*.ts", "test/fixtures/**/*.mts"]
 }
