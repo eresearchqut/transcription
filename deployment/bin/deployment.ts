@@ -16,6 +16,11 @@ type Environment = "dev" | "qa" | "prod" | "local";
 interface EnvironmentConfig {
   account: string;
   region: string;
+  /**
+   * Only a local deploy sets this, carrying the browser-reachable address of
+   * the emulator gateway. Real environments address AWS directly.
+   */
+  endpoint?: string;
   parameters: {
     ApiDomainName: string;
     ApplicationName: string;
@@ -52,14 +57,10 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
   : false;
 
 /**
- * The local emulator endpoint. Only present in the local configuration, since
- * real deployments address AWS directly.
+ * The local environment is configured from a file rather than SSM, since the
+ * emulator has no parameter store worth seeding and the values are fixed.
  */
-interface LocalEnvironmentConfig extends EnvironmentConfig {
-  endpoint: string;
-}
-
-const readLocalEnvironmentConfig = (): LocalEnvironmentConfig =>
+const readLocalEnvironmentConfig = (): EnvironmentConfig =>
   JSON.parse(
     readFileSync(resolve(__dirname, "../config/local.json"), {
       encoding: "utf8",
@@ -95,6 +96,15 @@ const assertDeployedParameters = (
   }
 };
 
+const requireEndpoint = ({ endpoint }: EnvironmentConfig): string => {
+  if (!endpoint) {
+    throw new Error(
+      "Missing endpoint in deployment/config/local.json. A local deploy targets the emulator rather than AWS, so there is nothing to address without it.",
+    );
+  }
+  return endpoint;
+};
+
 const githubFilters = process.env.GITHUB_FILTERS
   ? process.env.GITHUB_FILTERS.split(",")
   : undefined;
@@ -115,88 +125,87 @@ const frontendStackName = `${envName}-${repo}-frontend`;
 
 const app = new cdk.App({});
 
-if (isLocalDeploy) {
-  const env = readLocalEnvironmentConfig();
-
-  // ApiStack imports the user pool from an externally managed stack, which has
-  // no local counterpart, so stand one up under the same exported names.
-  const userPoolStack = new LocalUserPoolStack(
-    app,
-    "TranscriptionUserPoolStack",
-    {
-      stackName: env.parameters.UserPoolStackName,
-      exportPrefix: env.parameters.UserPoolStackName,
-      hostedUiDomain: new URL(env.endpoint).host,
-      env: { account: env.account, region: env.region },
-    },
+/**
+ * A local deploy reads a file; every other environment reads SSM. This is the
+ * only place the two differ in where their configuration comes from.
+ */
+const loadEnvironment = async (): Promise<EnvironmentConfig> => {
+  if (isLocalDeploy) {
+    return readLocalEnvironmentConfig();
+  }
+  const { Parameter } = await new SSMClient().send(
+    new GetParameterCommand({ Name: `/app/${envName}/${repo}/env` }),
   );
+  const env: EnvironmentConfig = JSON.parse(Parameter?.Value ?? "{}");
+  assertDeployedParameters(envName, env.parameters);
+  return env;
+};
 
-  // The default synthesizer uses the bootstrapped asset bucket, so no real
-  // file-assets bucket is required. The GitHub stacks and the us-east-1
-  // FrontEndStack are deliberately not created locally.
+loadEnvironment().then((env) => {
   const apiStack = new ApiStack(app, "TranscriptionStack", {
     stackName: apiStackName,
-    emulator: { endpoint: env.endpoint },
     parameters: env.parameters,
     env: { account: env.account, region: env.region },
+    // A local deploy keeps the default synthesizer, which uses the bootstrapped
+    // asset bucket, so no real file-assets bucket is required.
+    ...(isLocalDeploy
+      ? { emulator: { endpoint: requireEndpoint(env) } }
+      : {
+          synthesizer: new cdk.CliCredentialsStackSynthesizer({
+            fileAssetsBucketName: `${env.account}-${env.region}-${owner}-${repo}`,
+          }),
+        }),
   });
-  apiStack.addDependency(userPoolStack);
 
-  [apiStack, userPoolStack].forEach((stack) => {
-    cdk.Tags.of(stack).add("EresCdkApp", repo);
-  });
-} else {
-  new SSMClient()
-    .send(new GetParameterCommand({ Name: `/app/${envName}/${repo}/env` }))
-    .then(({ Parameter }) => JSON.parse(Parameter?.Value ?? "{}"))
-    .then((env: EnvironmentConfig) => {
-      assertDeployedParameters(envName, env.parameters);
-      const apiGitHubStack = new GitHubStack(app, "TranscriptionGitHubStack", {
+  const stacks: cdk.Stack[] = [apiStack];
+
+  if (isLocalDeploy) {
+    // ApiStack imports the user pool from an externally managed stack, which
+    // has no local counterpart, so stand one up under the same exported names.
+    const userPoolStack = new LocalUserPoolStack(
+      app,
+      "TranscriptionUserPoolStack",
+      {
+        stackName: env.parameters.UserPoolStackName,
+        exportPrefix: env.parameters.UserPoolStackName,
+        hostedUiDomain: new URL(requireEndpoint(env)).host,
+        env: { account: env.account, region: env.region },
+      },
+    );
+    apiStack.addDependency(userPoolStack);
+    stacks.push(userPoolStack);
+  } else {
+    // The GitHub stacks and the us-east-1 FrontEndStack have no local
+    // counterpart, so they are only created for a real deploy.
+    stacks.push(
+      new GitHubStack(app, "TranscriptionGitHubStack", {
         envName,
         owner,
         repo,
         stacks: [apiStackName],
         filters: githubFilters,
         env: { account: env.account, region: env.region },
-      });
-      const frontEndGitHubStack = new GitHubStack(
-        app,
-        "TranscriptionFrontEndGitHubStack",
-        {
-          envName,
-          owner,
-          repo,
-          stacks: [frontendStackName],
-          filters: githubFilters,
-          env: { account: env.account, region: "us-east-1" },
-        },
-      );
-
-      const apiStack = new ApiStack(app, "TranscriptionStack", {
-        stackName: apiStackName,
+      }),
+      new GitHubStack(app, "TranscriptionFrontEndGitHubStack", {
+        envName,
+        owner,
+        repo,
+        stacks: [frontendStackName],
+        filters: githubFilters,
+        env: { account: env.account, region: "us-east-1" },
+      }),
+      new FrontEndStack(app, "TranscriptionFrontEndStack", {
+        stackName: frontendStackName,
         synthesizer: new cdk.CliCredentialsStackSynthesizer({
-          fileAssetsBucketName: `${env.account}-${env.region}-${owner}-${repo}`,
+          fileAssetsBucketName: `${env.account}-us-east-1-${owner}-${repo}`,
         }),
         parameters: env.parameters,
-        env: { account: env.account, region: env.region },
-      });
-      const frontEndStack = new FrontEndStack(
-        app,
-        "TranscriptionFrontEndStack",
-        {
-          stackName: frontendStackName,
-          synthesizer: new cdk.CliCredentialsStackSynthesizer({
-            fileAssetsBucketName: `${env.account}-us-east-1-${owner}-${repo}`,
-          }),
-          parameters: env.parameters,
-          env: { account: env.account, region: "us-east-1" },
-        },
-      );
+        env: { account: env.account, region: "us-east-1" },
+      }),
+    );
+  }
 
-      [apiStack, apiGitHubStack, frontEndStack, frontEndGitHubStack].forEach(
-        (stack) => {
-          cdk.Tags.of(stack).add("EresCdkApp", repo);
-        },
-      );
-    });
-}
+  stacks.forEach((stack) => {
+    cdk.Tags.of(stack).add("EresCdkApp", repo);
+  });
+});
