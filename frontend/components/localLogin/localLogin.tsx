@@ -1,33 +1,43 @@
 import { Button, Card, Heading, Input, Stack, Text } from "@chakra-ui/react";
+import { signIn } from "aws-amplify/auth";
 import { type FormEventHandler, type FunctionComponent, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
-
-export interface LocalLoginProps {
-  onLogin(username: string, password: string): Promise<void>;
-  error?: Error;
-}
+import { useAuth } from "../../context/auth-context";
 
 /**
  * Username and password sign-in for a local deploy, where the Cognito hosted UI
  * cannot be reached. Users come from `pnpm ministack:seed-users`.
+ *
+ * Rendered by `/login` only when an emulator endpoint is configured, so a
+ * deployed build leaves this component out of the bundle.
  */
-export const LocalLogin: FunctionComponent<LocalLoginProps> = ({
-  onLogin,
-  error,
-}) => {
+export const LocalLogin: FunctionComponent = () => {
+  const { authenticated } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<Error | undefined>();
 
   const onSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
     setSubmitting(true);
-    onLogin(username, password).finally(() => setSubmitting(false));
+    signIn({
+      username,
+      password,
+      options: { authFlowType: "USER_PASSWORD_AUTH" },
+    })
+      .then(() => setError(undefined))
+      .catch((signInError: Error) => setError(signInError))
+      .finally(() => setSubmitting(false));
   };
 
+  if (authenticated) {
+    return null;
+  }
+
   return (
-    <Card.Root size={"sm"} variant={"outline"} height={"100%"}>
+    <Card.Root size={"sm"} variant={"outline"}>
       <Card.Header>
         <Card.Title asChild>
           <Heading as={"h2"} fontSize={"xl"}>

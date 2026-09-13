@@ -86,7 +86,7 @@ export const singleSignOn =
 
 export const handleLogin = async () => {
   if (!singleSignOn) {
-    await Router.push("/local-login");
+    await Router.push("/login");
     return;
   }
   await signInWithRedirect({ provider: { custom: "QUT" } });

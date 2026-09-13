@@ -1,1 +1,1 @@
-export { LocalLogin, type LocalLoginProps } from "./localLogin";
+export { LocalLogin } from "./localLogin";

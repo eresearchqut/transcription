@@ -49,7 +49,7 @@ pnpm dev
 
 That starts the emulator, deploys both stacks, writes `frontend/.env.local`, seeds two Cognito users, and starts the Next server on http://localhost:3000. It takes about a minute from cold, most of it the first CDK deploy, and the environment step blocks until the deploy finishes rather than racing it.
 
-Log in takes you to `/local-login` rather than the hosted UI, which needs TLS and the QUT identity provider. Sign in there as `researcher1` or `researcher2` with the password `password`. The seeded accounts guard nothing and are recreated whenever the stack is.
+Log in puts a username and password form on `/login` rather than redirecting to the hosted UI, which needs TLS and the QUT identity provider. Sign in as `researcher1` or `researcher2` with the password `password`. The seeded accounts guard nothing and are recreated whenever the stack is. A deployed build has no emulator endpoint configured, so the form and its component are left out of the bundle.
 
 ### Everyday commands
 

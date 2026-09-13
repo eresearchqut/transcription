@@ -19,10 +19,18 @@ import {
 } from "model";
 import type { FunctionComponent, PropsWithChildren } from "react";
 import { ExternalLink } from "@/components/externalLink";
+import { LocalLogin } from "@/components/localLogin";
 import { handleLogin, type NextPageWithLayout } from "@/pages/_app";
 import { useAuth } from "../context/auth-context";
 import { bytesToSize } from "../inputs/filePicker";
 import Layout from "../layout/layout";
+
+/**
+ * Only a local deploy sets an emulator endpoint. `next.config.js` gives it a
+ * build-time value either way, so a deployed build folds the sign-in form away
+ * and leaves the component out of the bundle.
+ */
+const localSignIn = !!process.env.NEXT_PUBLIC_AWS_ENDPOINT;
 
 const SUPPORTED_UPLOAD_FILE_FORMATS = SUPPORTED_FILE_FORMATS;
 const supportedInputLanguagesCount = Object.keys(
@@ -361,6 +369,11 @@ const LoginLayout: FunctionComponent<PropsWithChildren> = ({ children }) => {
       onLogin={handleLogin}
       onLogout={signOut}
     >
+      {localSignIn && (
+        <Box pb={4}>
+          <LocalLogin />
+        </Box>
+      )}
       {children}
     </Layout>
   );
