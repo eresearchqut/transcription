@@ -6,7 +6,6 @@ import xray from "aws-xray-sdk";
 import { s3ClientConfig } from "../client/s3Client";
 import { downloadKey } from "../service/transcriptionService";
 
-const region = process.env.AWS_REGION || "ap-southeast-2";
 const outputPattern = /^transcription\/([^/]+)\/([^/]+)$/;
 
 const s3Client = new S3Client(s3ClientConfig);
