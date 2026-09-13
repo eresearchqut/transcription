@@ -35,7 +35,7 @@ You rarely run this by hand. `docker compose up` runs `cdklocal bootstrap && cdk
 
 `TranscriptionUserPoolStack` exists only locally. A deployed environment is handed a user pool that already exists, provisioned outside this app, so the local stack stands one up and exports the values `ApiStack` imports.
 
-Everything that differs under the emulator is resolved in one block at the top of the `ApiStack` constructor, keyed off `props.emulator`, so the rest of the stack reads AWS-first. Three are emulator gaps: path-style S3 addressing, since there is no wildcard DNS; no CORS preflight options, since integration responses are not modelled; and an aspect that tolerates the missing X-Ray daemon. The rest follow from having no TLS locally, which rules out the hosted UI and the custom domain.
+Everything that differs under the emulator is resolved in one block at the top of the `ApiStack` constructor, keyed off `props.emulator`, so the rest of the stack reads AWS-first. Two are emulator gaps: path-style S3 addressing, since there is no wildcard DNS, and an aspect that tolerates the missing X-Ray daemon. A third pins the REST API id so the execute-api URL survives a rebuilt stack. The rest follow from having no TLS locally, which rules out the hosted UI and the custom domain.
 
 The VPC, custom domain, WAF and DNS record are separate, driven by their parameters being empty in `config/local.json`. Those same parameters are required in a deployed environment, so an incomplete SSM parameter set fails the synth rather than quietly deploying an API with no WAF in front of it.
 
