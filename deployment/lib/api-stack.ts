@@ -99,20 +99,6 @@ export class ApiStack extends cdk.Stack {
       ? { S3_FORCE_PATH_STYLE: "true" }
       : {};
 
-    // The emulator does not model integration responses, so the mock OPTIONS
-    // integration these options generate answers a preflight with no CORS
-    // headers and the browser blocks every call. Leaving them off there lets
-    // OPTIONS reach the proxy integration, where the API's own `cors()`
-    // middleware answers it.
-    const corsPreflightOptions = emulator
-      ? undefined
-      : {
-          allowOrigins: apigateway.Cors.ALL_ORIGINS,
-          allowMethods: apigateway.Cors.ALL_METHODS,
-          allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
-          maxAge: cdk.Duration.days(10),
-        };
-
     // The hosted UI needs TLS, which the local emulator does not serve, so a
     // local deploy signs in with a username and password instead.
     const explicitAuthFlows = emulator
@@ -257,7 +243,12 @@ export class ApiStack extends cdk.Stack {
       : {};
     const api = new apigateway.RestApi(this, "Api", {
       ...domainConfiguration,
-      defaultCorsPreflightOptions: corsPreflightOptions,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: apigateway.Cors.DEFAULT_HEADERS,
+        maxAge: cdk.Duration.days(10),
+      },
     });
 
     // MiniStack assigns a random REST API id on every deploy, which changes the

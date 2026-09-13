@@ -102,6 +102,7 @@ describe("ApiStack", () => {
     it("answers cors preflights from api gateway", () => {
       template().hasResourceProperties("AWS::ApiGateway::Method", {
         HttpMethod: "OPTIONS",
+        AuthorizationType: "NONE",
       });
     });
 
@@ -164,11 +165,18 @@ describe("ApiStack", () => {
       });
     });
 
-    it("leaves cors preflights to the proxy integration", () => {
-      const methods = localTemplate().findResources("AWS::ApiGateway::Method");
-      expect(
-        Object.values(methods).map((method) => method.Properties.HttpMethod),
-      ).not.toContain("OPTIONS");
+    // A preflight carries no credentials, so it has to reach an unauthenticated
+    // OPTIONS method. Without one it matches the authorized proxy method and is
+    // rejected, and the browser blocks every API call the frontend makes.
+    it("answers cors preflights without requiring a token", () => {
+      localTemplate().hasResourceProperties("AWS::ApiGateway::Method", {
+        HttpMethod: "OPTIONS",
+        AuthorizationType: "NONE",
+      });
+      localTemplate().hasResourceProperties("AWS::ApiGateway::Method", {
+        HttpMethod: "ANY",
+        AuthorizationType: "COGNITO_USER_POOLS",
+      });
     });
 
     it("allows password auth in place of the hosted ui", () => {
