@@ -15,9 +15,13 @@ It is excluded from `pnpm test`, which stays offline and needs no Docker. The ba
 
 Artifacts are written under `users/researcher1001/`, `transcription/` and `translations/`, and removed afterwards. A crashed run may leave objects behind; they are harmless and appear as extra uploads in the UI.
 
-## Why it does not run in CI
+## Running it in CI
 
-The suite targets whatever stack is already running rather than managing its own. The expensive part is not the emulator, which starts in about thirty seconds, but the `cdklocal` bootstrap and deploy in front of it, which takes five to eight minutes and would be paid on every run to test wiring that changes only when `api-stack.ts` does. Running these assertions in CI needs that deploy to become a cached step rather than the test's responsibility.
+`.github/workflows/integration.yaml` runs this suite on pull requests that touch `api/`, `model/`, the CDK app or the MiniStack scripts. It starts the stack, waits for the deploy with `pnpm ministack:env`, and runs the suite.
+
+The deploy is cheap enough to pay per run. Measured from a cold `docker compose up`: all 59 CloudFormation resources create in about a second, CDK reports a 5s deployment and 9.7s total, and the emulator is deployed with `cdklocal watch` running 60s in. The suite itself then takes about 26s. The workflow pre-pulls the MiniStack image and the two Lambda runtimes, roughly 1.4GB, because MiniStack runs each invocation in a sibling container and would otherwise fetch them inside the suite's own timeouts.
+
+The image is pinned there rather than tracking `latest`, so an upstream release cannot turn a green build red with no commit.
 
 ## What it does not cover
 

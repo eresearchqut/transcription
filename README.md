@@ -120,11 +120,9 @@ pnpm ministack:up     # wait for the deploy, watch with pnpm ministack:logs
 pnpm test:integration
 ```
 
-It targets whatever stack is already up rather than starting its own, so it
-does not run in CI. `api/test/integration/README.md` records that decision and
-what the suite deliberately leaves uncovered.
+It targets whatever stack is already up rather than starting its own. CI starts one for it: `.github/workflows/integration.yaml` runs the suite on pull requests touching the API or the CDK app. `api/test/integration/README.md` covers what the suite deliberately leaves uncovered.
 
-The first run against a freshly deployed stack can fail on Lambda cold starts, since every handler in the chain builds its container on the first invocation. Run it again before investigating.
+A freshly deployed stack builds a container for each handler on its first invocation, so the opening test carries that cost. If the suite times out on a stack that has only just come up, run it again before investigating.
 
 ## Contributing to MiniStack
 
