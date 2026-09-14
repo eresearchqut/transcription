@@ -57,13 +57,15 @@ Log in puts a username and password form on `/login` rather than redirecting to 
 | --- | --- |
 | `pnpm ministack:up` | Start the emulator and deploy, without the frontend |
 | `pnpm ministack:logs` | Follow the deploy, which is where CDK errors surface |
-| `pnpm ministack:deploy` | Redeploy by hand; `cdklocal watch` already redeploys on handler changes |
+| `pnpm ministack:deploy` | Redeploy after changing handler or stack code |
 | `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
 | `pnpm ministack:probe` | Inspect the emulated Transcribe service |
 | `pnpm ministack:down` | Stop the stack, keeping its state |
 
 `docker compose down -v` discards the emulator's state, so the next start redeploys from scratch and every id changes. When that happens, `frontend/.env.local` still holds the previous user pool client id, and the failure surfaces as `Client ... not found` rather than anything pointing at the env file. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
+
+The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file does not raise an inotify event inside the container on macOS, so the watch does not fire and code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs.
 
 The gateway is published on 24566 rather than the usual 4566, so this stack, data-management-checklist and spaces can run at once.
 
