@@ -7,6 +7,9 @@ services:
     # REST APIs.
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:latest}
     ports:
+      # Published on all interfaces so the frontend can be opened from a phone
+      # or another machine on the network. The emulator is unauthenticated, so
+      # run it on a trusted network only.
       # Not the standard 4566, so this stack can run alongside other local
       # emulators. MiniStack builds container-facing URLs from the in-container
       # GATEWAY_PORT and assumes the host publishes the same port, which the

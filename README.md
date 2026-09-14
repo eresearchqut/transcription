@@ -39,7 +39,7 @@ Speech-to-text and machine translation are emulated. Transcribe returns a commit
 
 ### Prerequisites
 
-Docker, with the daemon running and its socket readable, since handlers execute in sibling containers. Then `pnpm install` at the repo root. No AWS account, credentials or deployed stack are needed.
+Docker, with the daemon running and its socket readable, since handlers execute in sibling containers. The AWS CLI, which the helper scripts use to read stack outputs and seed users. Then `pnpm install` at the repo root. No AWS account, credentials or deployed stack are needed, and the scripts supply their own placeholder ones.
 
 ### Start it
 
@@ -60,13 +60,13 @@ That starts the emulator, deploys both stacks, writes `frontend/.env.local`, see
 | `pnpm ministack:deploy` | Redeploy after changing handler or stack code |
 | `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
-| `pnpm ministack:down` | Stop the stack, keeping its state |
+| `pnpm ministack:down` | Stop the emulator and discard its state |
 
-`docker compose down -v` discards the emulator's state, so the next start redeploys from scratch and every id changes. `frontend/.env.local` then holds a stale user pool client id, which surfaces as `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
+MiniStack holds its state in the container, so stopping it discards the stacks and every id changes on the next start. `frontend/.env.local` then holds a stale user pool client id, which surfaces as `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start. Adding `-v` also removes the dependency volumes, which only makes the next start slower.
 
 The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs.
 
-The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators.
+The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is published on all interfaces so the app can be opened from a phone or another machine, which means the emulator is reachable by anyone on the same network.
 
 ### Keeping the emulator image current
 
