@@ -1,7 +1,7 @@
-import { downloadData, getUrl } from "aws-amplify/storage";
 import { Packer } from "docx";
 import { useState } from "react";
 import toWebVTT from "srt-webvtt";
+import { downloadText, getSignedObjectUrl } from "../client/storage";
 import {
   segmentsToSrt,
   segmentsToText,
@@ -72,23 +72,14 @@ export const useDownload = () => {
     fileName: string,
   ): Promise<string> =>
     getCurrentSession().then(() =>
-      getUrl({
-        path: objectKey,
-        options: {
-          contentDisposition: `attachment; filename = ${fileName}`,
-        },
-      }).then((output) => output.url.href),
+      getSignedObjectUrl(objectKey, {
+        contentDisposition: `attachment; filename = ${fileName}`,
+      }),
     );
 
   const downloadTranscriptJob = (objectKey: string): Promise<TranscriptJob> =>
     getCurrentSession()
-      .then(() =>
-        downloadData({
-          path: objectKey,
-        }),
-      )
-      .then((downloadDataOutput) => downloadDataOutput.result)
-      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
+      .then(() => downloadText(objectKey))
       .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob);
 
   const fetchTranscriptUrl = async (
@@ -174,13 +165,7 @@ export const useDownload = () => {
     }: TranscriptOptions = {},
   ): Promise<string> => {
     return getCurrentSession()
-      .then(() =>
-        downloadData({
-          path: objectKey,
-        }),
-      )
-      .then((downloadDataOutput) => downloadDataOutput.result)
-      .then((downloadDataOutputResult) => downloadDataOutputResult.body.text())
+      .then(() => downloadText(objectKey))
       .then((dataBodyText) => JSON.parse(dataBodyText) as TranscriptJob)
       .then((transcriptJob) => {
         switch (format) {

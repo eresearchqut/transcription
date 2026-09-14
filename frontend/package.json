@@ -15,6 +15,9 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1078.0",
+    "@aws-sdk/lib-storage": "^3.1078.0",
+    "@aws-sdk/s3-request-presigner": "^3.1078.0",
     "@chakra-ui/react": "^3.36.0",
     "@danielgtmn/umami-react": "^1.1.6",
     "@emotion/react": "^11.14.0",
