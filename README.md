@@ -68,6 +68,16 @@ The bootstrap container finishes by running `cdklocal watch`, but a host edit to
 
 The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is published on all interfaces so the app can be opened from a phone or another machine, which means the emulator is reachable by anyone on the same network.
 
+### Opening the app from another device
+
+The stack is deployed against `localhost` by default, and the browser resolves that to whatever device it is running on, so a phone loading `http://<your-machine>:3000` would look for Cognito, S3 and the API on the phone. `LOCAL_HOST` sets the host the browser is given instead:
+
+```
+LOCAL_HOST=<your-machine-address> pnpm dev
+```
+
+It is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
+
 ### Keeping the emulator image current
 
 `docker-compose.yml` runs `ministackorg/ministack:latest`, and Compose reuses the cached copy rather than checking for a newer one. A stale image presents as broken application code, since a service added since the pull is simply absent. Refresh it with `docker compose pull`.

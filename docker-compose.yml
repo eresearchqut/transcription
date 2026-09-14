@@ -101,6 +101,10 @@ services:
     environment:
       # Use config/local.json, the default synthesizer and the local-safe stack.
       - LOCAL_DEPLOY=true
+      # The host the browser reaches the emulator and the frontend on. Set it
+      # to this machine's LAN address to open the app from a phone or another
+      # machine, where localhost is that device rather than this one.
+      - LOCAL_HOST=${LOCAL_HOST:-localhost}
       - AWS_ENDPOINT_URL=http://transcription-ministack:4566
       - AWS_ENDPOINT_URL_S3=http://transcription-ministack:4566
       # cdklocal publishes assets virtual-host style unless told otherwise, and
