@@ -54,12 +54,11 @@ jobs:
           wait
 
       - name: Start the local stack
-        run: docker compose up -d --build
+        run: pnpm ministack:up
 
-      # `docker compose up` returns once MiniStack is healthy, while cdklocal is
-      # still deploying. This polls CloudFormation for the stack outputs, the
-      # same gate `pnpm dev` uses.
-      - name: Wait for the deploy
+      # The stack outputs carry the Cognito and API identifiers the suite signs
+      # in with, so write them out the same way `pnpm dev` does.
+      - name: Write the frontend environment
         run: pnpm ministack:env
 
       - name: Run the integration suite

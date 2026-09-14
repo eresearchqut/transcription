@@ -12,7 +12,7 @@
  * known here.
  *
  * Usage:
- *   docker compose up -d --wait
+ *   pnpm ministack:up
  *   pnpm ministack:seed-users
  */
 import { execFileSync } from "node:child_process";

@@ -7,7 +7,7 @@
 The suite needs a deployed local stack and does not start one:
 
 ```sh
-docker compose up -d      # wait for the deploy, watch with pnpm ministack:logs
+pnpm ministack:up         # returns once the deploy is done; follow it with pnpm ministack:logs
 pnpm test:integration
 ```
 

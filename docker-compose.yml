@@ -77,13 +77,24 @@ services:
     # until it has been built here.
     command: >
       bash -c "cd /app &&
+               rm -f /tmp/deploy-complete &&
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
                pnpm --filter model build &&
                cd deployment &&
                rm -rf cdk.out &&
                cdklocal bootstrap &&
                cdklocal deploy --all --require-approval never &&
+               touch /tmp/deploy-complete &&
                cdklocal watch --all --require-approval never"
+    # The marker is cleared on start and written once the stack is deployed, so
+    # `docker compose up --wait` blocks until the outputs belong to this run
+    # rather than to the stack a previous run left behind.
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/deploy-complete"]
+      interval: 5s
+      timeout: 3s
+      retries: 120
+      start_period: 30s
     environment:
       # Use config/local.json, the default synthesizer and the local-safe stack.
       - LOCAL_DEPLOY=true

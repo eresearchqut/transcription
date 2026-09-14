@@ -8,7 +8,7 @@
  * you need somewhere else.
  *
  * Usage:
- *   docker compose up -d
+ *   pnpm ministack:up
  *   pnpm ministack:env
  */
 import { execFileSync } from "node:child_process";
@@ -66,9 +66,9 @@ const readFrontEndEnvironment = () =>
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
 /**
- * `docker compose up -d` returns once MiniStack is healthy, but the bootstrap
- * container is still running cdklocal at that point, so the stack does not
- * exist yet on a cold start. Poll rather than requiring a separate wait step.
+ * `pnpm ministack:up` waits on the bootstrap healthcheck, so the stack is
+ * normally deployed by the time this runs. Poll anyway to cover a plain
+ * `docker compose up -d`, which returns while cdklocal is still deploying.
  */
 const waitForFrontEndEnvironment = async () => {
   const deadline = Date.now() + timeoutSeconds * 1000;
