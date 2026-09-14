@@ -60,7 +60,6 @@ Log in puts a username and password form on `/login` rather than redirecting to 
 | `pnpm ministack:deploy` | Redeploy after changing handler or stack code |
 | `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
-| `pnpm ministack:probe` | Inspect the emulated Transcribe service |
 | `pnpm ministack:down` | Stop the stack, keeping its state |
 
 `docker compose down -v` discards the emulator's state, so the next start redeploys from scratch and every id changes. When that happens, `frontend/.env.local` still holds the previous user pool client id, and the failure surfaces as `Client ... not found` rather than anything pointing at the env file. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
