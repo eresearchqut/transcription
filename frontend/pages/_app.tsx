@@ -29,13 +29,10 @@ type AppPropsWithLayout = AppProps & {
 
 /**
  * Only a local deploy sets an emulator endpoint, where Cognito is served by the
- * emulator rather than by AWS and there is no hosted UI to redirect to.
- *
- * Real deployments sign in through the QUT identity provider on the Cognito
- * hosted UI. Amplify builds that URL as `https://${domain}` with the scheme
- * hardcoded, and the emulator serves plain http with no certificate, so the
- * redirect cannot complete locally. The local user pool also has no QUT
- * provider, only the Cognito-native users written by `pnpm ministack:seed-users`.
+ * emulator rather than by AWS and there is no hosted UI to redirect to. Amplify
+ * hardcodes the hosted UI scheme to https, which the emulator does not serve,
+ * and the local user pool has no QUT provider, only the Cognito-native users
+ * written by `pnpm ministack:seed-users`.
  */
 const localEndpoint = process.env.NEXT_PUBLIC_AWS_ENDPOINT;
 
@@ -77,9 +74,8 @@ Amplify.configure({
 });
 
 /**
- * Read back from the configuration rather than tracked alongside it: an oauth
- * block is what gives Amplify a hosted UI to redirect to, so its presence is
- * the sign-in method.
+ * An oauth block is what gives Amplify a hosted UI to redirect to, so its
+ * presence in the configuration is the sign-in method.
  */
 export const singleSignOn =
   !!Amplify.getConfig().Auth?.Cognito?.loginWith?.oauth;

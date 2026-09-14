@@ -26,8 +26,7 @@ jobs:
       # Pinned rather than the `latest` docker-compose.yml defaults to, so an
       # upstream release cannot turn a green build red with no commit here.
       # 1.5.10 is the floor the suite needs, for Translate and COGNITO_USER_POOLS
-      # enforcement on REST APIs; 1.5.11 is what this job has been verified
-      # against. Bump it deliberately.
+      # enforcement on REST APIs.
       MINISTACK_IMAGE: ministackorg/ministack:1.5.11
     steps:
       - uses: actions/checkout@v7
@@ -45,7 +44,7 @@ jobs:
 
       # MiniStack runs each invocation in a sibling container, and the CDK's
       # bucket notification custom resource is a Python function, so both
-      # runtimes are pulled on first use. Fetching them up front keeps a ~1.4GB
+      # runtimes are pulled on first use. Fetching them up front keeps the
       # download out of the suite's own chain timeouts.
       - name: Pre-pull runtime images
         run: |
@@ -58,9 +57,8 @@ jobs:
         run: docker compose up -d --build
 
       # `docker compose up` returns once MiniStack is healthy, while cdklocal is
-      # still deploying. This polls CloudFormation for the stack outputs, which
-      # is the same gate `pnpm dev` uses, so there is one implementation of the
-      # wait rather than a second one here.
+      # still deploying. This polls CloudFormation for the stack outputs, the
+      # same gate `pnpm dev` uses.
       - name: Wait for the deploy
         run: pnpm ministack:env
 

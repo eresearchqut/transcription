@@ -5,8 +5,8 @@ FROM node:${NODE_VERSION}
 # publishing and deploys all resolve to MiniStack rather than real AWS.
 RUN corepack enable && npm add -g aws-cdk-local aws-cdk
 
-# Keep the pnpm store out of the bind-mounted repo, otherwise the install
-# leaves a ~600MB .pnpm-store behind on the host for lint and git to trip over.
+# Keep the pnpm store outside the bind-mounted repo, so installing does not
+# leave one behind on the host.
 ENV npm_config_store_dir=/pnpm-store
 
 WORKDIR /app

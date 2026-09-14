@@ -7,11 +7,10 @@ services:
     # REST APIs.
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:latest}
     ports:
-      # Not the standard 4566, which data-management-checklist publishes
-      # (spaces takes 14566), so all three stacks can run at once. MiniStack
-      # builds container-facing URLs from the in-container GATEWAY_PORT (always
-      # 4566) and assumes the host publishes the same port; the two settings
-      # below compensate.
+      # Not the standard 4566, so this stack can run alongside other local
+      # emulators. MiniStack builds container-facing URLs from the in-container
+      # GATEWAY_PORT and assumes the host publishes the same port, which the
+      # two settings below compensate for.
       - "24566:4566"
     environment:
       # MiniStack configuration: https://github.com/ministackorg/ministack
@@ -19,8 +18,7 @@ services:
       # Run each invocation in a sibling container on the shared network so the
       # handlers can reach the gateway. The default warm executor stubs only
       # the modules it knows about, and NodejsFunction marks the AWS SDK
-      # external, so handlers die on init with "no stub for @aws-sdk/client-s3".
-      # The cost is X-Ray, which AWS RIE does not implement: see
+      # external. X-Ray is unavailable under this executor: see
       # TolerateMissingXrayDaemon in deployment/lib/api-stack.ts.
       - LAMBDA_EXECUTOR=docker
       - LAMBDA_DOCKER_NETWORK=transcription-network
@@ -28,13 +26,11 @@ services:
       # host.docker.internal:4566, where nothing is listening.
       - AWS_ENDPOINT_URL=http://transcription-ministack:4566
       # The host used to build CloudFormation custom resource ResponseURLs.
-      # Defaults to localhost, which a Lambda container cannot reach, and the
-      # deploy then hangs until the custom resource hits ServiceTimeout.
+      # Defaults to localhost, which a Lambda container cannot reach.
       - MINISTACK_HOST=transcription-ministack
       # Any OpenAI-compatible /chat/completions endpoint (Ollama, llama.cpp,
-      # vLLM) for real summaries; see the local development section of
-      # README.md. Unset, Bedrock answers with a canned reply, which is also
-      # the silent fallback when the proxy is unreachable.
+      # vLLM) for real summaries. Unset, or unreachable, Bedrock answers with a
+      # canned reply.
       - MINISTACK_BEDROCK_PROXY_URL=${MINISTACK_BEDROCK_PROXY_URL:-}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"

@@ -1,13 +1,11 @@
 /**
- * End-to-end coverage of the upload chain against a running local stack
- * (ERP-5129). Every other suite in this workspace mocks the AWS SDK, so
- * nothing else checks that the S3 notification filters, the EventBridge rules
- * and the IAM grants in deployment/lib/api-stack.ts actually reach the
- * handlers. That wiring is what this file exercises.
+ * End-to-end coverage of the upload chain against a running local stack. Every
+ * other suite in this workspace mocks the AWS SDK, so nothing else checks that
+ * the S3 notification filters, the EventBridge rules and the IAM grants in
+ * deployment/lib/api-stack.ts reach the handlers.
  *
- * Requires `docker compose up -d` and a finished deploy. It is excluded from
- * `pnpm test` and runs via `pnpm test:integration`; see the README in this
- * directory for why it is not a Testcontainers suite.
+ * Requires `docker compose up -d` and a finished deploy. Excluded from
+ * `pnpm test`; run it with `pnpm test:integration`.
  */
 import { randomUUID } from "node:crypto";
 

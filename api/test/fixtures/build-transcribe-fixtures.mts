@@ -2,12 +2,10 @@
  * Builds the committed Transcribe fixture documents from the compact turn
  * specifications below.
  *
- * The documents are generated rather than hand-written because their internal
- * consistency is what makes them useful: `segments` and `audio_segments` are
- * joined by `start_time` in frontend/components/transcriptSegments.ts, and
- * `audio_segments[].items` indexes into `results.items`. Hand-editing drifts
- * those apart silently, and the symptom is broken subtitles rather than a
- * failing assertion.
+ * The documents are generated so that they stay internally consistent:
+ * `segments` and `audio_segments` are joined by `start_time` in
+ * frontend/components/transcriptSegments.ts, and `audio_segments[].items`
+ * indexes into `results.items`.
  *
  * Regenerate after editing a specification:
  *   pnpm fixtures
@@ -86,7 +84,7 @@ interface SpeakerSegment extends SpeakerRange {
 /**
  * `TranscriptDocument` in src/util/transcript.ts is the minimum the application
  * reads. This is the full document the service writes, so it stays assignable
- * to that type: a fixture the consumer could not accept would be useless.
+ * to that type.
  */
 type Fixture = TranscriptDocument & {
   jobName: string;
@@ -207,9 +205,8 @@ interface Token {
 
 /**
  * Split a turn into Transcribe's word-level items. Trailing punctuation
- * becomes its own item with type "punctuation" and no timings, exactly as the
- * real service reports it, so consumers that walk `results.items` meet the
- * same shape they meet in production.
+ * becomes its own item with type "punctuation" and no timings, as the real
+ * service reports it.
  */
 const tokenise = (text: string): Token[] => {
   const tokens: Token[] = [];

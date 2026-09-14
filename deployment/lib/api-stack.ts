@@ -20,8 +20,7 @@ import type { IConstruct } from "constructs";
 
 /**
  * Handlers wrap their AWS clients with `xray.captureAWSv3Client` at module
- * load, which throws when no X-Ray daemon is listening. `api` already uses the
- * same escape hatch to run its tests.
+ * load, which throws when no X-Ray daemon is listening.
  */
 class TolerateMissingXrayDaemon implements cdk.IAspect {
   visit(node: IConstruct): void {
@@ -72,9 +71,9 @@ export interface ApiStackProps extends cdk.StackProps {
   /**
    * Set only when deploying against a local emulator rather than real AWS,
    * carrying the browser-reachable address of the emulator gateway. Every
-   * concession the emulator requires is derived from this in one block at the
-   * top of the stack constructor; resources that simply have no local
-   * counterpart are driven by their own parameter being empty instead.
+   * concession the emulator requires is derived from this at the top of the
+   * stack constructor. Resources that have no local counterpart are driven by
+   * their own parameter being empty instead.
    */
   emulator?: { endpoint: string };
 }
@@ -253,8 +252,7 @@ export class ApiStack extends cdk.Stack {
 
     // MiniStack assigns a random REST API id on every deploy, which changes the
     // execute-api URL the local frontend is built against. The ms-custom-id tag
-    // pins it so frontend/.env.local stays valid across a rebuilt stack. Real
-    // deployments have no such tag, and AWS would just carry it as metadata.
+    // pins it so frontend/.env.local stays valid across a rebuilt stack.
     if (emulator) {
       cdk.Tags.of(api).add("ms-custom-id", LOCAL_REST_API_ID);
     }

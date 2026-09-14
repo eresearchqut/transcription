@@ -49,8 +49,7 @@ const repo = "transcription";
 
 /**
  * Deploy against a local AWS emulator (MiniStack) instead of real AWS. Set
- * explicitly rather than derived from the branch name so that a local deploy is
- * never triggered by accident.
+ * explicitly, so a local deploy is never triggered by accident.
  */
 const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
   ? JSON.parse(process.env.LOCAL_DEPLOY)
@@ -71,8 +70,7 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig =>
  * Parameters whose absence makes ApiStack skip the resource that depends on
  * them. Empty is meaningful only for a local deploy, which has no VPC, custom
  * domain, WAF or hosted zone. In a real environment an empty value means the
- * SSM parameter is incomplete, so fail rather than quietly deploy an API with
- * no WAF in front of it.
+ * SSM parameter is incomplete, so fail rather than deploy without it.
  */
 const REQUIRED_DEPLOYED_PARAMETERS = [
   "ApiDomainName",
@@ -126,8 +124,7 @@ const frontendStackName = `${envName}-${repo}-frontend`;
 const app = new cdk.App({});
 
 /**
- * A local deploy reads a file; every other environment reads SSM. This is the
- * only place the two differ in where their configuration comes from.
+ * A local deploy reads a file; every other environment reads SSM.
  */
 const loadEnvironment = async (): Promise<EnvironmentConfig> => {
   if (isLocalDeploy) {

@@ -41,10 +41,8 @@ const WithMediaPlayerLayout: FunctionComponent<MediaPlayerDrawerProps> = ({
   const contentRef = React.useRef<HTMLDivElement>(null);
 
   // Chrome's native audio controls expand to fill the element as part of their
-  // own entry animation. Mounting the player while the drawer is still sliding
-  // in strands that expansion partway, leaving the controls narrower than the
-  // element until something forces a relayout, such as pressing play. Waiting
-  // for the drawer's animations to finish avoids the overlap.
+  // own entry animation, which is stranded partway if the player mounts while
+  // the drawer is still sliding in. Wait for the drawer's animations to finish.
   const [drawerSettled, setDrawerSettled] = React.useState(false);
 
   React.useEffect(() => {

@@ -8,14 +8,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 /**
- * S3 access for the browser.
- *
- * Amplify Storage is deliberately not used here. It offers no way to address an
- * S3 endpoint other than the real AWS one, which a local deploy against the
- * emulator needs, and that omission is a longstanding design decision rather
- * than a gap: https://github.com/aws-amplify/amplify-js/issues/978. The
- * maintainers' answer to this exact requirement is to talk to the AWS SDK
- * directly, which is what this module does.
+ * S3 access for the browser, through the AWS SDK rather than Amplify Storage,
+ * which offers no way to address an S3 endpoint other than the real AWS one.
  *
  * Credentials still come from Amplify, so Cognito and the identity pool remain
  * the only source of authorisation and the IAM policy on the authenticated role
@@ -28,13 +22,13 @@ const REGION = process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2";
 /**
  * Only a local deploy sets an endpoint. The SDK addresses S3 virtual-host style
  * by default, so it would resolve `<bucket>.localhost`, for which there is no
- * wildcard DNS entry, so local deploys force path-style addressing. This
- * mirrors what the handlers do in api/src/client/s3Client.ts.
+ * wildcard DNS entry, so local deploys force path-style addressing. Mirrors
+ * api/src/client/s3Client.ts.
  */
 const localEndpoint = process.env.NEXT_PUBLIC_AWS_ENDPOINT;
 
 /**
- * A provider rather than a static credentials object, because an upload can
+ * A provider rather than a static credentials object, since an upload can
  * outlive the credentials it started with. Amplify refreshes them when they
  * expire, and the SDK calls this again when it needs to re-sign.
  */

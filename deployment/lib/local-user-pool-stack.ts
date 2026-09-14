@@ -30,11 +30,8 @@ export interface LocalUserPoolStackProps extends cdk.StackProps {
 
 /**
  * Stands in for the QUT user pool stack when deploying against a local AWS
- * emulator. Real deployments import an externally managed user pool, so this
- * stack is only ever created on the local branch of `bin/deployment.ts`.
- *
- * It exists to satisfy the three `Fn::ImportValue` calls in `ApiStack`, which
- * are left untouched so the stack synthesises identically either way.
+ * emulator, satisfying the `Fn::ImportValue` calls in `ApiStack`. Real
+ * deployments import an externally managed user pool.
  */
 export class LocalUserPoolStack extends cdk.Stack {
   readonly userPool: cognito.UserPool;
@@ -45,9 +42,8 @@ export class LocalUserPoolStack extends cdk.Stack {
     this.userPool = new cognito.UserPool(this, "UserPool", {
       userPoolName: props.exportPrefix,
       signInAliases: { username: true, email: true },
-      // Nothing sensitive is behind these accounts and they are typed by hand
-      // every time the stack is recreated, so drop the complexity requirements
-      // the default policy imposes.
+      // Local test accounts hold nothing sensitive and are typed by hand, so
+      // the default complexity requirements are dropped.
       passwordPolicy: {
         minLength: 6,
         requireLowercase: false,

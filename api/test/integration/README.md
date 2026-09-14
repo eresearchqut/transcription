@@ -17,9 +17,7 @@ Artifacts are written under `users/researcher1001/`, `transcription/` and `trans
 
 ## Running it in CI
 
-`.github/workflows/integration.yaml` runs this suite on pull requests that touch `api/`, `model/`, the CDK app or the MiniStack scripts. It starts the stack, waits for the deploy with `pnpm ministack:env`, and runs the suite.
-
-The deploy is cheap enough to pay per run. Measured from a cold `docker compose up`: all 59 CloudFormation resources create in about a second, CDK reports a 5s deployment and 9.7s total, and the emulator is deployed with `cdklocal watch` running 60s in. The suite itself then takes about 26s. The workflow pre-pulls the MiniStack image and the two Lambda runtimes, roughly 1.4GB, because MiniStack runs each invocation in a sibling container and would otherwise fetch them inside the suite's own timeouts.
+`.github/workflows/integration.yaml` runs this suite on pull requests that touch `api/`, `model/`, the CDK app or the MiniStack scripts. It starts the stack, waits for the deploy with `pnpm ministack:env`, and runs the suite. The MiniStack image and the two Lambda runtimes are pre-pulled, since MiniStack runs each invocation in a sibling container and would otherwise fetch them inside the suite's own timeouts.
 
 The image is pinned there rather than tracking `latest`, so an upstream release cannot turn a green build red with no commit.
 
@@ -29,4 +27,4 @@ Both translation paths are covered: the source-equals-target short circuit, wher
 
 - Translated text. MiniStack's translation is a deterministic language-tagged transformation, so the batch test asserts structure instead: same segment count, same `start_time` values, and every segment's text changed.
 - Summary text. MiniStack answers Bedrock with a canned reply prefixed `[ministack mock` unless `MINISTACK_BEDROCK_PROXY_URL` points at an OpenAI-compatible endpoint, so only the presence of a non-empty summary object is meaningful.
-- The frontend's handling of a translated document, which is where ERP-5140 surfaces. The local stack reproduces it, but `frontend` has no test runner to assert against.
+- The frontend's rendering of a translated document. `frontend` has no test runner to assert against.
