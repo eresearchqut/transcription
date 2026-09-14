@@ -76,9 +76,13 @@ services:
       - "transcription-deployment-modules:/app/deployment/node_modules"
       - "transcription-model-modules:/app/model/node_modules"
       - "transcription-pnpm-store:/pnpm-store"
+    # `model` resolves to its compiled `dist`, and nothing else in the startup
+    # path builds it, so esbuild cannot bundle the handlers on a clean checkout
+    # until it has been built here.
     command: >
       bash -c "cd /app &&
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
+               pnpm --filter model build &&
                cd deployment &&
                rm -rf cdk.out &&
                cdklocal bootstrap &&
