@@ -49,7 +49,7 @@ pnpm dev
 
 That starts the emulator, deploys both stacks, writes `frontend/.env.local`, seeds two Cognito users and starts the Next server on http://localhost:3000. It takes about a minute from cold.
 
-`/login` shows a username and password form rather than redirecting to the hosted UI, which needs TLS and the QUT identity provider. Sign in as `researcher1` or `researcher2` with the password `password`. A deployed build has no emulator endpoint configured, so the form is left out of the bundle.
+`/login` is the landing page, as it is in a deployed environment. Logging in goes to `/sign-in` rather than the hosted UI, which needs TLS and the QUT identity provider, and signing in lands back in the app. Use `researcher1` or `researcher2` with the password `password`. A deployed build has no emulator endpoint configured, so the form is left out of the bundle and `/sign-in` is left out of the export.
 
 ### Everyday commands
 

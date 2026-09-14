@@ -9,7 +9,7 @@ import { useAuth } from "../../context/auth-context";
  * Username and password sign-in for a local deploy, where the Cognito hosted UI
  * cannot be reached. Users come from `pnpm ministack:seed-users`.
  *
- * Rendered by `/login` only when an emulator endpoint is configured, so a
+ * Rendered by `/sign-in` only when an emulator endpoint is configured, so a
  * deployed build leaves this component out of the bundle.
  */
 export const LocalLogin: FunctionComponent = () => {

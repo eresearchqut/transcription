@@ -82,7 +82,7 @@ export const singleSignOn =
 
 export const handleLogin = async () => {
   if (!singleSignOn) {
-    await Router.push("/login");
+    await Router.push("/sign-in");
     return;
   }
   await signInWithRedirect({ provider: { custom: "QUT" } });
