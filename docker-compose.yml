@@ -35,6 +35,15 @@ services:
       # vLLM) for real summaries. Unset, or unreachable, Bedrock answers with a
       # canned reply.
       - MINISTACK_BEDROCK_PROXY_URL=${MINISTACK_BEDROCK_PROXY_URL:-}
+      # How long an emulated Transcribe or Translate batch job takes, in
+      # seconds, split evenly between its two phases. Real jobs take minutes,
+      # so raise these to exercise the pending states the UI polls for.
+      # Translation runs at 5 rather than the emulator's 2, which is short
+      # enough that a transcription arrives already translated. Also settable
+      # at runtime, which a recreated container is not worth doing: see the job
+      # pacing section of the readme.
+      - TRANSCRIBE_JOB_RUN_SECONDS=${TRANSCRIBE_JOB_RUN_SECONDS:-2}
+      - TRANSLATE_JOB_RUN_SECONDS=${TRANSLATE_JOB_RUN_SECONDS:-5}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     healthcheck:

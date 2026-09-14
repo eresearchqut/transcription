@@ -84,6 +84,24 @@ It is read at deploy time and baked into the stack outputs, so changing it redep
 
 1.5.10 is the floor: earlier releases have no Translate service, and they let any token through the REST API authorizer. `MINISTACK_IMAGE` pins a specific release or points at a locally-built image.
 
+### Job pacing
+
+Transcribe and Translate batch jobs finish in seconds locally, against minutes on AWS, so a transcription reaches the browser almost fully formed and the queued and in-progress states the UI polls for barely appear. `TRANSCRIBE_JOB_RUN_SECONDS` and `TRANSLATE_JOB_RUN_SECONDS` stretch them, each split evenly between the job's two phases. Transcription runs at the emulator's default of 2 seconds and translation at 5, which is long enough to see a transcription arrive before its translation does:
+
+```
+TRANSCRIBE_JOB_RUN_SECONDS=120 TRANSLATE_JOB_RUN_SECONDS=600 pnpm ministack:up
+```
+
+Both are read at startup, so setting them recreates the emulator and wipes the stack. To change the pace on a stack you already have, post to the admin endpoint instead, which applies to the next job started:
+
+```
+curl -X POST http://localhost:24566/_ministack/config \
+  -H 'content-type: application/json' \
+  -d '{"transcribe._JOB_RUN_SECONDS": 120, "translate._JOB_RUN_SECONDS": 600}'
+```
+
+It answers with the values it applied, and silently ignores anything it does not recognise, so check that response rather than assuming it took. Put them back afterwards, since `pnpm test:integration` waits for the chain and a long pace times it out.
+
 ### Summarisation against the local stack
 
 Summarisation calls Bedrock, which MiniStack answers with a canned Anthropic-shaped reply prefixed `[ministack mock`. The shape is right and the content is a digest of the prompt, so the chain can be exercised but the summary itself means nothing.
