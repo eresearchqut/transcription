@@ -1,15 +1,20 @@
-import type { S3ClientConfig } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 
 /**
- * Shared S3 client configuration.
+ * Shared S3 client.
  *
  * The SDK addresses S3 virtual-host style by default, so a handler resolves
  * `<bucket>.<endpoint-host>`. Against a local emulator there is no wildcard DNS
  * entry for that and every call fails with ENOTFOUND before leaving the
  * container, so local deploys force path-style addressing instead. Real
  * deployments are unaffected and keep virtual-host addressing.
+ *
+ * X-Ray instrumentation is left to the importing handler, which decides whether
+ * to capture the client under test.
  */
-export const s3ClientConfig: S3ClientConfig = {
+const s3Client = new S3Client({
   region: process.env.AWS_REGION || "ap-southeast-2",
   ...(process.env.S3_FORCE_PATH_STYLE === "true" && { forcePathStyle: true }),
-};
+});
+
+export default s3Client;

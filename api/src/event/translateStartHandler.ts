@@ -1,8 +1,4 @@
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import {
   GetTranscriptionJobCommand,
   TranscribeClient,
@@ -21,7 +17,7 @@ import {
   toTranslateSourceCode,
 } from "model";
 
-import { s3ClientConfig } from "../client/s3Client";
+import s3Client from "../client/s3Client";
 import {
   getTranscription,
   normaliseJobId,
@@ -35,7 +31,6 @@ const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
 const dataAccessRoleArn = process.env.TRANSLATE_DATA_ACCESS_ROLE_ARN || "";
 
-const s3Client = new S3Client(s3ClientConfig);
 const transcribeClient = new TranscribeClient({ region });
 const translateClient = new TranslateClient({ region });
 

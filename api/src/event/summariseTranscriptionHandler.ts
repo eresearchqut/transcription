@@ -1,16 +1,12 @@
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
-import {
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 import type { Transcription } from "model";
 
 import { bedrockClientConfig, invokeModel } from "../client/bedrockClient";
-import { s3ClientConfig } from "../client/s3Client";
+import s3Client from "../client/s3Client";
 import {
   getTranscription,
   normaliseJobId,
@@ -19,7 +15,6 @@ import {
 
 const outputPattern = /^users\/([^/]+)\/([^/]+)$/;
 
-const s3Client = new S3Client(s3ClientConfig);
 const bedrockClient = new BedrockRuntimeClient(bedrockClientConfig);
 
 const GENERATE_SUMMARY_PROMPT =
