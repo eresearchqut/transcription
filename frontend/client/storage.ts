@@ -46,7 +46,17 @@ const clientConfig: S3ClientConfig = {
   ...(localEndpoint ? { endpoint: localEndpoint, forcePathStyle: true } : {}),
 };
 
-const s3Client = new S3Client(clientConfig);
+/**
+ * A new client per call rather than a module-level singleton. The SDK memoises
+ * whatever the credentials provider returns until it nears expiry, so a cached
+ * client keeps signing as the user it was built for over the hour an Amplify
+ * session lasts, and the authenticated role scopes S3 by identity. Amplify
+ * Storage avoided this by resolving credentials inside each operation, and
+ * client/fetchers.ts does the same for the API. Construction is config and a
+ * middleware stack, with no connection pool to lose, and `Upload` holds its
+ * client for the life of the transfer.
+ */
+const storageClient = () => new S3Client(clientConfig);
 
 export interface UploadObjectProps {
   path: string;
@@ -71,7 +81,7 @@ export const uploadObject = async ({
   onProgress,
 }: UploadObjectProps): Promise<void> => {
   const upload = new Upload({
-    client: s3Client,
+    client: storageClient(),
     params: {
       Bucket: BUCKET,
       Key: path,
@@ -92,7 +102,7 @@ export const uploadObject = async ({
 };
 
 export const downloadText = async (path: string): Promise<string> => {
-  const response = await s3Client.send(
+  const response = await storageClient().send(
     new GetObjectCommand({ Bucket: BUCKET, Key: path }),
   );
   return response.Body!.transformToString();
@@ -108,7 +118,7 @@ export const getSignedObjectUrl = async (
   { contentDisposition, expiresIn = 900 }: SignedUrlProps = {},
 ): Promise<string> =>
   getSignedUrl(
-    s3Client,
+    storageClient(),
     new GetObjectCommand({
       Bucket: BUCKET,
       Key: path,
