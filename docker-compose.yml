@@ -78,26 +78,33 @@ services:
       # pnpm links native binaries (notably esbuild, which the CDK uses to
       # bundle the handlers) for the host platform, so the container installs
       # its own dependencies into these volumes rather than reusing the
-      # bind-mounted tree.
+      # bind-mounted tree. `model/dist` is a volume for the same reason it is
+      # built here at all: the container runs as root, and a build output
+      # written back through the bind mount either lands root-owned in the
+      # working tree or races the host's own `pnpm --filter model build`.
       - "transcription-root-modules:/app/node_modules"
       - "transcription-api-modules:/app/api/node_modules"
       - "transcription-deployment-modules:/app/deployment/node_modules"
       - "transcription-model-modules:/app/model/node_modules"
+      - "transcription-model-dist:/app/model/dist"
       - "transcription-pnpm-store:/pnpm-store"
     # `model` resolves to its compiled `dist`, and nothing else in the startup
     # path builds it, so esbuild cannot bundle the handlers on a clean checkout
-    # until it has been built here.
+    # until it has been built here. Synthesis goes to /tmp rather than
+    # deployment/cdk.out, matching `pnpm ministack:deploy`, so the container
+    # never writes a cloud assembly into the bind-mounted tree or deletes one
+    # the host synthesised.
     command: >
       bash -c "cd /app &&
                rm -f /tmp/deploy-complete &&
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
                pnpm --filter model build &&
                cd deployment &&
-               rm -rf cdk.out &&
-               cdklocal bootstrap &&
-               cdklocal deploy --all --require-approval never &&
+               rm -rf /tmp/cdk.out &&
+               cdklocal bootstrap --output /tmp/cdk.out &&
+               cdklocal deploy --all --require-approval never --output /tmp/cdk.out &&
                touch /tmp/deploy-complete &&
-               cdklocal watch --all --require-approval never"
+               cdklocal watch --all --require-approval never --output /tmp/cdk.out"
     # The marker is cleared on start and written once the stack is deployed, so
     # `docker compose up --wait` blocks until the outputs belong to this run
     # rather than to the stack a previous run left behind.
@@ -138,6 +145,7 @@ volumes:
   transcription-api-modules:
   transcription-deployment-modules:
   transcription-model-modules:
+  transcription-model-dist:
   transcription-pnpm-store:
 
 networks:
