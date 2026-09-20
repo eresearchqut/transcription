@@ -57,7 +57,7 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
 
 /**
  * The host the browser reaches the emulator and the frontend on, substituted
- * into `${LOCAL_HOST}` in config/local.json. It defaults to localhost, which
+ * into `{{LOCAL_HOST}}` in config/local.json. It defaults to localhost, which
  * only works when the browser runs on the machine hosting the emulator. Set it
  * to that machine's reachable address to open the app from a phone or another
  * machine, where localhost is the device itself. It is separate from the
@@ -67,6 +67,13 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
 const localHost = process.env.LOCAL_HOST ?? "localhost";
 
 /**
+ * The token config/local.json carries wherever the browser-facing host belongs.
+ * Doubled braces rather than `${...}`, which would read as a shell or Compose
+ * variable expanded by something else, when this file is substituted here.
+ */
+const LOCAL_HOST_PLACEHOLDER = "{{LOCAL_HOST}}";
+
+/**
  * The local environment is configured from a file rather than SSM, since the
  * emulator has no parameter store worth seeding and the values are fixed.
  */
@@ -74,7 +81,7 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig =>
   JSON.parse(
     readFileSync(resolve(__dirname, "../config/local.json"), {
       encoding: "utf8",
-    }).replaceAll("${LOCAL_HOST}", localHost),
+    }).replaceAll(LOCAL_HOST_PLACEHOLDER, localHost),
   );
 
 /**

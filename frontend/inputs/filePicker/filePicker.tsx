@@ -146,11 +146,11 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
 
   return (
     <Stack gap={[2, 4]}>
-      {rejected.map((file, index) => (
+      {rejected.map((file) => (
         <Alert
           status={"error"}
           variant="outline"
-          key={index}
+          key={`${file.name}-${file.size}-${file.errors?.join("|")}`}
           icon={<MappedIcon icon={"file-alert"} />}
           title={file.name}
         >
