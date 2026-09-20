@@ -3,8 +3,6 @@ services:
     container_name: "${TRANSCRIPTION_MINISTACK_DOCKER_NAME:-transcription-ministack}"
     privileged: true
     # Override MINISTACK_IMAGE to pin a release or a locally-built image.
-    # 1.5.10 is the floor: Translate, and COGNITO_USER_POOLS enforcement on
-    # REST APIs.
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:latest}
     ports:
       # Loopback only: the emulator is unauthenticated and this container has

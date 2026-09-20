@@ -23,11 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      # Pinned rather than the `latest` docker-compose.yml defaults to, so an
-      # upstream release cannot turn a green build red with no commit here.
-      # 1.5.10 is the floor the suite needs, for Translate and COGNITO_USER_POOLS
-      # enforcement on REST APIs.
-      MINISTACK_IMAGE: ministackorg/ministack:1.5.11
+      # The docker-compose.yml default, named here so the pre-pull step below
+      # can fetch it. CI runs what a developer runs.
+      MINISTACK_IMAGE: ministackorg/ministack:latest
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

@@ -82,9 +82,7 @@ Both are needed. Without the first the emulator stays on loopback and the other 
 
 ### Keeping the emulator image current
 
-`docker-compose.yml` runs `ministackorg/ministack:latest`, and Compose reuses the cached copy rather than checking for a newer one. A stale image presents as broken application code, since a service added since the pull is simply absent. Refresh it with `docker compose pull`.
-
-1.5.10 is the floor: earlier releases have no Translate service, and they let any token through the REST API authorizer. `MINISTACK_IMAGE` pins a specific release or points at a locally-built image.
+`docker-compose.yml` runs `ministackorg/ministack:latest`, and Compose reuses the cached copy rather than checking for a newer one. A stale image presents as broken application code, since a service added since the pull is simply absent. Refresh it with `docker compose pull`. `MINISTACK_IMAGE` pins a specific release or points at a locally-built image.
 
 ### Job pacing
 
