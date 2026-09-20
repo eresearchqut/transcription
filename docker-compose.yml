@@ -15,7 +15,6 @@ services:
       # two settings below compensate for.
       - "${MINISTACK_BIND_HOST:-127.0.0.1}:24566:4566"
     environment:
-      # MiniStack configuration: https://github.com/ministackorg/ministack
       - MINISTACK_REGION=ap-southeast-2
       # Run each invocation in a sibling container on the shared network so the
       # handlers can reach the gateway. The default warm executor stubs only
