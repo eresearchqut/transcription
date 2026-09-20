@@ -7,14 +7,15 @@ services:
     # REST APIs.
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:latest}
     ports:
-      # Published on all interfaces so the frontend can be opened from a phone
-      # or another machine on the network. The emulator is unauthenticated, so
-      # run it on a trusted network only.
+      # Loopback only: the emulator is unauthenticated and this container has
+      # the Docker socket. MINISTACK_BIND_HOST=0.0.0.0 opens it to another
+      # device on a trusted network.
+
       # Not the standard 4566, so this stack can run alongside other local
       # emulators. MiniStack builds container-facing URLs from the in-container
       # GATEWAY_PORT and assumes the host publishes the same port, which the
       # two settings below compensate for.
-      - "24566:4566"
+      - "${MINISTACK_BIND_HOST:-127.0.0.1}:24566:4566"
     environment:
       # MiniStack configuration: https://github.com/ministackorg/ministack
       - MINISTACK_REGION=ap-southeast-2

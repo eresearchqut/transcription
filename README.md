@@ -66,17 +66,19 @@ MiniStack holds its state in the container, so stopping it discards the stacks a
 
 The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs.
 
-The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is published on all interfaces so the app can be opened from a phone or another machine, which means the emulator is reachable by anyone on the same network.
+The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next.
 
 ### Opening the app from another device
 
-The stack is deployed against `localhost` by default, and the browser resolves that to whatever device it is running on, so a phone loading `http://<your-machine>:3000` would look for Cognito, S3 and the API on the phone. `LOCAL_HOST` sets the host the browser is given instead:
+The stack is deployed against `localhost` by default, and the browser resolves that to whatever device it is running on, so a phone loading `http://<your-machine>:3000` would look for Cognito, S3 and the API on the phone. `LOCAL_HOST` sets the host the browser is given instead, and `MINISTACK_BIND_HOST` publishes the gateway beyond loopback:
 
 ```
-LOCAL_HOST=<your-machine-address> pnpm dev
+MINISTACK_BIND_HOST=0.0.0.0 LOCAL_HOST=<your-machine-address> pnpm dev
 ```
 
-It is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
+Both are needed. Without the first the emulator stays on loopback and the other device cannot reach it; without the second the browser is told to look for the emulator on itself. They hold different values because Docker Desktop on macOS binds only `127.0.0.1` or `0.0.0.0` and rejects a specific interface address, while `LOCAL_HOST` is baked into the stack outputs and is whatever the other device can resolve. This puts an unauthenticated emulator, on a privileged container with the Docker socket mounted, within reach of the network, so only do it on a network you trust.
+
+`LOCAL_HOST` is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
 
 ### Keeping the emulator image current
 
