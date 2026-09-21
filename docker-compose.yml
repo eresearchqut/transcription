@@ -72,18 +72,14 @@ services:
       context: .
       dockerfile: scripts/ministack/Dockerfile
     volumes:
-      # Read-only, because the container runs as root: anything it wrote back
-      # through the bind mount would land root-owned in the working tree, which
-      # the frontend, running as the host user, then cannot replace. Every path
-      # the deploy writes to is a volume or under /tmp, so this only enforces
-      # what is already true.
-      - ".:/app:ro"
+      - ".:/app"
       # pnpm links native binaries (notably esbuild, which the CDK uses to
       # bundle the handlers) for the host platform, so the container installs
       # its own dependencies into these volumes rather than reusing the
       # bind-mounted tree. `model/dist` is a volume for the same reason it is
-      # built here at all: a build output written back through the bind mount
-      # would race the host's own `pnpm --filter model build`.
+      # built here at all: the container runs as root, and a build output
+      # written back through the bind mount either lands root-owned in the
+      # working tree or races the host's own `pnpm --filter model build`.
       - "transcription-root-modules:/app/node_modules"
       - "transcription-api-modules:/app/api/node_modules"
       - "transcription-deployment-modules:/app/deployment/node_modules"
