@@ -28,7 +28,7 @@
     "ministack:up": "docker compose up -d --build --wait",
     "ministack:down": "docker compose down",
     "ministack:logs": "docker compose logs -f transcription-bootstrap",
-    "ministack:deploy": "docker compose exec -w /app/deployment transcription-bootstrap cdklocal deploy --all --require-approval never --output /tmp/cdk.out"
+    "ministack:deploy": "docker compose exec -w /app/deployment transcription-bootstrap cdklocal deploy --all --require-approval never --output /tmp/cdk.out.deploy"
   },
   "author": "eResearch",
   "license": "MIT",

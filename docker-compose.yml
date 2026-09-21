@@ -93,9 +93,10 @@ services:
     # `model` resolves to its compiled `dist`, and nothing else in the startup
     # path builds it, so esbuild cannot bundle the handlers on a clean checkout
     # until it has been built here. Synthesis goes to /tmp rather than
-    # deployment/cdk.out, matching `pnpm ministack:deploy`, so the container
-    # never writes a cloud assembly into the bind-mounted tree or deletes one
-    # the host synthesised.
+    # deployment/cdk.out, so the container never writes a cloud assembly into
+    # the bind-mounted tree or deletes one the host synthesised.
+    # `pnpm ministack:deploy` synthesises to /tmp/cdk.out.deploy instead,
+    # because the watch process below holds this one for as long as it runs.
     command: >
       bash -c "cd /app &&
                rm -f /tmp/deploy-complete &&
