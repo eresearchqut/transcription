@@ -5,7 +5,6 @@ import { signInWithRedirect } from "aws-amplify/auth";
 import type { NextPage } from "next";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import Router from "next/router";
 import type { ReactElement, ReactNode } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { AsyncErrorBoundary } from "@/components/errorBoundary";
@@ -29,10 +28,9 @@ type AppPropsWithLayout = AppProps & {
 
 /**
  * Only a local deploy sets an emulator endpoint, where Cognito is served by the
- * emulator rather than by AWS and there is no hosted UI to redirect to. Amplify
- * hardcodes the hosted UI scheme to https, which the emulator does not serve,
- * and the local user pool has no QUT provider, only the Cognito-native users
- * written by `pnpm ministack:seed-users`.
+ * emulator rather than by AWS. The hosted UI is reached the same way in both,
+ * through the TLS proxy in `docker-compose.yml` locally, but the SDK calls
+ * Amplify makes after sign-in have to be pointed at the emulator.
  */
 const localEndpoint = process.env.NEXT_PUBLIC_AWS_ENDPOINT;
 
@@ -46,27 +44,22 @@ Amplify.configure({
             userPoolEndpoint: localEndpoint,
             identityPoolEndpoint: localEndpoint,
           }
-        : {
-            loginWith: {
-              oauth: {
-                domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
-                scopes: [
-                  "phone",
-                  "email",
-                  "profile",
-                  "openid",
-                  "aws.cognito.signin.user.admin",
-                ],
-                redirectSignIn: [
-                  process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT!,
-                ],
-                redirectSignOut: [
-                  process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT!,
-                ],
-                responseType: "code",
-              },
-            },
-          }),
+        : {}),
+      loginWith: {
+        oauth: {
+          domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
+          scopes: [
+            "phone",
+            "email",
+            "profile",
+            "openid",
+            "aws.cognito.signin.user.admin",
+          ],
+          redirectSignIn: [process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT!],
+          redirectSignOut: [process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT!],
+          responseType: "code",
+        },
+      },
       identityPoolId: process.env.NEXT_PUBLIC_AUTH_IDENTITY_POOL_ID!,
       allowGuestAccess: false,
     },
@@ -74,19 +67,15 @@ Amplify.configure({
 });
 
 /**
- * An oauth block is what gives Amplify a hosted UI to redirect to, so its
- * presence in the configuration is the sign-in method.
+ * Both environments redirect to the Cognito hosted UI. A deployed pool
+ * federates to QUT and names it as the provider, which skips the hosted UI's
+ * own form; the local pool has no federation, so it shows that form and signs
+ * in the users `pnpm ministack:seed-users` writes.
  */
-export const singleSignOn =
-  !!Amplify.getConfig().Auth?.Cognito?.loginWith?.oauth;
-
-export const handleLogin = async () => {
-  if (!singleSignOn) {
-    await Router.push("/sign-in");
-    return;
-  }
-  await signInWithRedirect({ provider: { custom: "QUT" } });
-};
+export const handleLogin = async () =>
+  signInWithRedirect(
+    localEndpoint ? undefined : { provider: { custom: "QUT" } },
+  );
 
 const queryClient = new QueryClient();
 

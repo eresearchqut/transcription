@@ -21,6 +21,13 @@ interface EnvironmentConfig {
    * the emulator gateway. Real environments address AWS directly.
    */
   endpoint?: string;
+  /**
+   * Only a local deploy sets this, carrying the host serving the Cognito
+   * hosted UI over TLS. Not subject to `LOCAL_HOST` substitution: the
+   * certificate is issued for `localhost`, so another device on the network
+   * cannot use it.
+   */
+  authDomain?: string;
   parameters: {
     ApiDomainName: string;
     ApplicationName: string;
@@ -113,6 +120,15 @@ const requireEndpoint = ({ endpoint }: EnvironmentConfig): string => {
   return endpoint;
 };
 
+const requireAuthDomain = ({ authDomain }: EnvironmentConfig): string => {
+  if (!authDomain) {
+    throw new Error(
+      "Missing authDomain in deployment/config/local.json. Amplify builds the hosted UI URLs from it, so sign-in has nowhere to go without it.",
+    );
+  }
+  return authDomain;
+};
+
 const githubFilters = process.env.GITHUB_FILTERS
   ? process.env.GITHUB_FILTERS.split(",")
   : undefined;
@@ -175,7 +191,7 @@ loadEnvironment().then((env) => {
       {
         stackName: env.parameters.UserPoolStackName,
         exportPrefix: env.parameters.UserPoolStackName,
-        hostedUiDomain: new URL(requireEndpoint(env)).host,
+        hostedUiDomain: requireAuthDomain(env),
         env: { account: env.account, region: env.region },
       },
     );

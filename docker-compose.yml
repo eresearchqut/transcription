@@ -64,6 +64,34 @@ services:
           # deterministic locally, so resolve the subdomain to the gateway.
           - cdk-hnb659fds-assets-000000000000-ap-southeast-2.transcription-ministack
 
+  # Terminates TLS in front of the Cognito hosted UI. Amplify hardcodes the
+  # hosted UI scheme to https and the gateway serves plain http on a single
+  # port, so without this the frontend cannot sign in the way a deployed
+  # environment does.
+  transcription-auth-proxy:
+    container_name: "${TRANSCRIPTION_AUTH_PROXY_DOCKER_NAME:-transcription-auth-proxy}"
+    image: caddy:2-alpine
+    ports:
+      # Loopback by default for the same reason as the gateway, and because the
+      # certificate is issued for localhost and matches nothing else.
+      - "${MINISTACK_BIND_HOST:-127.0.0.1}:24443:24443"
+    volumes:
+      - "./scripts/ministack/Caddyfile:/etc/caddy/Caddyfile:ro"
+      # Holds the generated certificate authority. Without it a restart issues
+      # a new one and the developer has to trust it again.
+      - "transcription-caddy-data:/data"
+    healthcheck:
+      test: "wget --quiet --no-check-certificate --output-document=/dev/null https://localhost:24443/_healthz"
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 20
+    depends_on:
+      transcription-ministack:
+        condition: service_healthy
+    networks:
+      - transcription-network
+
   # Deploys the CDK app once MiniStack is healthy, then watches for Lambda code
   # changes.
   transcription-bootstrap:
@@ -146,6 +174,7 @@ volumes:
   transcription-model-modules:
   transcription-model-dist:
   transcription-pnpm-store:
+  transcription-caddy-data:
 
 networks:
   transcription-network:

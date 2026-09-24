@@ -98,12 +98,6 @@ export class ApiStack extends cdk.Stack {
       ? { S3_FORCE_PATH_STYLE: "true" }
       : {};
 
-    // The hosted UI needs TLS, which the local emulator does not serve, so a
-    // local deploy signs in with a username and password instead.
-    const explicitAuthFlows = emulator
-      ? ["ALLOW_REFRESH_TOKEN_AUTH", "ALLOW_USER_PASSWORD_AUTH"]
-      : ["ALLOW_REFRESH_TOKEN_AUTH"];
-
     // Real deployments are fronted by a custom domain over TLS. The emulator
     // has no domain or certificate, so the frontend is served by `next dev`
     // over http.
@@ -669,20 +663,24 @@ export class ApiStack extends cdk.Stack {
       },
     );
 
+    // Deduplicated because a local deploy serves the frontend from
+    // localhost:3000 over http, which is already the first entry, and Cognito
+    // rejects a callback list with a repeated URL.
+    const redirectUrls = [
+      ...new Set([
+        "http://localhost:3000/",
+        `${frontEndScheme}://${props.parameters.FrontEndDomainName}/`,
+      ]),
+    ];
+
     const userPoolClient = userPool.addClient("UserPoolClient", {
       supportedIdentityProviders:
         props.parameters.SupportedIdentityProviders.map((provider) =>
           cognito.UserPoolClientIdentityProvider.custom(provider),
         ),
       oAuth: {
-        callbackUrls: [
-          "http://localhost:3000/",
-          `https://${props.parameters.FrontEndDomainName}/`,
-        ],
-        logoutUrls: [
-          "http://localhost:3000/",
-          `https://${props.parameters.FrontEndDomainName}/`,
-        ],
+        callbackUrls: redirectUrls,
+        logoutUrls: redirectUrls,
         flows: {
           authorizationCodeGrant: true,
           implicitCodeGrant: false,
@@ -691,7 +689,7 @@ export class ApiStack extends cdk.Stack {
     });
     (
       userPoolClient.node.defaultChild as cognito.CfnUserPoolClient
-    ).explicitAuthFlows = explicitAuthFlows;
+    ).explicitAuthFlows = ["ALLOW_REFRESH_TOKEN_AUTH"];
 
     const providerName = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolProviderName`,

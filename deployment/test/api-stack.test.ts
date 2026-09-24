@@ -179,12 +179,18 @@ describe("ApiStack", () => {
       });
     });
 
-    it("allows password auth in place of the hosted ui", () => {
+    it("signs in through the hosted ui rather than with a password", () => {
       localTemplate().hasResourceProperties("AWS::Cognito::UserPoolClient", {
-        ExplicitAuthFlows: [
-          "ALLOW_REFRESH_TOKEN_AUTH",
-          "ALLOW_USER_PASSWORD_AUTH",
-        ],
+        ExplicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
+      });
+    });
+
+    // `next dev` serves the frontend over http locally, so a callback list
+    // holding only the https form would reject the redirect back from the
+    // hosted UI whenever LOCAL_HOST is not localhost.
+    it("registers the callback urls over http", () => {
+      localTemplate().hasResourceProperties("AWS::Cognito::UserPoolClient", {
+        CallbackURLs: ["http://localhost:3000/"],
       });
     });
 

@@ -33,6 +33,8 @@ pnpm dev:frontend
 
 The CDK app deploys against [MiniStack](https://ministack.org), a local AWS emulator, so the same `deployment/lib/api-stack.ts` that provisions dev and prod provisions your machine. Nothing is hand-written to mirror the real stack.
 
+The point is to change the stack and see the result without an AWS account, a deployed environment or anyone else's dev stack to share. That extends to signing in, which is not there to test authentication: the API's authorizer and the identity pool are both part of this deploy, so an identity token minted anywhere else is rejected, and without a local sign-in nothing behind the landing page can be reached at all.
+
 Speech-to-text and machine translation are emulated. Transcribe returns a committed fixture transcript and Translate applies a deterministic language-tagged transformation, so neither says anything about transcription or translation quality.
 
 `FrontEndStack` is out of scope. It is CloudFront plus Lambda@Edge in us-east-1; locally the frontend runs under `next dev` against the local API.
@@ -40,6 +42,8 @@ Speech-to-text and machine translation are emulated. Transcribe returns a commit
 ### Prerequisites
 
 Docker, with the daemon running and its socket readable, since handlers execute in sibling containers. The AWS CLI, which the helper scripts use to read stack outputs and seed users. Then `pnpm install` at the repo root. No AWS account, credentials or deployed stack are needed, and the scripts supply their own placeholder ones.
+
+Sign-in needs one further step, trusting a certificate authority, which only exists once the stack has started. It is covered below, in the order to do it.
 
 ### Start it
 
@@ -49,7 +53,35 @@ pnpm dev
 
 That starts the emulator, deploys both stacks, writes `frontend/.env.local`, seeds two Cognito users and starts the Next server on http://localhost:3000. It takes about a minute from cold.
 
-`/login` is the landing page, as it is in a deployed environment. Logging in goes to `/sign-in` rather than the hosted UI, which needs TLS and the QUT identity provider, and signing in lands back in the app. Use `researcher1` or `researcher2` with the password `password`. A deployed build has no emulator endpoint configured, so the form is left out of the bundle and `/sign-in` is left out of the export.
+Leave it running. On a machine that has already trusted the certificate authority, that is the whole setup and the next section can be skipped.
+
+### Trust the certificate authority
+
+One time per machine, in a second terminal while `pnpm dev` is running.
+
+Amplify builds the hosted UI URLs with the scheme hardcoded to https, and the emulator gateway serves plain http on a single port, so a Caddy container terminates TLS on https://localhost:24443 and proxies the sign-in endpoints back to the gateway. It serves `/oauth2/*`, `/login`, `/logout` and `/.well-known/*` and refuses everything else, so it does not become a second way into an unauthenticated emulator. Caddy issues its own certificate authority the first time it starts, which nothing on your machine has any reason to trust yet.
+
+Copy the authority out of the running container:
+
+```
+docker cp transcription-auth-proxy:/data/caddy/pki/authorities/local/root.crt ministack-root.crt
+```
+
+Then install it, which is the one part of this that differs by operating system:
+
+| | |
+| --- | --- |
+| macOS | `sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ministack-root.crt` |
+| Linux | Copy it into `/usr/local/share/ca-certificates/` and run `sudo update-ca-certificates` |
+| Windows | `certutil -addstore -f ROOT ministack-root.crt` from an elevated prompt |
+
+Firefox keeps its own certificate store on every platform, so it needs the same file imported under Settings, Privacy and Security, Certificates. Chrome, Edge and Safari use the system store. Restart the browser afterwards. Nothing on the Docker side needs restarting, so `pnpm dev` can keep running throughout.
+
+Skipping this leaves everything except sign-in working, and sign-in fails when the browser refuses the certificate on the token request. Clicking through the warning is not enough, because that request is a fetch rather than a navigation and never offers one. The authority is held in a volume, so it survives `pnpm ministack:down` and only has to be trusted again after `docker compose down -v`.
+
+### Sign in
+
+`/login` is the landing page, as it is in a deployed environment. Logging in redirects to the Cognito hosted UI, again as it does there, and signing in lands back in the app. The difference is what the hosted UI shows: a deployed pool federates to the QUT identity provider and goes straight there, while the local pool has no federation, so it shows its own username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
 ### Everyday commands
 
@@ -79,6 +111,8 @@ MINISTACK_BIND_HOST=0.0.0.0 LOCAL_HOST=<your-machine-address> pnpm dev
 Both are needed. Without the first the emulator stays on loopback and the other device cannot reach it; without the second the browser is told to look for the emulator on itself. They hold different values because Docker Desktop on macOS binds only `127.0.0.1` or `0.0.0.0` and rejects a specific interface address, while `LOCAL_HOST` is baked into the stack outputs and is whatever the other device can resolve. This puts an unauthenticated emulator, on a privileged container with the Docker socket mounted, within reach of the network, so only do it on a network you trust.
 
 `LOCAL_HOST` is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
+
+Signing in is the exception. The TLS proxy's certificate is issued for `localhost`, so another device gets a name mismatch it cannot click past on the token request. Browsing an already signed-in session works; starting one does not.
 
 ### Keeping the emulator image current
 

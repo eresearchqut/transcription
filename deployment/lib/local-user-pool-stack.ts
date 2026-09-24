@@ -22,8 +22,8 @@ export interface LocalUserPoolStackProps extends cdk.StackProps {
   readonly exportPrefix: string;
   /**
    * Host serving the Cognito hosted UI. MiniStack serves `/oauth2/authorize`
-   * and friends on the gateway rather than on the pool domain host, so this is
-   * the emulator endpoint rather than an `amazoncognito.com` address.
+   * and friends on the gateway, which is plain HTTP, so locally this is the
+   * TLS proxy in front of it rather than an `amazoncognito.com` address.
    */
   readonly hostedUiDomain: string;
 }
@@ -60,6 +60,9 @@ export class LocalUserPoolStack extends cdk.Stack {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // The hosted UI is reached on the TLS proxy rather than here, so the
+    // domain this registers is never served. It exists because a pool with no
+    // domain at all is not a shape the real stack ever takes.
     this.userPool.addDomain("Domain", {
       cognitoDomain: { domainPrefix: props.exportPrefix },
     });
