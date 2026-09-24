@@ -111,6 +111,35 @@ describe("ApiStack", () => {
         ExplicitAuthFlows: ["ALLOW_REFRESH_TOKEN_AUTH"],
       });
     });
+
+    it("lets a browser abandon its own multipart upload", () => {
+      template().hasResourceProperties("AWS::IAM::Role", {
+        Policies: Match.arrayWith([
+          Match.objectLike({
+            PolicyName: "s3-authorized-policy",
+            PolicyDocument: Match.objectLike({
+              Statement: Match.arrayWith([
+                Match.objectLike({
+                  Action: Match.arrayWith(["s3:AbortMultipartUpload"]),
+                }),
+              ]),
+            }),
+          }),
+        ]),
+      });
+    });
+
+    it("collects multipart uploads the browser never abandoned", () => {
+      template().hasResourceProperties("AWS::S3::Bucket", {
+        LifecycleConfiguration: {
+          Rules: Match.arrayWith([
+            Match.objectLike({
+              AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 },
+            }),
+          ]),
+        },
+      });
+    });
   });
 
   describe("with an individual parameter left empty", () => {
