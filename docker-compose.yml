@@ -141,7 +141,7 @@ services:
       bash -c "cd /app &&
                rm -f /tmp/deploy-complete &&
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
-               pnpm --filter model build &&
+               pnpm --filter 'api^...' build &&
                cd deployment &&
                rm -rf /tmp/cdk.out &&
                cdklocal bootstrap --output /tmp/cdk.out &&

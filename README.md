@@ -91,14 +91,14 @@ Skipping this leaves everything except sign-in working, and sign-in fails when t
 | --- | --- |
 | `pnpm ministack:up` | Start the emulator and deploy, without the frontend |
 | `pnpm ministack:logs` | Follow the deploy, which is where CDK errors surface |
-| `pnpm ministack:deploy` | Redeploy after changing handler or stack code |
+| `pnpm ministack:deploy` | Rebuild `model` and redeploy, after changing handler, model or stack code |
 | `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
 | `pnpm ministack:down` | Stop the emulator and discard its state |
 
 MiniStack holds its state in the container, so stopping it discards the stacks and every id changes on the next start. `frontend/.env.local` then holds a stale user pool client id, which surfaces as `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start. Adding `-v` also removes the dependency volumes, which only makes the next start slower.
 
-The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs.
+The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs. It also rebuilds `model` first, because `model/dist` is a container volume rather than part of the bind mount, so a build run on the host never reaches the bundler.
 
 The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next.
 
