@@ -24,11 +24,9 @@ localhost:24443 {
 	@hosted_ui path /oauth2/* /login* /logout* /.well-known/*
 	handle @hosted_ui {
 		# Amplify names a provider on every authorize request, defaulting to
-		# the built-in `COGNITO` when none is given. The emulator only knows
-		# providers that were added to the pool and answers
-		# `ResourceNotFoundException` for that name. The local pool has no
-		# federation, so dropping the parameter leaves the hosted UI's own
-		# form, which is the intended sign-in here.
+		# the built-in `COGNITO`, which the emulator rejects because only
+		# providers added to the pool exist there. The local pool has no
+		# federation, so dropping it leaves the hosted UI's own form.
 		uri query -identity_provider
 		reverse_proxy transcription-ministack:4566
 	}

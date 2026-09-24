@@ -33,15 +33,6 @@ services:
       # vLLM) for real summaries. Unset, or unreachable, Bedrock answers with a
       # canned reply.
       - MINISTACK_BEDROCK_PROXY_URL=${MINISTACK_BEDROCK_PROXY_URL:-}
-      # How long an emulated Transcribe or Translate batch job takes, in
-      # seconds, split evenly between its two phases. Real jobs take minutes,
-      # so raise these to exercise the pending states the UI polls for.
-      # Translation runs at 5 rather than the emulator's 2, which is short
-      # enough that a transcription arrives already translated. Also settable
-      # at runtime, which a recreated container is not worth doing: see the job
-      # pacing section of the readme.
-      - TRANSCRIBE_JOB_RUN_SECONDS=${TRANSCRIBE_JOB_RUN_SECONDS:-2}
-      - TRANSLATE_JOB_RUN_SECONDS=${TRANSLATE_JOB_RUN_SECONDS:-5}
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
     healthcheck:
@@ -63,6 +54,31 @@ services:
           # publish and ignores AWS_S3_FORCE_PATH_STYLE there. The name is
           # deterministic locally, so resolve the subdomain to the gateway.
           - cdk-hnb659fds-assets-000000000000-ap-southeast-2.transcription-ministack
+
+  # Paces the emulated Transcribe and Translate jobs, which otherwise finish
+  # faster than the pending states the UI polls for can be seen. The gateway
+  # holds these in memory, so this runs on every `up` and exits. Translation
+  # sits above the emulator's default so a transcription arrives before its
+  # translation does.
+  transcription-job-pace:
+    container_name: "${TRANSCRIPTION_JOB_PACE_DOCKER_NAME:-transcription-job-pace}"
+    image: curlimages/curl:8.11.1
+    entrypoint: ["sh", "-c"]
+    # The endpoint answers 200 whether or not it recognised a key, so the
+    # response is the only evidence these still exist.
+    command:
+      - >
+        curl --fail --silent --show-error --request POST
+        http://transcription-ministack:4566/_ministack/config
+        --header 'content-type: application/json'
+        --data '{"transcribe._JOB_RUN_SECONDS": ${TRANSCRIBE_JOB_RUN_SECONDS:-2}, "translate._JOB_RUN_SECONDS": ${TRANSLATE_JOB_RUN_SECONDS:-5}}'
+        | tee /dev/stderr
+        | grep -q '"transcribe._JOB_RUN_SECONDS".*"translate._JOB_RUN_SECONDS"'
+    depends_on:
+      transcription-ministack:
+        condition: service_healthy
+    networks:
+      - transcription-network
 
   # Terminates TLS in front of the Cognito hosted UI. Amplify hardcodes the
   # hosted UI scheme to https and the gateway serves plain http on a single
@@ -164,6 +180,10 @@ services:
     depends_on:
       transcription-ministack:
         condition: service_healthy
+      # Not a real dependency. `docker compose up --wait` fails on a service
+      # that exits unless something waits for it to complete.
+      transcription-job-pace:
+        condition: service_completed_successfully
     networks:
       - transcription-network
 

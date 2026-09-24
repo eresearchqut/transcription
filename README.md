@@ -126,7 +126,9 @@ Transcribe and Translate batch jobs finish in seconds locally, against minutes o
 TRANSCRIBE_JOB_RUN_SECONDS=120 TRANSLATE_JOB_RUN_SECONDS=600 pnpm ministack:up
 ```
 
-Both are read at startup, so setting them recreates the emulator and wipes the stack. To change the pace on a stack you already have, post to the admin endpoint instead, which applies to the next job started:
+Neither is read by the emulator itself. MiniStack 1.5.16 dropped `TRANSCRIBE_JOB_RUN_SECONDS`, leaving the admin endpoint as the only way to pace transcription, so the `transcription-job-pace` service posts both there once the gateway is healthy and exits. It runs on every `up`, matching how long the setting lasts, and fails the start if the endpoint stops recognising either key.
+
+The values live in the gateway's memory, so a pace applies to the next job started and is lost when the container is recreated. To change it on a stack you already have, post to the endpoint yourself rather than restarting:
 
 ```
 curl -X POST http://localhost:24566/_ministack/config \
