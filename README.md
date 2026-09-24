@@ -37,6 +37,8 @@ The point is to change the stack and see the result without an AWS account, a de
 
 Speech-to-text and machine translation are emulated. Transcribe returns a committed fixture transcript and Translate applies a deterministic language-tagged transformation, so neither says anything about transcription or translation quality.
 
+Upload isolation is not enforced. The authenticated role restricts each user to `users/${aws:PrincipalTag/qutIdentityId}/` in the data bucket, and MiniStack resolves no `aws:PrincipalTag` key, so the condition the whole scheme rests on is never evaluated. It also evaluates IAM only when started with `AUTH=true`, which this stack does not set. Locally, then, any signed-in user can read and write another user's objects. The keys are still built from the identity id, so the paths can be checked, but that the policy denies anything else can only be confirmed in a deployed environment.
+
 `FrontEndStack` is out of scope. It is CloudFront plus Lambda@Edge in us-east-1; locally the frontend runs under `next dev` against the local API.
 
 ### Prerequisites
