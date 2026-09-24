@@ -155,6 +155,10 @@ const readRecord = async (jobId: string): Promise<JobRecord | undefined> => {
  * Polls the job record until `settled` is happy. Reports the last record seen
  * on timeout, so a failure names the stage the chain stopped at rather than
  * just "timed out".
+ *
+ * The handlers persist a key and then the job status in separate updates, so
+ * `settled` has to name every field the assertions read or it can observe the
+ * record part-written.
  */
 const waitForRecord = async (
   jobId: string,
@@ -273,7 +277,8 @@ describe("upload chain", () => {
 
       const record = await waitForRecord(
         jobId,
-        (r) => Boolean(r.translationKey),
+        (r) =>
+          Boolean(r.translationKey) && r.translationJob?.status === "COMPLETED",
         "the translation key",
       );
 
@@ -300,7 +305,9 @@ describe("upload chain", () => {
 
       const record = await waitForRecord(
         jobId,
-        (r) => Boolean(r.translationKey && r.downloadKey),
+        (r) =>
+          Boolean(r.translationKey && r.downloadKey) &&
+          r.translationJob?.status === "COMPLETED",
         "the batch translation to finish",
       );
 
