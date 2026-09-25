@@ -6,7 +6,7 @@
 ![transcriptions](images/transcriptions.png)
 ![player](images/player.png)
 
-This application is monorepo using a pnpm workspace.
+This application is a monorepo using a pnpm workspace.
 
 * `pnpm build`
 * `pnpm install`
@@ -163,19 +163,12 @@ Fix emulator gaps upstream in [ministackorg/ministack](https://github.com/minist
 
 ## Linting and Formatting
 
-### Frontend
+Biome checks the whole repository from the root:
 
 ```
-pnpm --filter frontend lint
-pnpm --filter frontend fmt
-```
-
-### API
-
-```
-cd api
-pnpm --filter transcription-api lint
-pnpm --filter transcription-api fmt
+pnpm lint
+pnpm lint:fix
+pnpm fmt
 ```
 
 Ignore formatting revisions in `.git-blame-ignore-revs`:
@@ -186,26 +179,17 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ## Manual deployment instructions
 
-```
-cd api
-pnpm install
-```
+From the repo root:
 
 ```
-cd frontend
 pnpm install
-mkdir -p out
-```
-
-```
-cd deployment
-npm install
+mkdir -p frontend/out
 ```
 
 ### *Optional: Create GitHub deployment stack*
 
 ```
-export GITHUB_REF_NAME=dev
+export DEV_DEPLOY_OVERRIDE=true
 export GITHUB_FILTERS="environment:dev"
 cdk deploy TranscriptionGitHubStack
 cdk deploy TranscriptionFrontEndGitHubStack
@@ -262,5 +246,5 @@ pnpm build
 ### Deploy frontend stack
 
 ```
-cdk deploy FrontEndStack
+cdk deploy TranscriptionFrontEndStack
 ```
