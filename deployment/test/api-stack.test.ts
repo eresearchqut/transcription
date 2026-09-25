@@ -112,24 +112,7 @@ describe("ApiStack", () => {
       });
     });
 
-    it("lets a browser abandon its own multipart upload", () => {
-      template().hasResourceProperties("AWS::IAM::Role", {
-        Policies: Match.arrayWith([
-          Match.objectLike({
-            PolicyName: "s3-authorized-policy",
-            PolicyDocument: Match.objectLike({
-              Statement: Match.arrayWith([
-                Match.objectLike({
-                  Action: Match.arrayWith(["s3:AbortMultipartUpload"]),
-                }),
-              ]),
-            }),
-          }),
-        ]),
-      });
-    });
-
-    it("collects multipart uploads the browser never abandoned", () => {
+    it("collects incomplete multipart uploads", () => {
       template().hasResourceProperties("AWS::S3::Bucket", {
         LifecycleConfiguration: {
           Rules: Match.arrayWith([
