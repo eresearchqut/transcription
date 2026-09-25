@@ -33,7 +33,7 @@ const env = { account: "111111111111", region: "ap-southeast-2" };
  * are empty. Mirrors deployment/config/local.json.
  */
 const localProps: Partial<ApiStackProps> = {
-  emulator: { endpoint: "http://localhost:24566" },
+  emulator: { endpoint: "http://localhost:20005" },
   parameters: {
     ...parameters,
     ApiDomainName: "",
@@ -228,7 +228,7 @@ describe("ApiStack", () => {
         localTemplate().findOutputs("FrontEndEnvironment"),
       );
       expect(output).toContain(
-        "NEXT_PUBLIC_AWS_ENDPOINT=http://localhost:24566",
+        "NEXT_PUBLIC_AWS_ENDPOINT=http://localhost:20005",
       );
       expect(output).toContain(
         "NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/",

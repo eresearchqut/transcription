@@ -100,7 +100,7 @@ MiniStack holds its state in the container, so stopping it discards the stacks a
 
 The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs. It also rebuilds `model` first, because `model/dist` is a container volume rather than part of the bind mount, so a build run on the host never reaches the bundler.
 
-The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next. The gateway is also published on 20005, because Amplify Storage's local testing flag hardcodes `http://localhost:20005` as its S3 endpoint. That flag throws before it is used in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. pnpm fails the install when the patched version is no longer in the lockfile, which is the signal to check whether an upgrade has fixed it upstream.
+The gateway is published on 20005 because Amplify Storage's local testing flag hardcodes `http://localhost:20005` as its S3 endpoint, and being off the usual 4566 also lets this stack run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next. The Amplify flag throws before it is used in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. pnpm fails the install when the patched version is no longer in the lockfile, which is the signal to check whether an upgrade has fixed it upstream.
 
 ### Opening the app from another device
 
@@ -135,7 +135,7 @@ Neither is read by the emulator itself. MiniStack 1.5.16 dropped `TRANSCRIBE_JOB
 The values live in the gateway's memory, so a pace applies to the next job started and is lost when the container is recreated. To change it on a stack you already have, post to the endpoint yourself rather than restarting:
 
 ```
-curl -X POST http://localhost:24566/_ministack/config \
+curl -X POST http://localhost:20005/_ministack/config \
   -H 'content-type: application/json' \
   -d '{"transcribe._JOB_RUN_SECONDS": 120, "translate._JOB_RUN_SECONDS": 600}'
 ```

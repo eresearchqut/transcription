@@ -9,13 +9,12 @@ services:
       # the Docker socket. MINISTACK_BIND_HOST=0.0.0.0 opens it to another
       # device on a trusted network.
 
-      # Not the standard 4566, so this stack can run alongside other local
+      # Amplify Storage's local testing flag hardcodes this port for S3, so the
+      # whole gateway is published on it (see frontend/pages/_app.tsx). Not the
+      # standard 4566 either, so this stack can run alongside other local
       # emulators. MiniStack builds container-facing URLs from the in-container
       # GATEWAY_PORT and assumes the host publishes the same port, which the
       # two settings below compensate for.
-      - "${MINISTACK_BIND_HOST:-127.0.0.1}:24566:4566"
-      # Amplify Storage's local testing flag sends S3 requests to this port,
-      # which it hardcodes. See frontend/pages/_app.tsx.
       - "${MINISTACK_BIND_HOST:-127.0.0.1}:20005:4566"
     environment:
       - MINISTACK_REGION=ap-southeast-2

@@ -12,7 +12,7 @@ const synthesise = (): Template => {
   const stack = new LocalUserPoolStack(app, "TranscriptionUserPoolStack", {
     stackName: exportPrefix,
     exportPrefix,
-    hostedUiDomain: "localhost:24566",
+    hostedUiDomain: "localhost:20005",
     env: { account: "000000000000", region: "ap-southeast-2" },
   });
   return Template.fromStack(stack);
@@ -31,7 +31,7 @@ describe("LocalUserPoolStack", () => {
     });
     template.hasOutput("DomainName", {
       Export: { Name: `${exportPrefix}-DomainName` },
-      Value: "localhost:24566",
+      Value: "localhost:20005",
     });
   });
 

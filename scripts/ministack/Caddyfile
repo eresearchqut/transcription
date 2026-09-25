@@ -19,7 +19,7 @@ localhost:24443 {
 
 	# The emulator is unauthenticated, so this listener exposes the sign-in
 	# endpoints and nothing else. Without this it would be a second door to
-	# every service in the gateway, which the loopback binding on 24566 is
+	# every service in the gateway, which the loopback binding on 20005 is
 	# there to prevent.
 	@hosted_ui path /oauth2/* /login* /logout* /.well-known/*
 	handle @hosted_ui {

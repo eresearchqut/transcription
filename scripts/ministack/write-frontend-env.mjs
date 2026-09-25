@@ -15,7 +15,7 @@ import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const endpoint = process.env.MINISTACK_ENDPOINT ?? "http://localhost:24566";
+const endpoint = process.env.MINISTACK_ENDPOINT ?? "http://localhost:20005";
 const region = process.env.AWS_REGION ?? "ap-southeast-2";
 const stackName = process.env.API_STACK_NAME ?? "local-transcription";
 const timeoutSeconds = Number(process.env.MINISTACK_DEPLOY_TIMEOUT ?? 600);
