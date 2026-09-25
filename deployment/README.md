@@ -43,7 +43,7 @@ A local deploy differs from a deployed environment in four ways.
 
 **Some parameters are blank.** `ApiDomainName`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`.
 
-**The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The default synthesizer is kept, so no real asset bucket is needed.
+**The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The asset bucket those GitHub stacks would create is made by the Compose bootstrap command instead.
 
 **`ApiStack` adjusts for the emulator.** Each difference is resolved from `props.emulator` at the top of the constructor, so the rest of the stack reads as the AWS version:
 

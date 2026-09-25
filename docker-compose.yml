@@ -52,10 +52,10 @@ services:
     networks:
       transcription-network:
         aliases:
-          # cdklocal addresses the CDK asset bucket virtual-host style during
+          # cdklocal addresses the asset bucket virtual-host style during
           # publish and ignores AWS_S3_FORCE_PATH_STYLE there. The name is
           # deterministic locally, so resolve the subdomain to the gateway.
-          - cdk-hnb659fds-assets-000000000000-ap-southeast-2.transcription-ministack
+          - 000000000000-ap-southeast-2-eresearchqut-transcription.transcription-ministack
 
   # Paces the emulated Transcribe and Translate jobs, which otherwise finish
   # faster than the pending states the UI polls for can be seen. The gateway
@@ -146,7 +146,8 @@ services:
                pnpm --filter 'api^...' build &&
                cd deployment &&
                rm -rf /tmp/cdk.out &&
-               cdklocal bootstrap --output /tmp/cdk.out &&
+               (curl -sfI $$ASSET_BUCKET_URL > /dev/null ||
+                curl -sf -X PUT $$ASSET_BUCKET_URL -d '<CreateBucketConfiguration><LocationConstraint>ap-southeast-2</LocationConstraint></CreateBucketConfiguration>') &&
                cdklocal deploy --all --require-approval never --output /tmp/cdk.out &&
                touch /tmp/deploy-complete &&
                cdklocal watch --all --require-approval never --output /tmp/cdk.out"
@@ -160,8 +161,12 @@ services:
       retries: 120
       start_period: 30s
     environment:
-      # Use config/local.json, the default synthesizer and the local-safe stack.
+      # Use config/local.json and the local-safe stack.
       - LOCAL_DEPLOY=true
+      # The asset bucket bin/deployment.ts deploys into, which GitHubStack
+      # creates in a deployed environment. The command above creates it here,
+      # in place of `cdk bootstrap`, from the account in config/local.json.
+      - ASSET_BUCKET_URL=http://transcription-ministack:4566/000000000000-ap-southeast-2-eresearchqut-transcription
       # The host the browser reaches the emulator and the frontend on. Set it
       # to this machine's LAN address to open the app from a phone or another
       # machine, where localhost is that device rather than this one.

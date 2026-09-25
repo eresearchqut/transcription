@@ -150,6 +150,16 @@ const frontendStackName = `${envName}-${repo}-frontend`;
 const app = new cdk.App({});
 
 /**
+ * Deploys with the caller's credentials into the asset bucket that
+ * GitHubStack creates, rather than into a shared `cdk bootstrap` toolkit. A
+ * local deploy has no GitHubStack, so Compose creates the bucket itself.
+ */
+const assetSynthesizer = (account: string, region: string) =>
+  new cdk.CliCredentialsStackSynthesizer({
+    fileAssetsBucketName: `${account}-${region}-${owner}-${repo}`,
+  });
+
+/**
  * A local deploy reads a file; every other environment reads SSM.
  */
 const loadEnvironment = async (): Promise<EnvironmentConfig> => {
@@ -169,15 +179,8 @@ loadEnvironment().then((env) => {
     stackName: apiStackName,
     parameters: env.parameters,
     env: { account: env.account, region: env.region },
-    // A local deploy keeps the default synthesizer, which uses the bootstrapped
-    // asset bucket, so no real file-assets bucket is required.
-    ...(isLocalDeploy
-      ? { emulator: { endpoint: requireEndpoint(env) } }
-      : {
-          synthesizer: new cdk.CliCredentialsStackSynthesizer({
-            fileAssetsBucketName: `${env.account}-${env.region}-${owner}-${repo}`,
-          }),
-        }),
+    synthesizer: assetSynthesizer(env.account, env.region),
+    ...(isLocalDeploy && { emulator: { endpoint: requireEndpoint(env) } }),
   });
 
   const stacks: cdk.Stack[] = [apiStack];
@@ -193,6 +196,7 @@ loadEnvironment().then((env) => {
         exportPrefix: env.parameters.UserPoolStackName,
         hostedUiDomain: requireAuthDomain(env),
         env: { account: env.account, region: env.region },
+        synthesizer: assetSynthesizer(env.account, env.region),
       },
     );
     apiStack.addDependency(userPoolStack);
@@ -219,9 +223,7 @@ loadEnvironment().then((env) => {
       }),
       new FrontEndStack(app, "TranscriptionFrontEndStack", {
         stackName: frontendStackName,
-        synthesizer: new cdk.CliCredentialsStackSynthesizer({
-          fileAssetsBucketName: `${env.account}-us-east-1-${owner}-${repo}`,
-        }),
+        synthesizer: assetSynthesizer(env.account, "us-east-1"),
         parameters: env.parameters,
         env: { account: env.account, region: "us-east-1" },
       }),
