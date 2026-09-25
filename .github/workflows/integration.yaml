@@ -1,0 +1,65 @@
+name: Integration
+on:
+  pull_request:
+  workflow_dispatch:
+
+# The suite deploys a stack and polls it, so a superseded run has nothing worth
+# finishing.
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # The docker-compose.yml default, named here so the pre-pull step below
+      # can fetch it. CI runs what a developer runs.
+      MINISTACK_IMAGE: ministackorg/ministack:latest
+      # Evaluate IAM, so a handler missing a grant fails the suite. See the
+      # AUTH setting in docker-compose.yml for why local development doesn't.
+      MINISTACK_AUTH: "true"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          run_install: false
+      - name: Use Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+
+      # MiniStack runs each invocation in a sibling container, and the CDK's
+      # bucket notification custom resource is a Python function, so both
+      # runtimes are pulled on first use. Fetching them up front keeps the
+      # download out of the suite's own chain timeouts.
+      - name: Pre-pull runtime images
+        run: |
+          docker pull --quiet "$MINISTACK_IMAGE" &
+          docker pull --quiet public.ecr.aws/lambda/nodejs:24 &
+          docker pull --quiet public.ecr.aws/lambda/python:3.13 &
+          wait
+
+      - name: Start the local stack
+        run: pnpm ministack:up
+
+      # The stack outputs carry the Cognito and API identifiers the suite signs
+      # in with, so write them out the same way `pnpm dev` does.
+      - name: Write the frontend environment
+        run: pnpm ministack:env
+
+      - name: Run the integration suite
+        run: pnpm test:integration
+
+      - name: Stack logs
+        if: failure()
+        run: docker compose logs --no-color --tail 400
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v

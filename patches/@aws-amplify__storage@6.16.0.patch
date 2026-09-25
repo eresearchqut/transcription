@@ -1,0 +1,34 @@
+diff --git a/dist/cjs/providers/s3/utils/client/s3data/base.js b/dist/cjs/providers/s3/utils/client/s3data/base.js
+index 8b19d593d7f35e69b3c73d04f788e4e81ed940f4..118a6c46c2da07e442497969c7c9bd62b23885dc 100644
+--- a/dist/cjs/providers/s3/utils/client/s3data/base.js
++++ b/dist/cjs/providers/s3/utils/client/s3data/base.js
+@@ -28,8 +28,10 @@ const endpointResolver = (options, apiInput) => {
+         if (customEndpoint === constants_1.LOCAL_TESTING_S3_ENDPOINT) {
+             endpoint = new utils_1.AmplifyUrl(customEndpoint);
+         }
+-        (0, assertValidationError_1.assertValidationError)(!customEndpoint.includes('://'), validation_1.StorageValidationErrorCode.InvalidCustomEndpoint);
+-        endpoint = new utils_1.AmplifyUrl(`https://${customEndpoint}`);
++        else {
++            (0, assertValidationError_1.assertValidationError)(!customEndpoint.includes('://'), validation_1.StorageValidationErrorCode.InvalidCustomEndpoint);
++            endpoint = new utils_1.AmplifyUrl(`https://${customEndpoint}`);
++        }
+     }
+     else if (useAccelerateEndpoint) {
+         // this ErrorCode isn't expose yet since forcePathStyle param isn't publicly exposed
+diff --git a/dist/esm/providers/s3/utils/client/s3data/base.mjs b/dist/esm/providers/s3/utils/client/s3data/base.mjs
+index f4f5675f905308dc9419597af0df4b2c72648774..733d1514b0451617489349aa88655929ab558bcf 100644
+--- a/dist/esm/providers/s3/utils/client/s3data/base.mjs
++++ b/dist/esm/providers/s3/utils/client/s3data/base.mjs
+@@ -30,8 +30,10 @@ const endpointResolver = (options, apiInput) => {
+         if (customEndpoint === LOCAL_TESTING_S3_ENDPOINT) {
+             endpoint = new AmplifyUrl(customEndpoint);
+         }
+-        assertValidationError(!customEndpoint.includes('://'), StorageValidationErrorCode.InvalidCustomEndpoint);
+-        endpoint = new AmplifyUrl(`https://${customEndpoint}`);
++        else {
++            assertValidationError(!customEndpoint.includes('://'), StorageValidationErrorCode.InvalidCustomEndpoint);
++            endpoint = new AmplifyUrl(`https://${customEndpoint}`);
++        }
+     }
+     else if (useAccelerateEndpoint) {
+         // this ErrorCode isn't expose yet since forcePathStyle param isn't publicly exposed

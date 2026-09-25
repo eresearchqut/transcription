@@ -1,0 +1,43 @@
+{
+	admin off
+	# Only the site below is served, on an explicit port, so there is no plain
+	# HTTP site to redirect from and nothing should be listening on 80.
+	auto_https disable_redirects
+}
+
+# Amplify builds the hosted UI URLs as `https://{domain}/...` with the scheme
+# hardcoded, so reaching Cognito through the emulator needs TLS in front of it.
+# The gateway itself serves plain HTTP and binds a single port, so the
+# certificate is terminated here instead.
+#
+# `tls internal` issues from Caddy's own CA rather than reading a certificate
+# from the working tree, so this container starts on a clean checkout and in
+# CI, where no certificate exists. Trusting that CA is a one-time developer
+# step: see the readme.
+localhost:24443 {
+	tls internal
+
+	# The emulator is unauthenticated, so this listener exposes the sign-in
+	# endpoints and nothing else. Without this it would be a second door to
+	# every service in the gateway, which the loopback binding on 20005 is
+	# there to prevent.
+	@hosted_ui path /oauth2/* /login* /logout* /.well-known/*
+	handle @hosted_ui {
+		# Amplify names a provider on every authorize request, defaulting to
+		# the built-in `COGNITO`, which the emulator rejects because only
+		# providers added to the pool exist there. The local pool has no
+		# federation, so dropping it leaves the hosted UI's own form.
+		uri query -identity_provider
+		reverse_proxy transcription-ministack:4566
+	}
+
+	# Served locally so the container healthcheck has something to ask for that
+	# does not depend on a user pool existing yet.
+	handle /_healthz {
+		respond "ok" 200
+	}
+
+	handle {
+		respond "Not a Cognito hosted UI endpoint." 404
+	}
+}
