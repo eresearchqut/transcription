@@ -1,32 +1,28 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Transcription frontend
 
-## Getting Started
+A Next.js app using the pages router, built as a static export (`output: "export"`) that `TranscriptionFrontEndStack` serves from S3 and CloudFront. It uses Chakra UI for components, TanStack Query for API calls, and Amplify for Cognito sign-in and S3 access.
 
-First, run the development server:
+## Running it
 
-```bash
-pnpm dev
-```
+Start it from the repo root, which builds the workspace packages it imports (such as `model`) before starting `next dev`:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `pnpm dev` starts the local stack and points the frontend at it.
+- `pnpm dev:frontend` starts only the frontend, using whatever `.env.local` holds. To use the deployed dev environment, follow the root README's section on it first.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+Both serve http://localhost:3000.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+## Configuration
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Settings are `NEXT_PUBLIC_` variables, inlined at build time. `.env` holds the defaults shared by every environment. The rest, such as the API URL, user pool and bucket, come from the `FrontEndEnvironment` output of `TranscriptionStack`: `pnpm ministack:env` writes it to `.env.local` for the local stack, and the deploy workflow writes it to `.env.production`.
 
-## Learn More
+`NEXT_PUBLIC_AWS_ENDPOINT` is set only for the local stack. When it is present, `pages/_app.tsx` points Amplify Storage at the emulator.
 
-To learn more about Next.js, take a look at the following resources:
+## Other commands
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run these from `frontend/`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- `pnpm build` writes the static export to `out/`.
+- `pnpm serve` serves `out/` on port 3000.
+- `pnpm storybook` starts Storybook on port 6006.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Lint and format checks run from the repo root with `pnpm lint` and `pnpm fmt`.
