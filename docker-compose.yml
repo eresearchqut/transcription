@@ -14,6 +14,9 @@ services:
       # GATEWAY_PORT and assumes the host publishes the same port, which the
       # two settings below compensate for.
       - "${MINISTACK_BIND_HOST:-127.0.0.1}:24566:4566"
+      # Amplify Storage's local testing flag sends S3 requests to this port,
+      # which it hardcodes. See frontend/pages/_app.tsx.
+      - "${MINISTACK_BIND_HOST:-127.0.0.1}:20005:4566"
     environment:
       - MINISTACK_REGION=ap-southeast-2
       # Run each invocation in a sibling container on the shared network so the

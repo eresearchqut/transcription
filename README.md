@@ -100,7 +100,7 @@ MiniStack holds its state in the container, so stopping it discards the stacks a
 
 The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs. It also rebuilds `model` first, because `model/dist` is a container volume rather than part of the bind mount, so a build run on the host never reaches the bundler.
 
-The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next.
+The gateway is published on 24566 rather than the usual 4566, so this stack can run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next. The gateway is also published on 20005, because Amplify Storage's local testing flag hardcodes `http://localhost:20005` as its S3 endpoint. That flag throws before it is used in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. pnpm fails the install when the patched version is no longer in the lockfile, which is the signal to check whether an upgrade has fixed it upstream.
 
 ### Opening the app from another device
 
@@ -115,6 +115,8 @@ Both are needed. Without the first the emulator stays on loopback and the other 
 `LOCAL_HOST` is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
 
 Signing in is the exception. The TLS proxy's certificate is issued for `localhost`, so another device gets a name mismatch it cannot click past on the token request. Browsing an already signed-in session works; starting one does not.
+
+Uploads and downloads do not work from another device either. Amplify Storage sends them to `localhost:20005` whatever `LOCAL_HOST` is set to, so the other device looks for S3 on itself.
 
 ### Keeping the emulator image current
 
