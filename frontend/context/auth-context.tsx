@@ -62,29 +62,26 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   const { identify } = useAnalytics();
   const { setAttributes } = useMonitoring();
 
-  const loadUser = useCallback(async () => {
-    try {
-      const userAttributes = (await fetchUserAttributes()) as UserAttributes;
-      const { "custom:qutIdentityId": id, "custom:uid": username } =
-        userAttributes;
-      setState((current) => ({
-        ...current,
-        user: { username, id },
-        loading: false,
-        authenticated: true,
-      }));
-    } catch {
-      setState(() => ({
-        loading: false,
-        authenticated: false,
-        user: undefined,
-      }));
-    }
-  }, []);
-
   useEffect(() => {
-    loadUser().then();
-  }, [loadUser]);
+    fetchUserAttributes()
+      .then((userAttributes) => {
+        const { "custom:qutIdentityId": id, "custom:uid": username } =
+          userAttributes as UserAttributes;
+        setState((current) => ({
+          ...current,
+          user: { username, id },
+          loading: false,
+          authenticated: true,
+        }));
+      })
+      .catch(() => {
+        setState(() => ({
+          loading: false,
+          authenticated: false,
+          user: undefined,
+        }));
+      });
+  }, []);
 
   const getCurrentSession = useCallback(async () => {
     const authSession = await fetchAuthSession();
@@ -109,9 +106,6 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     const handleAuthEvents = async (data: { payload: { event: string } }) => {
       const { event } = data.payload;
       switch (event) {
-        case "signedIn":
-          await loadUser();
-          break;
         case "signedOut":
           setState({ loading: false, authenticated: false, user: undefined });
           await router.push("/login");
@@ -130,7 +124,7 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
     };
     // Subscribe to Auth events
     return Hub.listen("auth", handleAuthEvents);
-  }, [router.push, loadUser]);
+  }, [router.push]);
 
   if (state.loading) {
     return <LoadingPage label={"Loading..."} />;
