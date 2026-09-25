@@ -62,7 +62,8 @@ export const bytesToSize = (bytes: number, precision = 0): string => {
 
 interface FileMeta {
   name: string;
-  size?: string;
+  size: number;
+  lastModified: number;
   errors?: string[];
 }
 
@@ -92,7 +93,8 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
       const rejectedMeta: FileMeta[] = rejectedFiles.map(
         ({ file, errors }) => ({
           name: file.name,
-          size: bytesToSize(file.size),
+          size: file.size,
+          lastModified: file.lastModified,
           errors: errors.map((fileError) => fileError.message),
         }),
       );
@@ -106,7 +108,8 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
           if (maxFiles && merged.length >= maxFiles) {
             rejectedMeta.push({
               name: file.name,
-              size: bytesToSize(file.size),
+              size: file.size,
+              lastModified: file.lastModified,
               errors: [`You can only upload up to ${maxFiles} files`],
             });
             continue;
@@ -150,7 +153,7 @@ export const FilePicker: FunctionComponent<FilePickerProps> = (props) => {
         <Alert
           status={"error"}
           variant="outline"
-          key={`${file.name}-${file.size}-${file.errors?.join("|")}`}
+          key={`${file.name}-${file.size}-${file.lastModified}`}
           icon={<MappedIcon icon={"file-alert"} />}
           title={file.name}
         >
