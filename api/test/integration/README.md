@@ -17,7 +17,7 @@ Artifacts are written under `users/researcher1001/`, `transcription/` and `trans
 
 ## Running it in CI
 
-`.github/workflows/integration.yaml` runs this suite on pull requests that touch `api/`, `model/`, the CDK app or the MiniStack scripts. It starts the stack, waits for the deploy with `pnpm ministack:env`, and runs the suite. The MiniStack image and the two Lambda runtimes are pre-pulled, since MiniStack runs each invocation in a sibling container and would otherwise fetch them inside the suite's own timeouts.
+`.github/workflows/integration.yaml` runs this suite on every pull request. It starts the stack, waits for the deploy with `pnpm ministack:env`, and runs the suite. The MiniStack image and the two Lambda runtimes are pre-pulled, since MiniStack runs each invocation in a sibling container and would otherwise fetch them inside the suite's own timeouts.
 
 ## What it does not cover
 

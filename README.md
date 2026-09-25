@@ -149,7 +149,7 @@ pnpm ministack:up
 pnpm test:integration
 ```
 
-It uses whatever stack is already running. CI runs it on pull requests that touch the API or the CDK app, in `.github/workflows/integration.yaml`. The first run after a deploy builds a container per handler and can time out, so run it again before investigating. `api/test/integration/README.md` lists what it doesn't cover.
+It uses whatever stack is already running. CI runs it on every pull request, in `.github/workflows/integration.yaml`. The first run after a deploy builds a container per handler and can time out, so run it again before investigating. `api/test/integration/README.md` lists what it doesn't cover.
 
 ### Limitations
 

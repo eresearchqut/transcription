@@ -1,15 +1,6 @@
 name: Integration
 on:
   pull_request:
-    paths:
-      - 'api/**'
-      - 'model/**'
-      - 'deployment/lib/**'
-      - 'deployment/bin/**'
-      - 'deployment/config/**'
-      - 'docker-compose.yml'
-      - 'scripts/ministack/**'
-      - '.github/workflows/integration.yaml'
   workflow_dispatch:
 
 # The suite deploys a stack and polls it, so a superseded run has nothing worth
