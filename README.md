@@ -31,21 +31,13 @@ pnpm dev:frontend
 
 ## Running the whole stack locally
 
-The CDK app deploys against [MiniStack](https://ministack.org), a local AWS emulator, so the same `deployment/lib/api-stack.ts` that provisions dev and prod provisions your machine. Nothing is hand-written to mirror the real stack.
-
-The point is to change the stack and see the result without an AWS account, a deployed environment or anyone else's dev stack to share. That extends to signing in, which is not there to test authentication: the API's authorizer and the identity pool are both part of this deploy, so an identity token minted anywhere else is rejected, and without a local sign-in nothing behind the landing page can be reached at all.
-
-Speech-to-text and machine translation are emulated. Transcribe returns a committed fixture transcript and Translate applies a deterministic language-tagged transformation, so neither says anything about transcription or translation quality.
-
-Upload isolation is not enforced. The authenticated role restricts each user to `users/${aws:PrincipalTag/qutIdentityId}/` in the data bucket, and MiniStack resolves no `aws:PrincipalTag` key, so the condition the whole scheme rests on is never evaluated. It also evaluates IAM only when started with `AUTH=true`, which this stack does not set. Locally, then, any signed-in user can read and write another user's objects. The keys are still built from the identity id, so the paths can be checked, but that the policy denies anything else can only be confirmed in a deployed environment.
-
-`FrontEndStack` is out of scope. It is CloudFront plus Lambda@Edge in us-east-1; locally the frontend runs under `next dev` against the local API.
+The CDK app can be deployed against [MiniStack](https://ministack.org), a local AWS emulator. The same `deployment/lib/api-stack.ts` that provisions dev and prod provisions the local stack, so you can change the stack and see the result without an AWS account or a shared dev environment.
 
 ### Prerequisites
 
-Docker, with the daemon running and its socket readable, since handlers execute in sibling containers. The AWS CLI, which the helper scripts use to read stack outputs and seed users. Then `pnpm install` at the repo root. No AWS account, credentials or deployed stack are needed, and the scripts supply their own placeholder ones.
-
-Sign-in needs one further step, trusting a certificate authority, which only exists once the stack has started. It is covered below, in the order to do it.
+- Docker, with the daemon running. Handlers run in sibling containers, so the Docker socket must be readable.
+- The AWS CLI, which the helper scripts use. No AWS credentials are needed.
+- `pnpm install` at the repo root.
 
 ### Start it
 
@@ -53,23 +45,21 @@ Sign-in needs one further step, trusting a certificate authority, which only exi
 pnpm dev
 ```
 
-That starts the emulator, deploys both stacks, writes `frontend/.env.local`, seeds two Cognito users and starts the Next server on http://localhost:3000. It takes about a minute from cold.
-
-Leave it running. On a machine that has already trusted the certificate authority, that is the whole setup and the next section can be skipped.
+This starts the emulator, deploys the stacks, writes `frontend/.env.local`, seeds two Cognito users and starts the frontend on http://localhost:3000. It takes about a minute from cold. The first time on a machine, trust the certificate authority before signing in.
 
 ### Trust the certificate authority
 
-One time per machine, in a second terminal while `pnpm dev` is running.
+Do this once per machine, while `pnpm dev` is running.
 
-Amplify builds the hosted UI URLs with the scheme hardcoded to https, and the emulator gateway serves plain http on a single port, so a Caddy container terminates TLS on https://localhost:24443 and proxies the sign-in endpoints back to the gateway. It serves `/oauth2/*`, `/login`, `/logout` and `/.well-known/*` and refuses everything else, so it does not become a second way into an unauthenticated emulator. Caddy issues its own certificate authority the first time it starts, which nothing on your machine has any reason to trust yet.
+Amplify requires https for the Cognito hosted UI, so a Caddy container serves the sign-in endpoints on https://localhost:24443 and proxies them to the emulator. It refuses every other path. Caddy creates its own certificate authority on first start, which your machine needs to trust.
 
-Copy the authority out of the running container:
+Copy it out of the container:
 
 ```
 docker cp transcription-auth-proxy:/data/caddy/pki/authorities/local/root.crt ministack-root.crt
 ```
 
-Then install it, which is the one part of this that differs by operating system:
+Then install it:
 
 | | |
 | --- | --- |
@@ -77,13 +67,13 @@ Then install it, which is the one part of this that differs by operating system:
 | Linux | Copy it into `/usr/local/share/ca-certificates/` and run `sudo update-ca-certificates` |
 | Windows | `certutil -addstore -f ROOT ministack-root.crt` from an elevated prompt |
 
-Firefox keeps its own certificate store on every platform, so it needs the same file imported under Settings, Privacy and Security, Certificates. Chrome, Edge and Safari use the system store. Restart the browser afterwards. Nothing on the Docker side needs restarting, so `pnpm dev` can keep running throughout.
+Firefox has its own certificate store, so import the file there as well, under Settings, Privacy and Security, Certificates. Restart the browser afterwards.
 
-Skipping this leaves everything except sign-in working, and sign-in fails when the browser refuses the certificate on the token request. Clicking through the warning is not enough, because that request is a fetch rather than a navigation and never offers one. The authority is held in a volume, so it survives `pnpm ministack:down` and only has to be trusted again after `docker compose down -v`.
+Without this, everything except sign-in works. Clicking through the browser warning doesn't help, because the request that fails is a background fetch. The authority is kept in a Docker volume, so it only needs trusting again after `docker compose down -v`.
 
 ### Sign in
 
-`/login` is the landing page, as it is in a deployed environment. Logging in redirects to the Cognito hosted UI, again as it does there, and signing in lands back in the app. The difference is what the hosted UI shows: a deployed pool federates to the QUT identity provider and goes straight there, while the local pool has no federation, so it shows its own username and password form. Use `researcher1` or `researcher2` with the password `password`.
+Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
 ### Everyday commands
 
@@ -96,43 +86,41 @@ Skipping this leaves everything except sign-in working, and sign-in fails when t
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
 | `pnpm ministack:down` | Stop the emulator and discard its state |
 
-MiniStack holds its state in the container, so stopping it discards the stacks and every id changes on the next start. `frontend/.env.local` then holds a stale user pool client id, which surfaces as `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start. Adding `-v` also removes the dependency volumes, which only makes the next start slower.
+MiniStack keeps its state in the container, so stopping it discards the stacks and every id changes on the next start. A stale `frontend/.env.local` then fails with `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
 
-The bootstrap container finishes by running `cdklocal watch`, but a host edit to a bind-mounted file raises no inotify event inside the container on macOS, so code changes need `pnpm ministack:deploy`. That command synthesizes into its own output directory, since the watch process holds `cdk.out` for as long as it runs. It also rebuilds `model` first, because `model/dist` is a container volume rather than part of the bind mount, so a build run on the host never reaches the bundler.
+The bootstrap container runs `cdklocal watch`, but on macOS it doesn't see edits made on the host, so run `pnpm ministack:deploy` after changing code. It rebuilds `model` inside the container first, because the bundler can't see a `model/dist` built on the host.
 
-The gateway is published on 20005 because Amplify Storage's local testing flag hardcodes `http://localhost:20005` as its S3 endpoint, and being off the usual 4566 also lets this stack run alongside other local emulators. It is bound to 127.0.0.1, because the emulator is unauthenticated and its container is privileged with the Docker socket mounted, so anyone who can reach the gateway can run containers on this machine. Opening it to other devices is opt-in, covered next. The Amplify flag throws before it is used in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. pnpm fails the install when the patched version is no longer in the lockfile, which is the signal to check whether an upgrade has fixed it upstream.
+### Ports
+
+The emulator is published on http://localhost:20005, because Amplify Storage's local testing flag hardcodes that address. The flag is broken in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. The patch is pinned to the installed version, so upgrading Amplify fails `pnpm install` until the patch is regenerated or removed.
+
+The emulator and the sign-in proxy are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
 
 ### Opening the app from another device
 
-The stack is deployed against `localhost` by default, and the browser resolves that to whatever device it is running on, so a phone loading `http://<your-machine>:3000` would look for Cognito, S3 and the API on the phone. `LOCAL_HOST` sets the host the browser is given instead, and `MINISTACK_BIND_HOST` publishes the gateway beyond loopback:
+To load the app from another device on your network, such as a phone:
 
 ```
 MINISTACK_BIND_HOST=0.0.0.0 LOCAL_HOST=<your-machine-address> pnpm dev
 ```
 
-Both are needed. Without the first the emulator stays on loopback and the other device cannot reach it; without the second the browser is told to look for the emulator on itself. They hold different values because Docker Desktop on macOS binds only `127.0.0.1` or `0.0.0.0` and rejects a specific interface address, while `LOCAL_HOST` is baked into the stack outputs and is whatever the other device can resolve. This puts an unauthenticated emulator, on a privileged container with the Docker socket mounted, within reach of the network, so only do it on a network you trust.
+`MINISTACK_BIND_HOST` publishes the emulator beyond loopback, and `LOCAL_HOST` is the address the browser is told to use, which is baked into the stack outputs. Only do this on a network you trust.
 
-`LOCAL_HOST` is read at deploy time and baked into the stack outputs, so changing it redeploys and rewrites `frontend/.env.local`. The helper scripts still reach the emulator on `localhost`, since they run on this machine. Use the address the other device can reach, not `0.0.0.0`.
-
-Signing in is the exception. The TLS proxy's certificate is issued for `localhost`, so another device gets a name mismatch it cannot click past on the token request. Browsing an already signed-in session works; starting one does not.
-
-Uploads and downloads do not work from another device either. Amplify Storage sends them to `localhost:20005` whatever `LOCAL_HOST` is set to, so the other device looks for S3 on itself.
+Two things still don't work from the other device. Starting a sign-in fails, because the TLS certificate is only valid for `localhost`. Uploads and downloads fail, because Amplify Storage always uses `localhost:20005`.
 
 ### Keeping the emulator image current
 
-`docker-compose.yml` runs `ministackorg/ministack:latest`, and Compose reuses the cached copy rather than checking for a newer one. A stale image presents as broken application code, since a service added since the pull is simply absent. Refresh it with `docker compose pull`. `MINISTACK_IMAGE` pins a specific release or points at a locally-built image.
+Compose reuses its cached copy of `ministackorg/ministack:latest`, and a stale image can look like broken application code. Run `docker compose pull` to refresh it. `MINISTACK_IMAGE` pins a release or points at a local build.
 
 ### Job pacing
 
-Transcribe and Translate batch jobs finish in seconds locally, against minutes on AWS, so a transcription reaches the browser almost fully formed and the queued and in-progress states the UI polls for barely appear. `TRANSCRIBE_JOB_RUN_SECONDS` and `TRANSLATE_JOB_RUN_SECONDS` stretch them, each split evenly between the job's two phases. Transcription runs at the emulator's default of 2 seconds and translation at 5, which is long enough to see a transcription arrive before its translation does:
+Transcribe and Translate jobs finish in seconds locally, so the queued and in-progress states barely appear in the UI. To slow them down:
 
 ```
 TRANSCRIBE_JOB_RUN_SECONDS=120 TRANSLATE_JOB_RUN_SECONDS=600 pnpm ministack:up
 ```
 
-Neither is read by the emulator itself. MiniStack 1.5.16 dropped `TRANSCRIBE_JOB_RUN_SECONDS`, leaving the admin endpoint as the only way to pace transcription, so the `transcription-job-pace` service posts both there once the gateway is healthy and exits. It runs on every `up`, matching how long the setting lasts, and fails the start if the endpoint stops recognising either key.
-
-The values live in the gateway's memory, so a pace applies to the next job started and is lost when the container is recreated. To change it on a stack you already have, post to the endpoint yourself rather than restarting:
+The defaults are 2 and 5 seconds. The `transcription-job-pace` service posts these to the emulator's config endpoint on every `up`. The emulator holds them in memory, so to change them on a running stack, post them yourself:
 
 ```
 curl -X POST http://localhost:20005/_ministack/config \
@@ -140,42 +128,38 @@ curl -X POST http://localhost:20005/_ministack/config \
   -d '{"transcribe._JOB_RUN_SECONDS": 120, "translate._JOB_RUN_SECONDS": 600}'
 ```
 
-It answers with the values it applied, and silently ignores anything it does not recognise, so check that response rather than assuming it took. Put them back afterwards, since `pnpm test:integration` waits for the chain and a long pace times it out.
+Check the response, since the endpoint ignores keys it doesn't recognise. Reset the values afterwards, because a long pace makes `pnpm test:integration` time out.
 
-### Summarisation against the local stack
+### Summarisation
 
-Summarisation calls Bedrock, which MiniStack answers with a canned Anthropic-shaped reply prefixed `[ministack mock`. The shape is right and the content is a digest of the prompt, so the chain can be exercised but the summary itself means nothing.
-
-For real summaries, point MiniStack at any OpenAI-compatible `/chat/completions` endpoint. With [Ollama](https://ollama.com) serving on its default port:
+The emulated Bedrock returns a canned reply prefixed `[ministack mock`, so summaries are placeholders. For real summaries, point MiniStack at an OpenAI-compatible endpoint such as [Ollama](https://ollama.com):
 
 ```
 MINISTACK_BEDROCK_PROXY_URL=http://host.docker.internal:11434 pnpm ministack:up
 ```
 
-Give the base URL only; MiniStack appends `/v1/chat/completions`. It is read at startup, so it must be set when the container is created. Recreating the container wipes the emulator's state, so a redeploy follows.
+Give the base URL only, since MiniStack appends `/v1/chat/completions`. The setting is read when the container is created, and recreating the container wipes the stack, so expect a redeploy. If the endpoint is unreachable, MiniStack silently falls back to the canned reply, so check for the prefix before trusting a summary.
 
-MiniStack falls back to the canned reply silently when the proxy is unreachable, so check for the `[ministack mock` prefix before trusting a summary, and before asserting on one in a test.
+### Integration tests
 
-### Integration tests against the local stack
-
-`pnpm test` mocks the AWS SDK and needs no Docker, so it never checks that the S3 notification filters, EventBridge rules and IAM grants in `deployment/lib/api-stack.ts` reach the handlers. `pnpm test:integration` covers that against a running local stack:
+`pnpm test` mocks AWS. `pnpm test:integration` runs against the local stack and checks that the S3 notifications, EventBridge rules and IAM grants in `deployment/lib/api-stack.ts` actually reach the handlers:
 
 ```
-pnpm ministack:up     # wait for the deploy, watch with pnpm ministack:logs
+pnpm ministack:up
 pnpm test:integration
 ```
 
-It targets whatever stack is already up rather than starting its own. `.github/workflows/integration.yaml` runs it on pull requests touching the API or the CDK app. `api/test/integration/README.md` covers what the suite leaves uncovered.
+It uses whatever stack is already running. CI runs it on pull requests that touch the API or the CDK app, in `.github/workflows/integration.yaml`. The first run after a deploy builds a container per handler and can time out, so run it again before investigating. `api/test/integration/README.md` lists what it doesn't cover.
 
-A freshly deployed stack builds a container for each handler on its first invocation, so the opening test carries that cost. If the suite times out on a stack that has only just come up, run it again before investigating.
+### Limitations
+
+- Transcribe and Translate are emulated. Transcribe returns a fixture transcript and Translate applies a deterministic transformation, so neither says anything about quality.
+- Upload isolation isn't enforced. MiniStack doesn't evaluate the `aws:PrincipalTag` condition that restricts each user to their own prefix, and only checks IAM at all when started with `AUTH=true`. Locally, any signed-in user can read and write another user's objects, so isolation can only be checked in a deployed environment.
+- `FrontEndStack`, which is CloudFront and Lambda@Edge, isn't deployed locally. The frontend runs under `next dev` instead.
 
 ## Contributing to MiniStack
 
-Local gaps are usually fixed upstream rather than worked around here. MiniStack is open source at [ministackorg/ministack](https://github.com/ministackorg/ministack), and the Transcribe, Translate and REST API authorizer support this stack depends on all arrived that way.
-
-Work from a personal fork with `upstream` pointing at `ministackorg/ministack`, and follow its conventions rather than this repo's: ruff and pytest, not Biome and Jest, and one file per service under `ministack/services/`. A new service also needs registering in `ministack/app.py`, detection patterns in `ministack/core/router.py`, a fixture in `tests/conftest.py`, a row in its README table and a CHANGELOG entry. Its `CONTRIBUTING.md` carries the full checklist.
-
-Avoid adding a workaround here for emulator behaviour that AWS does not produce.
+Fix emulator gaps upstream in [ministackorg/ministack](https://github.com/ministackorg/ministack) rather than working around them here. The Transcribe, Translate and REST API authorizer support this stack relies on arrived that way. Follow MiniStack's own conventions, which are ruff and pytest with one file per service under `ministack/services/`, and the checklist in its `CONTRIBUTING.md`. Don't add workarounds here for behaviour AWS doesn't have.
 
 ## Linting and Formatting
 
