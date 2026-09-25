@@ -1,8 +1,8 @@
 ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}
 
-# cdklocal points the CDK CLI at the emulator, so the toolkit stack, asset
-# publishing and deploys all resolve to MiniStack rather than real AWS.
+# cdklocal points the CDK CLI at the emulator, so asset publishing and
+# deploys resolve to MiniStack rather than real AWS.
 RUN corepack enable && npm add -g aws-cdk-local aws-cdk
 
 # Keep the pnpm store outside the bind-mounted repo, so installing does not
