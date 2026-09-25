@@ -167,11 +167,13 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ## Manual deployment instructions
 
-From the repo root:
+From the repo root, install and build the API's workspace dependencies, then run the remaining commands from `deployment`, which holds `cdk.json`:
 
 ```
 pnpm install
+pnpm --filter "api^..." build
 mkdir -p frontend/out
+cd deployment
 ```
 
 ### *Optional: Create GitHub deployment stack*
@@ -223,12 +225,7 @@ cdk deploy TranscriptionStack
 ```
 export STACK_NAME=dev-transcription
 aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > ../frontend/.env.production
-```
-
-From the top-level `frontend` directory:
-
-```
-pnpm build
+pnpm --filter frontend build
 ```
 
 ### Deploy frontend stack
