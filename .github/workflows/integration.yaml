@@ -17,6 +17,9 @@ jobs:
       # The docker-compose.yml default, named here so the pre-pull step below
       # can fetch it. CI runs what a developer runs.
       MINISTACK_IMAGE: ministackorg/ministack:latest
+      # Evaluate IAM, so a handler missing a grant fails the suite. See the
+      # AUTH setting in docker-compose.yml for why local development doesn't.
+      MINISTACK_AUTH: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

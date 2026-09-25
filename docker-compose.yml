@@ -17,6 +17,12 @@ services:
       - "127.0.0.1:20005:4566"
     environment:
       - MINISTACK_REGION=ap-southeast-2
+      # Evaluates IAM policies, and gives each Lambda a session for its own
+      # execution role, so the handlers' grants are checked. The integration
+      # workflow turns it on. Local development leaves it off because MiniStack
+      # doesn't substitute policy variables, so the signed-in user's policy on
+      # users/${aws:PrincipalTag/qutIdentityId}/* would deny every upload.
+      - AUTH=${MINISTACK_AUTH:-false}
       # Run each invocation in a sibling container on the shared network so the
       # handlers can reach the gateway. The default warm executor stubs only
       # the modules it knows about, and NodejsFunction marks the AWS SDK

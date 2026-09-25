@@ -2,7 +2,8 @@
  * End-to-end coverage of the upload chain against a running local stack. Every
  * other suite in this workspace mocks the AWS SDK, so nothing else checks that
  * the S3 notification filters, the EventBridge rules and the IAM grants in
- * deployment/lib/api-stack.ts reach the handlers.
+ * deployment/lib/api-stack.ts reach the handlers. The grants are only checked
+ * when the stack runs with MINISTACK_AUTH=true, as it does in CI.
  *
  * Requires `docker compose up -d` and a finished deploy. Excluded from
  * `pnpm test`; run it with `pnpm test:integration`.

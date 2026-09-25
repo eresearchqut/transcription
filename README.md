@@ -139,12 +139,12 @@ pnpm ministack:up
 pnpm test:integration
 ```
 
-It uses whatever stack is already running. CI runs it on every pull request, in `.github/workflows/integration.yaml`. The first run after a deploy builds a container per handler and can time out, so run it again before investigating. `api/test/integration/README.md` lists what it doesn't cover.
+It uses whatever stack is already running, and only checks the IAM grants when MiniStack evaluates IAM. CI turns that on with `MINISTACK_AUTH=true`, and `api/test/integration/README.md` shows how to do the same locally. CI runs it on every pull request, in `.github/workflows/integration.yaml`. The first run after a deploy builds a container per handler and can time out, so run it again before investigating. `api/test/integration/README.md` lists what it doesn't cover.
 
 ### Limitations
 
 - Transcribe and Translate are emulated. Transcribe returns a fixture transcript and Translate applies a deterministic transformation, so neither says anything about quality.
-- Upload isolation isn't enforced. MiniStack doesn't evaluate the `aws:PrincipalTag` condition that restricts each user to their own prefix, and only checks IAM at all when started with `AUTH=true`. Locally, any signed-in user can read and write another user's objects, so isolation can only be checked in a deployed environment.
+- Upload isolation isn't enforced. IAM is only evaluated when MiniStack is started with `MINISTACK_AUTH=true`, and even then it doesn't substitute policy variables such as `${aws:PrincipalTag/qutIdentityId}`, so it denies every upload rather than scoping them. Local development leaves it off, so any signed-in user can read and write another user's objects, and isolation can only be checked in a deployed environment.
 - `FrontEndStack`, which is CloudFront and Lambda@Edge, isn't deployed locally. The frontend runs under `next dev` instead.
 
 ## Contributing to MiniStack
