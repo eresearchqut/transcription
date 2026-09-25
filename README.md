@@ -20,9 +20,10 @@ cd frontend
 export STACK_NAME=dev-transcription
 aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.development.local
 ```
-2. Modify `.env.development.local` to redirect to the local app after login:
+2. Modify `.env.development.local` to redirect to the local app after signing in and out:
 ```
 NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
+NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT=http://localhost:3000/
 ```
 3. Start the app against the deployed dev environment
 ```
