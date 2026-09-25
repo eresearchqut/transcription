@@ -1,5 +1,6 @@
 import { Text, VStack } from "@chakra-ui/react";
 import type { OpenChangeDetails } from "@zag-js/dialog";
+import { uploadData } from "aws-amplify/storage";
 import { pick } from "lodash";
 import { useState } from "react";
 import { v4 as uuid } from "uuid";
@@ -8,7 +9,6 @@ import type { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/medi
 import { MediaUpload, type TranscribeProps } from "@/components/mediaUpload";
 import { TranscriptionProgress } from "@/components/transcriptionProgress";
 import type { NextPageWithLayout } from "@/pages/_app";
-import { uploadObject } from "../client/storage";
 import { useAnalytics } from "../context/analytics-context";
 import { useAuth } from "../context/auth-context";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
@@ -104,29 +104,31 @@ const Upload: NextPageWithLayout = () => {
 
       getCurrentSession()
         .then(() =>
-          uploadObject({
+          uploadData({
             path: key,
             data: file,
-            contentDisposition: `attachment; filename = ${metadata.filename}`,
-            metadata,
-            onProgress: ({ transferredBytes, totalBytes }) => {
-              const progressPercent =
-                (transferredBytes / (totalBytes ?? 1)) * 100;
+            options: {
+              contentDisposition: `attachment; filename = ${metadata.filename}`,
+              metadata,
+              onProgress: ({ transferredBytes, totalBytes }) => {
+                const progressPercent =
+                  (transferredBytes / (totalBytes ?? 1)) * 100;
 
-              setUploadProps((current) => {
-                return {
-                  ...current,
-                  [id]: {
-                    filename: file.name,
-                    uploadProgressPercent: progressPercent,
-                    isPreparingUpload: false,
-                    uploaded: false,
-                    transcriptionProgress: undefined,
-                  },
-                };
-              });
+                setUploadProps((current) => {
+                  return {
+                    ...current,
+                    [id]: {
+                      filename: file.name,
+                      uploadProgressPercent: progressPercent,
+                      isPreparingUpload: false,
+                      uploaded: false,
+                      transcriptionProgress: undefined,
+                    },
+                  };
+                });
+              },
             },
-          }).then(() => {
+          }).result.then(() => {
             setUploadProps((current) => {
               if (!current[id]) return current;
               return {

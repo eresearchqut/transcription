@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { downloadData } from "aws-amplify/storage";
 import { isEmpty, isUndefined } from "lodash";
 import {
   enableGenerateSummary,
@@ -10,7 +11,6 @@ import {
 } from "model";
 import { useEffect, useState } from "react";
 import { getter } from "../client/fetchers";
-import { downloadText } from "../client/storage";
 import { useAuth } from "../context/auth-context";
 
 const API_ENDPOINT =
@@ -76,9 +76,15 @@ export const useTranscription = ({
     queryKey: ["transcription.summary", jobId],
     queryFn: async (): Promise<string | undefined> => {
       return !isEmpty(transcription?.summaryKey)
-        ? getCurrentSession().then(() =>
-            downloadText(transcription!.summaryKey!),
-          )
+        ? getCurrentSession()
+            .then(() => {
+              const summaryKey = transcription!.summaryKey!;
+              return downloadData({ path: summaryKey });
+            })
+            .then((downloadDataOutput) => downloadDataOutput.result)
+            .then((downloadDataOutputResult) =>
+              downloadDataOutputResult.body.text(),
+            )
         : undefined;
     },
   });

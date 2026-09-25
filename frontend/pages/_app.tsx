@@ -64,6 +64,20 @@ Amplify.configure({
       allowGuestAccess: false,
     },
   },
+  Storage: {
+    S3: {
+      bucket: process.env.NEXT_PUBLIC_TRANSCRIPTION_BUCKET,
+      region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2",
+      // Amplify Storage accepts no endpoint of its own, only this flag, which
+      // sends every request to a hardcoded http://localhost:20005 path-style.
+      // The gateway is published on that port as well for this reason. The
+      // flag is broken upstream and works only with the patch in
+      // patches/@aws-amplify__storage@6.16.0.patch.
+      ...(localEndpoint
+        ? { dangerouslyConnectToHttpEndpointForTesting: "true" }
+        : {}),
+    },
+  },
 });
 
 /**

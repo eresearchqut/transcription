@@ -751,7 +751,7 @@ export class ApiStack extends cdk.Stack {
                 "s3:GetObject",
                 "s3:PutObject",
                 "s3:DeleteObject",
-                // lib-storage aborts a failed multipart upload to release the
+                // Amplify Storage aborts a failed multipart upload to release the
                 // parts it has already sent. Without this the abort is denied
                 // and the parts stay in the bucket, billable and invisible to
                 // ListObjects.
