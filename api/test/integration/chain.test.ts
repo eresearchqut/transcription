@@ -27,7 +27,7 @@ import { unmarshall } from "@aws-sdk/util-dynamodb";
 import type { TranscriptDocument } from "../../src/util/transcript";
 
 const endpoint = process.env.MINISTACK_ENDPOINT ?? "http://localhost:20005";
-const region = process.env.AWS_REGION ?? "ap-southeast-2";
+const region = process.env.MINISTACK_REGION ?? "ap-southeast-2";
 const stackName = process.env.API_STACK_NAME ?? "local-transcription";
 const account = process.env.MINISTACK_ACCOUNT_ID ?? "000000000000";
 

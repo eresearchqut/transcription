@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const endpoint = process.env.MINISTACK_ENDPOINT ?? "http://localhost:20005";
-const region = process.env.AWS_REGION ?? "ap-southeast-2";
+const region = process.env.MINISTACK_REGION ?? "ap-southeast-2";
 const exportPrefix =
   process.env.USER_POOL_STACK_NAME ?? "local-transcription-user-pool";
 
