@@ -233,8 +233,8 @@ describe("upload chain", () => {
 
       const record = await waitForRecord(
         jobId,
-        (r) => Boolean(r.downloadKey && r.summaryKey),
-        "the transcript and summary keys",
+        (r) => Boolean(r.downloadKey && r.summaryKey && r.jobStatusUpdated),
+        "the transcript and summary keys and the job status",
       );
 
       // fileUploadHandler ran, so the users/*.upload notification filter fires.
