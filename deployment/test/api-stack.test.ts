@@ -197,9 +197,8 @@ describe("ApiStack", () => {
       });
     });
 
-    // `next dev` serves the frontend over http locally, so a callback list
-    // holding only the https form would reject the redirect back from the
-    // hosted UI whenever LOCAL_HOST is not localhost.
+    // `next dev` serves the frontend over http on localhost:3000, which every
+    // client already registers, so the list holds it once.
     it("registers the callback urls over http", () => {
       localTemplate().hasResourceProperties("AWS::Cognito::UserPoolClient", {
         CallbackURLs: ["http://localhost:3000/"],

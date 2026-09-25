@@ -23,9 +23,7 @@ interface EnvironmentConfig {
   endpoint?: string;
   /**
    * Only a local deploy sets this, carrying the host serving the Cognito
-   * hosted UI over TLS. Not subject to `LOCAL_HOST` substitution: the
-   * certificate is issued for `localhost`, so another device on the network
-   * cannot use it.
+   * hosted UI over TLS.
    */
   authDomain?: string;
   parameters: {
@@ -63,16 +61,6 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
   : false;
 
 /**
- * The host the browser reaches the emulator and the frontend on. Only the
- * browser resolves it, so opening the app from another device needs that
- * machine's address. The deploy and the handlers stay on the Compose network.
- */
-const localHost = process.env.LOCAL_HOST ?? "localhost";
-
-// Doubled braces, since ${...} would read as a variable expanded elsewhere.
-const LOCAL_HOST_PLACEHOLDER = "{{LOCAL_HOST}}";
-
-/**
  * A file rather than SSM. The emulator starts empty, so a local deploy would
  * have to write the parameter before it could read it, on every start.
  */
@@ -80,7 +68,7 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig =>
   JSON.parse(
     readFileSync(resolve(__dirname, "../config/local.json"), {
       encoding: "utf8",
-    }).replaceAll(LOCAL_HOST_PLACEHOLDER, localHost),
+    }),
   );
 
 /**

@@ -54,9 +54,3 @@ A local deploy differs from a deployed environment in four ways.
 - The frontend is given the emulator endpoint, which `frontend/pages/_app.tsx` points Amplify Storage at.
 
 Sign-in goes through the Cognito hosted UI in both cases. A deployed pool federates to QUT SSO, so the hosted UI redirects there. The local pool has no federation and shows its own username and password form. Amplify hardcodes `https` into the hosted UI URL, so Compose runs a TLS proxy in front of the gateway for it.
-
-### Addressing from the browser
-
-`config/local.json` writes browser-facing hosts as `{{LOCAL_HOST}}`, which `bin/deployment.ts` replaces with the `LOCAL_HOST` environment variable, defaulting to `localhost`. That covers the emulator endpoint and the frontend origin. Set it to this machine's network address to open the app from another device.
-
-Two addresses are left alone. `authDomain` stays on `localhost` because the proxy's certificate is only valid there. The endpoint the deploy and the handlers use stays on the Compose network.

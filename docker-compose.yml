@@ -6,8 +6,7 @@ services:
     image: ${MINISTACK_IMAGE:-ministackorg/ministack:latest}
     ports:
       # Loopback only: the emulator is unauthenticated and this container has
-      # the Docker socket. MINISTACK_BIND_HOST=0.0.0.0 opens it to another
-      # device on a trusted network.
+      # the Docker socket.
 
       # Amplify Storage's local testing flag hardcodes this port for S3, so the
       # whole gateway is published on it (see frontend/pages/_app.tsx). Not the
@@ -15,7 +14,7 @@ services:
       # emulators. MiniStack builds container-facing URLs from the in-container
       # GATEWAY_PORT and assumes the host publishes the same port, which the
       # two settings below compensate for.
-      - "${MINISTACK_BIND_HOST:-127.0.0.1}:20005:4566"
+      - "127.0.0.1:20005:4566"
     environment:
       - MINISTACK_REGION=ap-southeast-2
       # Run each invocation in a sibling container on the shared network so the
@@ -90,9 +89,9 @@ services:
     container_name: "${TRANSCRIPTION_AUTH_PROXY_DOCKER_NAME:-transcription-auth-proxy}"
     image: caddy:2-alpine
     ports:
-      # Loopback by default for the same reason as the gateway, and because the
+      # Loopback only, for the same reason as the gateway, and because the
       # certificate is issued for localhost and matches nothing else.
-      - "${MINISTACK_BIND_HOST:-127.0.0.1}:24443:24443"
+      - "127.0.0.1:24443:24443"
     volumes:
       - "./scripts/ministack/Caddyfile:/etc/caddy/Caddyfile:ro"
       # Holds the generated certificate authority. Without it a restart issues
@@ -167,10 +166,6 @@ services:
       # creates in a deployed environment. The command above creates it here,
       # in place of `cdk bootstrap`, from the account in config/local.json.
       - ASSET_BUCKET_URL=http://transcription-ministack:4566/000000000000-ap-southeast-2-eresearchqut-transcription
-      # The host the browser reaches the emulator and the frontend on. Set it
-      # to this machine's LAN address to open the app from a phone or another
-      # machine, where localhost is that device rather than this one.
-      - LOCAL_HOST=${LOCAL_HOST:-localhost}
       - AWS_ENDPOINT_URL=http://transcription-ministack:4566
       - AWS_ENDPOINT_URL_S3=http://transcription-ministack:4566
       # cdklocal publishes assets virtual-host style unless told otherwise, and

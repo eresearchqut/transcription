@@ -96,18 +96,6 @@ The emulator is published on http://localhost:20005, because Amplify Storage's l
 
 The emulator and the sign-in proxy are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
 
-### Opening the app from another device
-
-To load the app from another device on your network, such as a phone:
-
-```
-MINISTACK_BIND_HOST=0.0.0.0 LOCAL_HOST=<your-machine-address> pnpm dev
-```
-
-`MINISTACK_BIND_HOST` publishes the emulator beyond loopback, and `LOCAL_HOST` is the address the browser is told to use, which is baked into the stack outputs. Only do this on a network you trust.
-
-Two things still don't work from the other device. Starting a sign-in fails, because the TLS certificate is only valid for `localhost`. Uploads and downloads fail, because Amplify Storage always uses `localhost:20005`.
-
 ### Keeping the emulator image current
 
 Compose reuses its cached copy of `ministackorg/ministack:latest`, and a stale image can look like broken application code. Run `docker compose pull` to refresh it. `MINISTACK_IMAGE` pins a release or points at a local build.
