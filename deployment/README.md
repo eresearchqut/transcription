@@ -49,7 +49,7 @@ A local deploy differs from a deployed environment in four ways.
 
 - Handlers address S3 path-style, because the emulator has no wildcard DNS for `<bucket>.<host>`.
 - An aspect tolerates the missing X-Ray daemon.
-- The REST API id is pinned, so the execute-api URL survives a redeploy and `frontend/.env.local` stays valid.
+- The REST API id is pinned, so the execute-api URL survives a redeploy and `frontend/.env.development.local` stays valid.
 - The Cognito callback URL and allowed origin use `http`, because `next dev` serves the frontend over plain HTTP.
 - The frontend is given the emulator endpoint, which `frontend/pages/_app.tsx` points Amplify Storage at.
 

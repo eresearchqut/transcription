@@ -250,7 +250,8 @@ export class ApiStack extends cdk.Stack {
 
     // MiniStack assigns a random REST API id on every deploy, which changes the
     // execute-api URL the local frontend is built against. The ms-custom-id tag
-    // pins it so frontend/.env.local stays valid across a rebuilt stack.
+    // pins it so frontend/.env.development.local stays valid across a rebuilt
+    // stack.
     if (emulator) {
       cdk.Tags.of(api).add("ms-custom-id", LOCAL_REST_API_ID);
     }

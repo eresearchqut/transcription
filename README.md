@@ -14,13 +14,13 @@ This application is a monorepo using a pnpm workspace.
 * `pnpm test:integration` (needs a running local stack, see below)
 
 ## Local frontend development against the deployed dev environment
-1. Copy the dev environment variables into your local `.env.local`
+1. Copy the dev environment variables into your local `.env.development.local`
 ```
 cd frontend
 export STACK_NAME=dev-transcription
-aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.local
+aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='FrontEndEnvironment'].OutputValue" --output text > .env.development.local
 ```
-2. Modify `.env.local` to redirect to the local app after login:
+2. Modify `.env.development.local` to redirect to the local app after login:
 ```
 NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
 ```
@@ -45,7 +45,7 @@ The CDK app can be deployed against [MiniStack](https://ministack.org), a local 
 pnpm dev
 ```
 
-This starts the emulator, deploys the stacks, writes `frontend/.env.local`, seeds two Cognito users and starts the frontend on http://localhost:3000. It takes about a minute from cold. The first time on a machine, trust the certificate authority before signing in.
+This starts the emulator, deploys the stacks, writes `frontend/.env.development.local`, seeds two Cognito users and starts the frontend on http://localhost:3000. It takes about a minute from cold. The first time on a machine, trust the certificate authority before signing in.
 
 ### Trust the certificate authority
 
@@ -82,11 +82,13 @@ Sign-in goes through the Cognito hosted UI, as in a deployed environment. The lo
 | `pnpm ministack:up` | Start the emulator and deploy, without the frontend |
 | `pnpm ministack:logs` | Follow the deploy, which is where CDK errors surface |
 | `pnpm ministack:deploy` | Rebuild `model` and redeploy, after changing handler, model or stack code |
-| `pnpm ministack:env` | Rewrite `frontend/.env.local` from the deployed stack outputs |
+| `pnpm ministack:env` | Rewrite `frontend/.env.development.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
 | `pnpm ministack:down` | Stop the emulator and discard its state |
 
-MiniStack keeps its state in the container, so stopping it discards the stacks and every id changes on the next start. A stale `frontend/.env.local` then fails with `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
+MiniStack keeps its state in the container, so stopping it discards the stacks and every id changes on the next start. A stale `frontend/.env.development.local` then fails with `Client ... not found`. `pnpm ministack:env` rewrites it, and `pnpm dev` does so on every start.
+
+The file is `.env.development.local` rather than `.env.local` because only `next dev` reads it, so a production build can't pick up the emulator endpoints. If you have a `frontend/.env.local` from before this change, delete it.
 
 The bootstrap container runs `cdklocal watch`, but on macOS it doesn't see edits made on the host, so run `pnpm ministack:deploy` after changing code. It rebuilds `model` inside the container first, because the bundler can't see a `model/dist` built on the host.
 
