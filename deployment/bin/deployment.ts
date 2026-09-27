@@ -72,13 +72,17 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig =>
   );
 
 /**
- * Parameters whose absence makes ApiStack skip the resource that depends on
- * them. Empty is meaningful only for a local deploy, which has no VPC, custom
- * domain, WAF or hosted zone. In a real environment an empty value means the
- * SSM parameter is incomplete, so fail rather than deploy without it.
+ * Parameters that a local deploy leaves empty because it has no VPC, custom
+ * domain, certificate, WAF or hosted zone. ApiStack skips the resource that
+ * depends on each one, and FrontEndStack is not created locally. In a real
+ * environment an empty value means the SSM parameter is incomplete, so fail
+ * rather than deploy without it.
  */
 const REQUIRED_DEPLOYED_PARAMETERS = [
   "ApiDomainName",
+  "FrontEndDomainName",
+  "GlobalCertificateArn",
+  "GlobalWafArn",
   "HostedZoneName",
   "RegionalCertificateArn",
   "RegionalWafArn",
@@ -94,7 +98,7 @@ const assertDeployedParameters = (
   );
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip the VPC, custom domain, WAF or DNS record.`,
+      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs or DNS records.`,
     );
   }
 };
