@@ -51,6 +51,8 @@ const identityId = "researcher1001";
 
 /** The chain settles in a few seconds locally; allow for a Lambda cold start. */
 const CHAIN_TIMEOUT_MS = 120_000;
+/** Outlasts the polling deadline so waitForRecord's diagnostic surfaces first. */
+const TEST_TIMEOUT_MS = CHAIN_TIMEOUT_MS + 60_000;
 const POLL_INTERVAL_MS = 500;
 
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
@@ -265,7 +267,7 @@ describe("upload chain", () => {
       const summary = await getObject(record.summaryKey as string);
       expect(summary?.length).toBeGreaterThan(0);
     },
-    CHAIN_TIMEOUT_MS,
+    TEST_TIMEOUT_MS,
   );
 
   it(
@@ -293,7 +295,7 @@ describe("upload chain", () => {
       ) as TranscriptDocument;
       expect(translated.results.transcripts?.length).toBeGreaterThan(0);
     },
-    CHAIN_TIMEOUT_MS,
+    TEST_TIMEOUT_MS,
   );
 
   it(
@@ -343,7 +345,7 @@ describe("upload chain", () => {
         expect(after.length).toBeGreaterThan(0);
       }
     },
-    CHAIN_TIMEOUT_MS,
+    TEST_TIMEOUT_MS,
   );
 
   it(
@@ -368,6 +370,6 @@ describe("upload chain", () => {
       );
       expect(record.summaryKey).toBe(`users/${identityId}/summary/${jobId}`);
     },
-    CHAIN_TIMEOUT_MS,
+    TEST_TIMEOUT_MS,
   );
 });

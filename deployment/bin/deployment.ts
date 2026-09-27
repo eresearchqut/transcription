@@ -86,6 +86,7 @@ const REQUIRED_DEPLOYED_PARAMETERS = [
   "HostedZoneName",
   "RegionalCertificateArn",
   "RegionalWafArn",
+  "SubnetIds",
   "VpcId",
 ] as const;
 
@@ -93,9 +94,10 @@ const assertDeployedParameters = (
   envName: Environment,
   parameters: EnvironmentConfig["parameters"],
 ): void => {
-  const missing = REQUIRED_DEPLOYED_PARAMETERS.filter(
-    (name) => !parameters[name],
-  );
+  const missing = REQUIRED_DEPLOYED_PARAMETERS.filter((name) => {
+    const value = parameters[name];
+    return Array.isArray(value) ? value.length === 0 : !value;
+  });
   if (missing.length > 0) {
     throw new Error(
       `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs or DNS records.`,
@@ -142,9 +144,11 @@ const frontendStackName = `${envName}-${repo}-frontend`;
 const app = new cdk.App({});
 
 /**
- * Deploys with the caller's credentials into the asset bucket that
- * GitHubStack creates, rather than into a shared `cdk bootstrap` toolkit. A
- * local deploy has no GitHubStack, so Compose creates the bucket itself.
+ * ApiStack and FrontEndStack deploy with the caller's credentials into the
+ * asset bucket that GitHubStack creates, rather than into a shared
+ * `cdk bootstrap` toolkit. GitHubStack itself has to exist before that bucket
+ * does, so it keeps the default synthesizer. A local deploy has no
+ * GitHubStack, so Compose creates the bucket itself.
  */
 const assetSynthesizer = (account: string, region: string) =>
   new cdk.CliCredentialsStackSynthesizer({
