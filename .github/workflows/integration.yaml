@@ -40,10 +40,14 @@ jobs:
       # download out of the suite's own chain timeouts.
       - name: Pre-pull runtime images
         run: |
-          docker pull --quiet "$MINISTACK_IMAGE" &
-          docker pull --quiet public.ecr.aws/lambda/nodejs:24 &
-          docker pull --quiet public.ecr.aws/lambda/python:3.13 &
-          wait
+          pids=()
+          for image in "$MINISTACK_IMAGE" public.ecr.aws/lambda/nodejs:24 public.ecr.aws/lambda/python:3.13; do
+            docker pull --quiet "$image" &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do
+            wait "$pid"
+          done
 
       - name: Start the local stack
         run: pnpm ministack:up
