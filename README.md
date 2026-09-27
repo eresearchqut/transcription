@@ -25,8 +25,9 @@ aws cloudformation describe-stacks --stack-name $STACK_NAME --query "Stacks[0].O
 NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT=http://localhost:3000/
 NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT=http://localhost:3000/
 ```
-3. Start the app against the deployed dev environment
+3. Start the app against the deployed dev environment from the repository root
 ```
+cd ..
 pnpm dev:frontend
 ```
 
