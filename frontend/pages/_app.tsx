@@ -26,11 +26,25 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
+/**
+ * Only a local deploy sets an emulator endpoint, where Cognito is served by the
+ * emulator rather than by AWS. The hosted UI is reached the same way in both,
+ * through the TLS proxy in `docker-compose.yml` locally, but the SDK calls
+ * Amplify makes after sign-in have to be pointed at the emulator.
+ */
+const localEndpoint = process.env.NEXT_PUBLIC_AWS_ENDPOINT;
+
 Amplify.configure({
   Auth: {
     Cognito: {
       userPoolClientId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_CLIENT_ID!,
       userPoolId: process.env.NEXT_PUBLIC_AUTH_USER_POOL_ID!,
+      ...(localEndpoint
+        ? {
+            userPoolEndpoint: localEndpoint,
+            identityPoolEndpoint: localEndpoint,
+          }
+        : {}),
       loginWith: {
         oauth: {
           domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
@@ -54,13 +68,28 @@ Amplify.configure({
     S3: {
       bucket: process.env.NEXT_PUBLIC_TRANSCRIPTION_BUCKET,
       region: process.env.NEXT_PUBLIC_AWS_REGION || "ap-southeast-2",
+      // Amplify Storage accepts no endpoint of its own, only this flag, which
+      // sends every request to a hardcoded http://localhost:20005 path-style.
+      // The gateway is published on that port for this reason. The
+      // flag is broken upstream and works only with the patch in
+      // patches/@aws-amplify__storage@6.16.0.patch.
+      ...(localEndpoint
+        ? { dangerouslyConnectToHttpEndpointForTesting: "true" }
+        : {}),
     },
   },
 });
 
-export const handleLogin = async () => {
-  await signInWithRedirect({ provider: { custom: "QUT" } });
-};
+/**
+ * Both environments redirect to the Cognito hosted UI. A deployed pool
+ * federates to QUT and names it as the provider, which skips the hosted UI's
+ * own form; the local pool has no federation, so it shows that form and signs
+ * in the users `pnpm ministack:seed-users` writes.
+ */
+export const handleLogin = async () =>
+  signInWithRedirect(
+    localEndpoint ? undefined : { provider: { custom: "QUT" } },
+  );
 
 const queryClient = new QueryClient();
 

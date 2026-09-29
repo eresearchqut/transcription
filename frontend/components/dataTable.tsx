@@ -98,7 +98,7 @@ export const DataTable = (props: DataTableProps) => {
         <Grid
           hideFrom={"xl"}
           templateColumns="repeat(2, 1fr)"
-          key={rowIndex}
+          key={row.id}
           gap={4}
           borderBottomWidth={1}
           padding={2}

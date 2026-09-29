@@ -107,3 +107,6 @@ build
 .idea
 out
 .next
+
+# Copy of the local TLS proxy certificate authority, taken during setup.
+ministack-root.crt
