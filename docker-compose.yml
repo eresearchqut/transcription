@@ -188,6 +188,10 @@ services:
     depends_on:
       transcription-ministack:
         condition: service_healthy
+        # The emulator keeps the stack in memory, so a recreated gateway comes
+        # up empty. Restarting here redeploys it and clears the deploy marker,
+        # which would otherwise let `--wait` pass against an empty emulator.
+        restart: true
       # Not a real dependency. `docker compose up --wait` fails on a service
       # that exits unless something waits for it to complete.
       transcription-job-pace:
