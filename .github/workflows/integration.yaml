@@ -14,9 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      # The docker-compose.yml default, named here so the pre-pull step below
-      # can fetch it. CI runs what a developer runs.
-      MINISTACK_IMAGE: ministackorg/ministack:latest
       # Evaluate IAM, so a handler missing a grant fails the suite. See the
       # AUTH setting in docker-compose.yml for why local development doesn't.
       MINISTACK_AUTH: "true"
@@ -34,20 +31,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      # MiniStack runs each invocation in a sibling container, and the CDK's
-      # bucket notification custom resource is a Python function, so both
-      # runtimes are pulled on first use. Fetching them up front keeps the
-      # download out of the suite's own chain timeouts.
-      - name: Pre-pull runtime images
-        run: |
-          pids=()
-          for image in "$MINISTACK_IMAGE" public.ecr.aws/lambda/nodejs:24 public.ecr.aws/lambda/python:3.13; do
-            docker pull --quiet "$image" &
-            pids+=($!)
-          done
-          for pid in "${pids[@]}"; do
-            wait "$pid"
-          done
+      # MiniStack runs each invocation in a sibling container, so the Lambda
+      # runtimes are otherwise pulled on first use. Fetching them up front, with
+      # the rest of the stack's images, keeps the download out of the suite's
+      # own chain timeouts. The cache-only profile adds the runtime images
+      # declared in docker-compose.yml.
+      - name: Pre-pull images
+        run: docker compose --profile cache-only pull --quiet --ignore-buildable
 
       - name: Start the local stack
         run: pnpm ministack:up

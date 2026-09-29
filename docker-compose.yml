@@ -195,6 +195,20 @@ services:
     networks:
       - transcription-network
 
+  # The Lambda runtime images MiniStack starts each invocation in, listed so
+  # `docker compose --profile cache-only pull` fetches them ahead of the first
+  # invocation. The profile keeps `up` from starting them. Keep the Node tag in
+  # step with the runtime in deployment/lib/api-stack.ts.
+  transcription-runtime-nodejs:
+    image: public.ecr.aws/lambda/nodejs:24
+    profiles: [cache-only]
+  # For the CDK's bucket notification custom resource. The CDK picks this
+  # version, the latest Python runtime it knows about, so an aws-cdk-lib bump
+  # can move it.
+  transcription-runtime-python:
+    image: public.ecr.aws/lambda/python:3.13
+    profiles: [cache-only]
+
 volumes:
   transcription-root-modules:
   transcription-api-modules:

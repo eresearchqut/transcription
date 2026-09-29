@@ -25,7 +25,7 @@ The suite writes under `users/researcher1001/`, `transcription/` and `translatio
 
 ## CI
 
-`.github/workflows/integration.yaml` runs the suite on every pull request, with IAM evaluation on (`MINISTACK_AUTH=true`), so a handler missing a grant fails with `AccessDeniedException` in its logs. It starts the stack, waits for the deploy with `pnpm ministack:env`, then runs the tests. The MiniStack image and the two Lambda runtimes are pulled beforehand. MiniStack runs each invocation in a sibling container, so without the pre-pull the first invocations would download the runtimes inside the suite's timeouts.
+`.github/workflows/integration.yaml` runs the suite on every pull request, with IAM evaluation on (`MINISTACK_AUTH=true`), so a handler missing a grant fails with `AccessDeniedException` in its logs. It starts the stack, waits for the deploy with `pnpm ministack:env`, then runs the tests. The stack's images and the two Lambda runtimes are pulled beforehand with `docker compose --profile cache-only pull`, which works the same way locally. MiniStack runs each invocation in a sibling container, so without the pre-pull the first invocations would download the runtimes inside the suite's timeouts. The runtime images are declared in `docker-compose.yml` under the `cache-only` profile.
 
 ## What it does not cover
 
