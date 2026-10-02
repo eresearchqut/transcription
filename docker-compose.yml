@@ -150,6 +150,9 @@ services:
       # built here at all: the container runs as root, and a build output
       # written back through the bind mount either lands root-owned in the
       # working tree or races the host's own `pnpm --filter model build`.
+      # Docker creates a missing mount point as root, after which the host's
+      # build can't write to `model/dist`, so `pnpm ministack:up` creates it
+      # first.
       - "transcription-root-modules:/app/node_modules"
       - "transcription-api-modules:/app/api/node_modules"
       - "transcription-deployment-modules:/app/deployment/node_modules"
