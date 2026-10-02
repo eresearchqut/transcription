@@ -1,3 +1,4 @@
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { TranscriptionJobStatus } from "./transcription";
 
 export interface UsageRecord {
@@ -9,7 +10,7 @@ export interface UsageRecord {
   jobId: string;
 
   rpid?: string;
-  rpidPayload?: Record<string, unknown>;
+  researchProject?: RpidDto;
 
   sourceLanguages?: string[];
   resolvedLanguage?: string;

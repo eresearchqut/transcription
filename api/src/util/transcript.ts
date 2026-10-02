@@ -14,6 +14,7 @@ export interface TranscriptResults {
   segments?: Segment[];
   speaker_labels?: unknown;
   items?: unknown;
+  audio_segments?: unknown;
 }
 
 export interface TranscriptDocument {
@@ -30,13 +31,18 @@ export const segmentTexts = (doc: TranscriptDocument): string[] =>
 export const translationCharacterCount = (doc: TranscriptDocument): number =>
   segmentTexts(doc).reduce((total, text) => total + text.length, 0);
 
+/**
+ * The end time of the last timed entry. Transcribe's output does not record
+ * the length of the media, so this stands in for it, less any trailing
+ * silence.
+ */
 export const transcriptDurationSeconds = (
   doc: TranscriptDocument,
 ): number | undefined => {
   const timed = [
     doc.results.segments,
     doc.results.items,
-    (doc.results as { audio_segments?: unknown }).audio_segments,
+    doc.results.audio_segments,
   ];
   let longest: number | undefined;
   for (const entries of timed) {
