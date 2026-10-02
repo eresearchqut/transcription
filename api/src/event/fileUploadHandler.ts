@@ -8,6 +8,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
@@ -25,24 +26,33 @@ xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
 /**
- * The reason to refuse the upload, shown to the user as the job's failure
- * reason, or undefined when the RPID is one of their active projects.
+ * Finds the upload's RPID among the user's active projects, or gives the
+ * reason to refuse the upload, which is shown to the user as the job's
+ * failure reason.
  */
-const rpidRejection = async (
+const checkRpid = async (
   identityId: string,
   rpid: string | undefined,
-): Promise<string | undefined> => {
+): Promise<{ project: RpidDto } | { rejection: string }> => {
   if (!rpid) {
-    return "A Research Project ID (RPID) is required to start a transcription.";
+    return {
+      rejection:
+        "A Research Project ID (RPID) is required to start a transcription.",
+    };
   }
   try {
-    if (await getRpid(identityId, rpid)) {
-      return undefined;
+    const project = await getRpid(identityId, rpid);
+    if (project) {
+      return { project };
     }
-    return `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`;
+    return {
+      rejection: `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`,
+    };
   } catch (error) {
     console.error(`Failed to validate RPID ${rpid}`, error);
-    return `The Research Project ID (RPID) ${rpid} could not be checked with the Data Management Planning tool. Please try again later.`;
+    return {
+      rejection: `The Research Project ID (RPID) ${rpid} could not be checked with the Data Management Planning tool. Please try again later.`,
+    };
   }
 };
 
@@ -80,17 +90,14 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
 
-      const rejection = await rpidRejection(
-        identityId,
-        headResponse.Metadata.rpid,
-      );
-      if (rejection) {
+      const rpidCheck = await checkRpid(identityId, headResponse.Metadata.rpid);
+      if ("rejection" in rpidCheck) {
         await jobRejected(
           identityId,
           jobId,
           record.s3,
           headResponse.Metadata,
-          rejection,
+          rpidCheck.rejection,
         );
         continue;
       }
@@ -158,6 +165,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
+          rpidCheck.project,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

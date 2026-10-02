@@ -125,6 +125,30 @@ describe("ApiStack", () => {
       ).toContain(`NEXT_PUBLIC_DMP_URL=${parameters.DmpWebUrl}`);
     });
 
+    it("projects job records into a usage table that never expires", () => {
+      const synthesised = template();
+      synthesised.hasResource("AWS::DynamoDB::Table", {
+        DeletionPolicy: "Retain",
+        Properties: Match.objectLike({
+          DeletionProtectionEnabled: true,
+          PointInTimeRecoverySpecification: {
+            PointInTimeRecoveryEnabled: true,
+          },
+          TimeToLiveSpecification: Match.absent(),
+          GlobalSecondaryIndexes: [
+            Match.objectLike({ IndexName: "byRpid" }),
+            Match.objectLike({ IndexName: "byPeriod" }),
+          ],
+        }),
+      });
+      synthesised.hasResourceProperties("AWS::Lambda::EventSourceMapping", {
+        EventSourceArn: { "Fn::GetAtt": ["Table", "StreamArn"] },
+        FunctionResponseTypes: ["ReportBatchItemFailures"],
+        BisectBatchOnFunctionError: true,
+        DestinationConfig: { OnFailure: { Destination: Match.anyValue() } },
+      });
+    });
+
     it("leaves the x-ray daemon address at the lambda default", () => {
       Object.values(template().findResources("AWS::Lambda::Function")).forEach(
         (fn) => {
@@ -219,7 +243,7 @@ describe("ApiStack", () => {
       const applicationFunctions = Object.values(
         localTemplate().findResources("AWS::Lambda::Function"),
       ).filter((fn) => fn.Properties.Environment?.Variables?.APPLICATION_NAME);
-      expect(applicationFunctions).toHaveLength(7);
+      expect(applicationFunctions).toHaveLength(8);
       applicationFunctions.forEach((fn) => {
         expect(fn.Properties.Environment.Variables).toMatchObject({
           AWS_XRAY_CONTEXT_MISSING: "LOG_ERROR",

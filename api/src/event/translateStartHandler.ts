@@ -24,7 +24,11 @@ import {
   translationJob as updateTranslationJob,
   translationKey as updateTranslationKey,
 } from "../service/transcriptionService";
-import { segmentTexts, type TranscriptDocument } from "../util/transcript";
+import {
+  segmentTexts,
+  type TranscriptDocument,
+  translationCharacterCount,
+} from "../util/transcript";
 import { buildXliff, XLIFF_FILE_NAME } from "../util/xliff";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
@@ -124,10 +128,15 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
       }),
     );
     await updateTranslationKey(identityId, jobId, translationOutputKey);
-    await updateTranslationJob(identityId, jobId, {
-      jobId: "",
-      status: "COMPLETED",
-    });
+    await updateTranslationJob(
+      identityId,
+      jobId,
+      {
+        jobId: "",
+        status: "COMPLETED",
+      },
+      0,
+    );
     return "Source language matches target; copied original transcript";
   }
 
@@ -184,10 +193,15 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
     return "Failed to start translation job";
   }
 
-  await updateTranslationJob(identityId, jobId, {
-    jobId: startResponse.JobId ?? "",
-    status: startResponse.JobStatus ?? "SUBMITTED",
-  });
+  await updateTranslationJob(
+    identityId,
+    jobId,
+    {
+      jobId: startResponse.JobId ?? "",
+      status: startResponse.JobStatus ?? "SUBMITTED",
+    },
+    translationCharacterCount(transcript),
+  );
 
   return `Started translation job ${startResponse.JobId} (${sourceLanguage} -> ${targetLanguage})`;
 };

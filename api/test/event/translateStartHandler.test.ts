@@ -121,6 +121,7 @@ describe("translateStartHandler", () => {
       jobId: "tjid",
       status: "SUBMITTED",
     });
+    expect(record.translationCharacters).toEqual(24);
   });
 
   test("copies the original transcript when source equals target", async () => {
@@ -144,6 +145,7 @@ describe("translateStartHandler", () => {
       `users/${identityId}/translations/${jobId}/en`,
     );
     expect(record.translationJob?.status).toEqual("COMPLETED");
+    expect(record.translationCharacters).toEqual(0);
   });
 
   test("persists FAILED when the source language is not supported by Translate", async () => {

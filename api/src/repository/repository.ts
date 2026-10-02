@@ -44,27 +44,33 @@ export const putResource = (
     }),
   );
 
-export const updateResource = (
+export const updateResources = (
   pk: string,
   sk: string,
-  attributeName: string,
-  attributeValue: string | object,
-) =>
-  dynamoDBClient.send(
+  attributes: Record<string, string | number | object | undefined>,
+) => {
+  const entries = Object.entries(attributes).filter(
+    ([, value]) => value !== undefined,
+  );
+  const assignments = entries.map((_, index) => `#n${index} = :v${index}`);
+  return dynamoDBClient.send(
     new UpdateItemCommand({
       TableName: tableName,
       Key: marshall({ pk, sk }),
       ReturnValues: "UPDATED_NEW",
-      UpdateExpression:
-        "set #attributeName = :attributeValue, #date = :date, #ttl = :ttl",
+      UpdateExpression: `set ${[...assignments, "#date = :date", "#ttl = :ttl"].join(", ")}`,
       ExpressionAttributeNames: {
-        "#attributeName": attributeName,
+        ...Object.fromEntries(
+          entries.map(([name], index) => [`#n${index}`, name]),
+        ),
         "#date": "date",
         "#ttl": "ttl",
       },
       ExpressionAttributeValues: marshall(
         {
-          ":attributeValue": attributeValue,
+          ...Object.fromEntries(
+            entries.map(([, value], index) => [`:v${index}`, value]),
+          ),
           ":date": new Date().toISOString(),
           ":ttl": Math.floor(Date.now() / 1000) + TTL_DELTA,
         },
@@ -72,6 +78,14 @@ export const updateResource = (
       ),
     }),
   );
+};
+
+export const updateResource = (
+  pk: string,
+  sk: string,
+  attributeName: string,
+  attributeValue: string | object,
+) => updateResources(pk, sk, { [attributeName]: attributeValue });
 
 export const deleteResource = (pk: string, sk: string) =>
   dynamoDBClient.send(

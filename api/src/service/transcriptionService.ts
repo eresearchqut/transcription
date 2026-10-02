@@ -1,10 +1,13 @@
 import type { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
+
 import {
   getResource,
   getResources,
   putResource,
   updateResource,
+  updateResources,
 } from "../repository/repository";
 
 export const normaliseJobId = (jobId: string): string =>
@@ -17,12 +20,14 @@ export const jobStarted = (
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
+  researchProject?: RpidDto,
 ) =>
   putResource(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
+    researchProject,
   });
 
 export const jobRejected = (
@@ -59,15 +64,23 @@ export const downloadKey = (
   identityId: string,
   jobId: string,
   downloadKey: string,
+  audioSeconds?: number,
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "downloadKey", downloadKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    downloadKey,
+    audioSeconds,
+  });
 
 export const summaryKey = (
   identityId: string,
   jobId: string,
   summaryKey: string,
+  summaryUsage?: { inputTokens?: number; outputTokens?: number },
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "summaryKey", summaryKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    summaryKey,
+    summaryUsage,
+  });
 
 export const translationKey = (
   identityId: string,
@@ -85,13 +98,12 @@ export const translationJob = (
   identityId: string,
   jobId: string,
   translationJob: { jobId: string; status: string; message?: string },
+  translationCharacters?: number,
 ) =>
-  updateResource(
-    identityId,
-    normaliseJobId(jobId),
-    "translationJob",
+  updateResources(identityId, normaliseJobId(jobId), {
     translationJob,
-  );
+    translationCharacters,
+  });
 
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);

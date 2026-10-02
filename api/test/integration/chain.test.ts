@@ -23,7 +23,9 @@ import {
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
+
+import { type UsageRecord, usagePartitionKey, usageSortKey } from "model";
 
 import type { TranscriptDocument } from "../../src/util/transcript";
 
@@ -33,8 +35,8 @@ const stackName = process.env.API_STACK_NAME ?? "local-transcription";
 const account = process.env.MINISTACK_ACCOUNT_ID ?? "000000000000";
 
 // api-stack.ts names the bucket `${stackName}-${region}-${account}`, so it is
-// derivable rather than needing a CloudFormation lookup. The table carries a
-// CDK-generated suffix and is resolved by prefix below.
+// derivable rather than needing a CloudFormation lookup. The tables carry a
+// CDK-generated suffix and are resolved by prefix below.
 const bucket = `${stackName}-${region}-${account}`.toLowerCase();
 
 const clientConfig = {
@@ -63,6 +65,7 @@ const POLL_INTERVAL_MS = 500;
 const sleep = (ms: number) => new Promise((done) => setTimeout(done, ms));
 
 let tableName: string;
+let usageTableName: string;
 
 /** Every artifact this suite creates, removed in afterAll. */
 const createdKeys = new Set<string>();
@@ -72,7 +75,7 @@ const STACK_HINT =
   "Start the stack with `docker compose up -d` and wait for the deploy " +
   "(pnpm ministack:logs).";
 
-const resolveTableName = async () => {
+const resolveTableName = async (logicalId: string) => {
   let tableNames: string[];
   try {
     const { TableNames = [] } = await ddb.send(new ListTablesCommand({}));
@@ -84,13 +87,10 @@ const resolveTableName = async () => {
       cause,
     });
   }
-  const match = tableNames.find((name) =>
-    name.startsWith(`${stackName}-Table`),
-  );
+  const prefix = `${stackName}-${logicalId}`;
+  const match = tableNames.find((name) => name.startsWith(prefix));
   if (!match) {
-    throw new Error(
-      `No ${stackName}-Table* table on ${endpoint}. ${STACK_HINT}`,
-    );
+    throw new Error(`No ${prefix}* table on ${endpoint}. ${STACK_HINT}`);
   }
   return match;
 };
@@ -164,24 +164,37 @@ const readRecord = async (jobId: string): Promise<JobRecord | undefined> => {
   return Item ? (unmarshall(Item) as JobRecord) : undefined;
 };
 
+const readUsage = async (jobId: string): Promise<UsageRecord | undefined> => {
+  const { Item } = await ddb.send(
+    new GetItemCommand({
+      TableName: usageTableName,
+      Key: marshall({
+        pk: usagePartitionKey(identityId),
+        sk: usageSortKey(jobId),
+      }),
+    }),
+  );
+  return Item ? (unmarshall(Item) as UsageRecord) : undefined;
+};
+
 /**
- * Polls the job record until `settled` is happy. Reports the last record seen
- * on timeout, so a failure names the stage the chain stopped at rather than
- * just "timed out".
+ * Polls a record until `settled` is happy. Reports the last record seen on
+ * timeout, so a failure names the stage the chain stopped at rather than just
+ * "timed out".
  *
  * The handlers persist a key and then the job status in separate updates, so
  * `settled` has to name every field the assertions read or it can observe the
  * record part-written.
  */
-const waitForRecord = async (
-  jobId: string,
-  settled: (record: JobRecord) => boolean,
+const waitFor = async <T>(
+  read: () => Promise<T | undefined>,
+  settled: (record: T) => boolean,
   description: string,
 ) => {
   const deadline = Date.now() + CHAIN_TIMEOUT_MS;
-  let last: JobRecord | undefined;
+  let last: T | undefined;
   while (Date.now() < deadline) {
-    last = await readRecord(jobId);
+    last = await read();
     if (last && settled(last)) return last;
     await sleep(POLL_INTERVAL_MS);
   }
@@ -191,13 +204,26 @@ const waitForRecord = async (
   );
 };
 
+const waitForRecord = (
+  jobId: string,
+  settled: (record: JobRecord) => boolean,
+  description: string,
+) => waitFor(() => readRecord(jobId), settled, description);
+
+const waitForUsage = (
+  jobId: string,
+  settled: (record: UsageRecord) => boolean,
+  description: string,
+) => waitFor(() => readUsage(jobId), settled, description);
+
 const getObject = (key: string) =>
   s3
     .send(new GetObjectCommand({ Bucket: bucket, Key: key }))
     .then((result) => result.Body?.transformToString());
 
 beforeAll(async () => {
-  tableName = await resolveTableName();
+  tableName = await resolveTableName("Table");
+  usageTableName = await resolveTableName("UsageTable");
 }, 30_000);
 
 afterAll(async () => {
@@ -205,7 +231,9 @@ afterAll(async () => {
   // nothing was created and there is nothing to clean up.
   if (!tableName) return;
   // Objects the chain produced are discovered rather than tracked, since the
-  // handlers choose their own keys (notably the "redacted-" prefix).
+  // handlers choose their own keys (notably the "redacted-" prefix). Usage
+  // records are left alone: deleting a job record updates its usage record
+  // afterwards, and that table is meant to keep them.
   for (const jobId of createdJobIds) {
     for (const prefix of [
       `users/${identityId}/`,
@@ -409,6 +437,69 @@ describe("rpid check", () => {
         ),
       });
       expect(record.transcriptionResponse).toBeUndefined();
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+describe("usage audit log", () => {
+  it(
+    "keeps the usage of a job after its record is deleted",
+    async () => {
+      const jobId = await upload({ generateSummary: true });
+
+      await waitForRecord(
+        jobId,
+        (r) => Boolean(r.downloadKey && r.summaryKey && r.jobStatusUpdated),
+        "the transcript and summary keys and the job status",
+      );
+      const usage = await waitForUsage(
+        jobId,
+        (u) =>
+          u.status === "COMPLETED" &&
+          u.audioSeconds !== undefined &&
+          u.summaryInputTokens !== undefined,
+        "the usage of the completed job",
+      );
+
+      expect(usage).toMatchObject({
+        identityId,
+        jobId,
+        rpid: ACTIVE_RPID,
+        researchProject: {
+          encodedId: ACTIVE_RPID,
+          title: "Oral histories of Queensland flood recovery",
+          lead: { name: "Researcher One" },
+        },
+        sourceLanguages: ["en-AU"],
+        mimeType: "audio/mpeg",
+        piiRedaction: false,
+        summaryRequested: true,
+        translationRequested: false,
+        bytesUploaded: 1024,
+        usageMonth: usage.startedAt.slice(0, 7),
+      });
+      expect(usage.audioSeconds).toBeGreaterThan(0);
+      expect(usage.completedAt).toBeDefined();
+      expect(JSON.stringify(usage)).not.toContain("integration.mp3");
+
+      // TTL expiry and a delete both reach the stream as a REMOVE.
+      await ddb.send(
+        new DeleteItemCommand({
+          TableName: tableName,
+          Key: { pk: { S: identityId }, sk: { S: jobId } },
+        }),
+      );
+      const expired = await waitForUsage(
+        jobId,
+        (u) => Boolean(u.expiredAt),
+        "the usage record to note the deletion",
+      );
+      expect(expired).toMatchObject({
+        status: "COMPLETED",
+        audioSeconds: usage.audioSeconds,
+        startedAt: usage.startedAt,
+      });
     },
     TEST_TIMEOUT_MS,
   );

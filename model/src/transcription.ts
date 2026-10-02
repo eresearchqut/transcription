@@ -1,3 +1,4 @@
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import supportedTranscriptionLanguagesJson from "./supported_transcription_languages.json";
 import supportedTranslationLanguagesJson from "./supported_translation_languages.json";
 
@@ -14,6 +15,7 @@ export interface Transcription {
   metadata: {
     filetype: string;
     languagecode: string;
+    languages?: string;
     mimetype: string;
     filename: string;
     generatesummary: string;
@@ -22,9 +24,17 @@ export interface Transcription {
     rpid?: string;
   };
   date: string;
+  /** The DMP project details for the RPID, as they were at upload. */
+  researchProject?: RpidDto;
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
+  audioSeconds?: number;
+  summaryUsage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+  translationCharacters?: number;
   translationJob?: {
     jobId: string;
     status: string;
