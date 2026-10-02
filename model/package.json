@@ -12,6 +12,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@eresearchqut/dmp-api": "^1.1.0",
     "date-fns": "^4.4.0",
     "react-dropzone": "^15.0.0"
   },

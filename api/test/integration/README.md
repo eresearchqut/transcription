@@ -4,6 +4,8 @@
 
 Each upload names an RPID, which `fileUploadHandler` checks with the stand-in for the Data Management Planning tool that Compose runs. The suite uses one of researcher1001's active plans from `scripts/ministack/dmp-rpids.json`, and checks that an archived or unknown RPID fails the job without starting a transcription.
 
+The usage test follows the DynamoDB stream from the job table to the usage table. It waits for the completed job's usage record, deletes the job record to stand in for its TTL expiry, and checks that the usage record survives with `expiredAt` set.
+
 ## Running it
 
 The suite needs a deployed local stack and does not start one:
@@ -23,7 +25,7 @@ pnpm test:integration
 
 `pnpm test` excludes it, so the unit tests stay offline and need no Docker. The batch translation test needs a MiniStack image with Amazon Translate support and fails on older ones.
 
-The suite writes under `users/researcher1001/`, `transcription/` and `translations/`, and removes what it wrote afterwards. A crashed run can leave objects behind. They are harmless and show up as extra uploads in the UI.
+The suite writes under `users/researcher1001/`, `transcription/` and `translations/`, and removes what it wrote afterwards. It leaves usage records in place, since deleting a job record writes to its usage record through the stream and would race the cleanup. A crashed run can leave objects behind. They are harmless and show up as extra uploads in the UI.
 
 ## CI
 

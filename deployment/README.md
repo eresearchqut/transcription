@@ -18,7 +18,7 @@ The environment is the current git branch: `dev`, `qa` or `prod`. Its parameters
 
 | Stack | Contents | Created for |
 | --- | --- | --- |
-| `TranscriptionStack` | The API, the Lambda handlers, the DynamoDB table, the data bucket and the EventBridge rules, in `lib/api-stack.ts` | Every environment |
+| `TranscriptionStack` | The API, the Lambda handlers, the job and usage DynamoDB tables, the data bucket and the EventBridge rules, in `lib/api-stack.ts` | Every environment |
 | `TranscriptionFrontEndStack` | The S3 bucket and CloudFront distribution serving `frontend/out`, in us-east-1 | Deployed environments |
 | `TranscriptionGitHubStack`, `TranscriptionFrontEndGitHubStack` | The asset bucket and the role GitHub Actions assumes to deploy each of the two stacks above | Deployed environments |
 | `TranscriptionUserPoolStack` | A Cognito user pool standing in for the externally managed one | Local deploys |

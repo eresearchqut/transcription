@@ -62,7 +62,7 @@ describe("fileUploadHandler", () => {
     expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
       expect.objectContaining({
         metadata: expect.objectContaining({ rpid: RPID }),
-        rpidPayload: project,
+        researchProject: project,
       }),
     );
   });

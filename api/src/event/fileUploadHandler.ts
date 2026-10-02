@@ -165,7 +165,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
-          rpidCheck.project as unknown as Record<string, unknown>,
+          rpidCheck.project,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

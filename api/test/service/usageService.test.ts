@@ -1,3 +1,4 @@
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { Transcription } from "model";
 import { TranscriptionJobStatus } from "model";
 
@@ -5,6 +6,14 @@ import { toUsageRecord } from "../../src/service/usageService";
 
 const IDENTITY_ID = "76c65a59-1c57-489b-be96-020ceaa9675a";
 const JOB_ID = "2e9b38b5-1df0-4841-8308-f174fb88aac7";
+
+const researchProject: RpidDto = {
+  encodedId: "RPID-1234",
+  title: "Project",
+  lead: { id: "1", name: "Lead" },
+  supervisor: { id: "2", name: "Supervisor" },
+  organisation: { faculty: { id: 3, name: "Faculty of X", type: "faculty" } },
+};
 
 const transcription = (overrides: Partial<Transcription> = {}) =>
   ({
@@ -29,7 +38,7 @@ describe("usageService", () => {
   it("maps the metered units and dimensions of a job", () => {
     const record = toUsageRecord(
       transcription({
-        rpidPayload: { encodedId: "RPID-1234", organisation: "Faculty of X" },
+        researchProject,
         audioSeconds: 128.4,
         summaryUsage: { inputTokens: 900, outputTokens: 120 },
         translationCharacters: 4321,
@@ -43,7 +52,7 @@ describe("usageService", () => {
         identityId: IDENTITY_ID,
         jobId: JOB_ID,
         rpid: "RPID-1234",
-        rpidPayload: { encodedId: "RPID-1234", organisation: "Faculty of X" },
+        researchProject,
         sourceLanguages: ["en-AU", "fr-FR"],
         targetLanguage: "es",
         mimeType: "audio/wav",

@@ -41,7 +41,7 @@ export const toUsageRecord = (record: Transcription): UsageRecord => {
     jobId: record.sk,
 
     rpid: metadata.rpid || undefined,
-    rpidPayload: record.rpidPayload,
+    researchProject: record.researchProject,
 
     sourceLanguages: splitLanguages(metadata.languages),
     resolvedLanguage: resolvedLanguage(record),
