@@ -1,8 +1,7 @@
-import { Badge, HStack, Stack, Text, Wrap } from "@chakra-ui/react";
+import { Stack, Text } from "@chakra-ui/react";
 import { Select, type Props as SelectProps } from "chakra-react-select";
-import type { Rpid, RpidOrganisation, RpidResearcher } from "model";
+import type { Rpid } from "model";
 import type { FunctionComponent } from "react";
-import { OptionBadge } from "@/components/mediaUpload/optionsSummary";
 
 export interface RpidInputProps
   extends Omit<SelectProps, "options" | "onChange" | "value"> {
@@ -17,75 +16,30 @@ interface RpidOption {
   rpid: Rpid;
 }
 
-export const rpidLabel = (rpid: Rpid): string =>
-  rpid.title ? `${rpid.encodedId}: ${rpid.title}` : (rpid.encodedId ?? "");
+const rpidLabel = ({ rpid, title }: Rpid): string =>
+  title ? `${rpid}: ${title}` : rpid;
 
-const researcherName = (researcher?: RpidResearcher): string | undefined =>
-  researcher?.preferredName || researcher?.name;
-
-export const organisationName = (rpid: Rpid): string | undefined => {
-  const { organisation } = rpid;
-  if (!organisation) {
-    return undefined;
-  }
-  if (typeof (organisation as RpidOrganisation).name === "string") {
-    return (organisation as RpidOrganisation).name;
-  }
-  return Object.values(organisation as Record<string, RpidOrganisation>)
-    .map((org) => org?.name)
-    .find((name) => !!name);
-};
-
-const statusColorPalette = (status?: string): string => {
-  switch (status?.toUpperCase()) {
-    case "ACTIVE":
-      return "green";
-    case "CLOSED":
-      return "gray";
-    default:
-      return "orange";
-  }
-};
+const rpidDetails = ({ lead, supervisor, school, faculty }: Rpid): string =>
+  [
+    lead && `Lead: ${lead}`,
+    supervisor && `Supervisor: ${supervisor}`,
+    [school, faculty].filter(Boolean).join(", "),
+  ]
+    .filter(Boolean)
+    .join(" \u00b7 ");
 
 const RpidOptionLabel: FunctionComponent<{
   rpid: Rpid;
   context: "menu" | "value";
 }> = ({ rpid, context }) => {
-  if (context === "value") {
-    return <>{rpidLabel(rpid)}</>;
-  }
-  const details = [
-    researcherName(rpid.lead) && {
-      label: "Lead",
-      value: researcherName(rpid.lead) as string,
-    },
-    researcherName(rpid.supervisor) && {
-      label: "Supervisor",
-      value: researcherName(rpid.supervisor) as string,
-    },
-    organisationName(rpid) && {
-      label: "Organisation",
-      value: organisationName(rpid) as string,
-    },
-  ].filter(Boolean) as { label: string; value: string }[];
+  const details = context === "menu" && rpidDetails(rpid);
   return (
-    <Stack gap={1}>
-      <HStack gap={2}>
-        <Text as={"span"} fontWeight={"medium"}>
-          {rpidLabel(rpid)}
+    <Stack gap={0.5}>
+      <Text as={"span"}>{rpidLabel(rpid)}</Text>
+      {details && (
+        <Text as={"span"} fontSize={"xs"} color={"fg.muted"}>
+          {details}
         </Text>
-        {rpid.status && (
-          <Badge colorPalette={statusColorPalette(rpid.status)} size={"sm"}>
-            {rpid.status}
-          </Badge>
-        )}
-      </HStack>
-      {details.length > 0 && (
-        <Wrap gap={1}>
-          {details.map(({ label, value }) => (
-            <OptionBadge key={label} label={label} value={value} />
-          ))}
-        </Wrap>
       )}
     </Stack>
   );
@@ -97,13 +51,11 @@ export const RpidInput: FunctionComponent<RpidInputProps> = ({
   value,
   ...props
 }) => {
-  const rpidOptions: RpidOption[] = (rpids ?? [])
-    .filter((rpid) => rpid.encodedId)
-    .map((rpid) => ({
-      label: rpidLabel(rpid),
-      value: rpid.encodedId as string,
-      rpid,
-    }));
+  const rpidOptions: RpidOption[] = (rpids ?? []).map((rpid) => ({
+    label: rpidLabel(rpid),
+    value: rpid.rpid,
+    rpid,
+  }));
 
   const selectedRpidOption =
     rpidOptions.find((option) => option.value === value) ?? null;

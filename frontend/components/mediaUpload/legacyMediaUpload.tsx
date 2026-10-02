@@ -15,7 +15,6 @@ import { type FunctionComponent, useState } from "react";
 import { ExternalLink } from "@/components/externalLink";
 import { HelpPopover } from "@/components/helpPopover";
 import { NewFeature } from "@/components/newFeature";
-import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
@@ -23,8 +22,9 @@ import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
 import { useRpids } from "../../hooks/useRpids";
 import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
 import { LanguageInput } from "../../inputs/languageInput";
-import { RpidInput } from "../../inputs/rpidInput";
+import { RpidAlerts, RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
+import { DMP_URL } from "../../utils/dmp";
 import type { TranscribeProps } from "./transcriptionOptions";
 
 export type { TranscribeProps };
@@ -45,7 +45,8 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>();
   const [rpid, setRpid] = useState<string | undefined>();
 
-  const { rpids, isLoading: rpidsLoading, isError: rpidsError } = useRpids();
+  const rpidsState = useRpids();
+  const { rpids, isLoading: rpidsLoading } = rpidsState;
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -105,29 +106,7 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
 
   return (
     <VStack align={"stretch"} gap={4}>
-      {rpidsError && (
-        <Alert
-          status={"error"}
-          title={"Your research projects could not be retrieved."}
-        >
-          <Text>
-            A Research Project ID (RPID) is required to use this service. Please
-            try again later. If the problem persists, contact eResearch support.
-          </Text>
-        </Alert>
-      )}
-      {!rpidsError && !rpidsLoading && rpids?.length === 0 && (
-        <Alert status={"warning"} title={"You have no research projects."}>
-          <Text>
-            A Research Project ID (RPID) is required to use this service. Create
-            a data management plan in the{" "}
-            <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
-              Data Management Planning tool
-            </ExternalLink>{" "}
-            to obtain one.
-          </Text>
-        </Alert>
-      )}
+      <RpidAlerts {...rpidsState} />
       <Stack
         direction={{ base: "column", sm: "row" }}
         gap={4}
@@ -152,6 +131,14 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
               onChange={setRpid}
               isLoading={rpidsLoading}
               placeholder={"Select a research project..."}
+              chakraStyles={{
+                menu: (provided) => ({
+                  ...provided,
+                  minWidth: "100%",
+                  width: "max-content",
+                  maxWidth: "min(36rem, 90vw)",
+                }),
+              }}
             />
           </Box>
           <HelpPopover
@@ -160,7 +147,7 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
           >
             Every transcription must be assigned to one of your research
             projects. Your Research Project IDs (RPIDs) are sourced from the{" "}
-            <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
+            <ExternalLink href={DMP_URL}>
               Data Management Planning tool
             </ExternalLink>
             .

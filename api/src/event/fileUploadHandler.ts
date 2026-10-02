@@ -24,6 +24,28 @@ const transcribeClient = new TranscribeClient({ region });
 xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
+/**
+ * The reason to refuse the upload, shown to the user as the job's failure
+ * reason, or undefined when the RPID is one of their active projects.
+ */
+const rpidRejection = async (
+  identityId: string,
+  rpid: string | undefined,
+): Promise<string | undefined> => {
+  if (!rpid) {
+    return "A Research Project ID (RPID) is required to start a transcription.";
+  }
+  try {
+    if (await getRpid(identityId, rpid)) {
+      return undefined;
+    }
+    return `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`;
+  } catch (error) {
+    console.error(`Failed to validate RPID ${rpid}`, error);
+    return `The Research Project ID (RPID) ${rpid} could not be checked with the Data Management Planning tool. Please try again later.`;
+  }
+};
+
 export const handler = async (event: S3Event) => {
   let uploadsCount = 0;
   for (const record of event.Records) {
@@ -58,28 +80,17 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
 
-      const rpid = headResponse.Metadata.rpid;
-      if (!rpid) {
-        console.error("Missing rpid metadata for upload", objectKey);
+      const rejection = await rpidRejection(
+        identityId,
+        headResponse.Metadata.rpid,
+      );
+      if (rejection) {
         await jobRejected(
           identityId,
           jobId,
           record.s3,
           headResponse.Metadata,
-          "A Research Project ID (RPID) is required to start a transcription.",
-        );
-        continue;
-      }
-      try {
-        await getRpid(identityId, rpid);
-      } catch (error) {
-        console.error(`Failed to validate rpid ${rpid}`, error);
-        await jobRejected(
-          identityId,
-          jobId,
-          record.s3,
-          headResponse.Metadata,
-          `The Research Project ID (RPID) ${rpid} could not be validated.`,
+          rejection,
         );
         continue;
       }

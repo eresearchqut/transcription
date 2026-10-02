@@ -23,7 +23,7 @@ interface OptionBadgeProps {
   value: string;
 }
 
-export const OptionBadge = ({ label, value }: OptionBadgeProps) => (
+const OptionBadge = ({ label, value }: OptionBadgeProps) => (
   <Group attached>
     <Badge variant={"solid"} colorPalette={"gray"} fontSize={"xs"}>
       {label}

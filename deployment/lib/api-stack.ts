@@ -55,6 +55,7 @@ export interface ApiStackProps extends cdk.StackProps {
     DmpApiUrl: string;
     DmpCredentialsParameter: string;
     DmpTokenUrl: string;
+    DmpWebUrl?: string;
     Environment: string;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
@@ -194,12 +195,23 @@ export class ApiStack extends cdk.Stack {
         })()
       : {};
 
-    const dmpCredentials =
-      ssm.StringParameter.fromSecureStringParameterAttributes(
-        this,
-        "DmpCredentials",
-        { parameterName: props.parameters.DmpCredentialsParameter },
-      );
+    // The handlers read the DMP client credentials from Parameter Store at
+    // runtime, so the secret never appears in the template. A local deploy
+    // leaves the parameter empty, because the DMP stub accepts any client.
+    const dmpCredentials = props.parameters.DmpCredentialsParameter
+      ? ssm.StringParameter.fromSecureStringParameterAttributes(
+          this,
+          "DmpCredentials",
+          { parameterName: props.parameters.DmpCredentialsParameter },
+        )
+      : undefined;
+    const dmpEnvironment: Record<string, string> = {
+      DMP_API_URL: props.parameters.DmpApiUrl,
+      DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
+      ...(dmpCredentials && {
+        DMP_CREDENTIALS_PARAMETER: dmpCredentials.parameterName,
+      }),
+    };
 
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
@@ -218,15 +230,13 @@ export class ApiStack extends cdk.Stack {
         BUCKET_NAME: dataBucket.bucketName,
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
-        DMP_API_URL: props.parameters.DmpApiUrl,
-        DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
-        DMP_CREDENTIALS_PARAMETER: props.parameters.DmpCredentialsParameter,
+        ...dmpEnvironment,
         ...localHandlerEnvironment,
       },
       ...vpcConfiguration,
     });
     dataTable.grantReadWriteData(apiFunction);
-    dmpCredentials.grantRead(apiFunction);
+    dmpCredentials?.grantRead(apiFunction);
 
     const userPoolArn = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolArn`,
@@ -328,9 +338,7 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
-          DMP_API_URL: props.parameters.DmpApiUrl,
-          DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
-          DMP_CREDENTIALS_PARAMETER: props.parameters.DmpCredentialsParameter,
+          ...dmpEnvironment,
           ...localHandlerEnvironment,
         },
       },
@@ -347,7 +355,7 @@ export class ApiStack extends cdk.Stack {
     );
     dataTable.grantReadWriteData(jobStartFunction);
     dataBucket.grantReadWrite(jobStartFunction);
-    dmpCredentials.grantRead(jobStartFunction);
+    dmpCredentials?.grantRead(jobStartFunction);
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),
@@ -839,6 +847,9 @@ export class ApiStack extends cdk.Stack {
               NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN:
                 props.parameters.SplunkRumAccessToken,
             }
+          : {}),
+        ...(props.parameters.DmpWebUrl
+          ? { NEXT_PUBLIC_DMP_URL: props.parameters.DmpWebUrl }
           : {}),
         ...(props.parameters.UmamiWebsiteId && props.parameters.UmamiUrl
           ? {

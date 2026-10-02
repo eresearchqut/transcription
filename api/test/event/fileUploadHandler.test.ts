@@ -35,8 +35,8 @@ describe("fileUploadHandler", () => {
   const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
 
   beforeAll(() => {
-    process.env.DMP_TOKEN_URL = "https://dmp.example.com/oauth2/token";
-    process.env.DMP_API_URL = "https://dmp.example.com/api";
+    process.env.DMP_TOKEN_URL = "https://auth.dmp.example.com/oauth2/token";
+    process.env.DMP_API_URL = "https://api.dmp.example.com";
     process.env.DMP_CLIENT_ID = "client-id";
     process.env.DMP_CLIENT_SECRET = "client-secret";
     global.fetch = fetchMock as unknown as typeof fetch;
@@ -60,12 +60,14 @@ describe("fileUploadHandler", () => {
     });
     fetchMock
       .mockResolvedValueOnce(tokenResponse)
-      .mockResolvedValueOnce(jsonResponse(200, { encodedId: RPID }));
+      .mockResolvedValueOnce(
+        jsonResponse(200, { encodedId: RPID, title: "Project" }),
+      );
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      `https://dmp.example.com/api/rpid/${IDENTITY_ID}/${RPID}`,
+      `https://api.dmp.example.com/v1/rpid/user/${IDENTITY_ID}/${RPID}?status=ACTIVE`,
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: "Bearer test-token",
@@ -104,7 +106,7 @@ describe("fileUploadHandler", () => {
     );
   });
 
-  it("rejects the job when the rpid cannot be validated", async () => {
+  it("rejects the job when the rpid is not one of the user's active projects", async () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
@@ -122,7 +124,7 @@ describe("fileUploadHandler", () => {
         jobStatusUpdated: {
           detail: {
             TranscriptionJobStatus: "FAILED",
-            FailureReason: `The Research Project ID (RPID) ${RPID} could not be validated.`,
+            FailureReason: `The Research Project ID (RPID) ${RPID} is not one of your active projects in the Data Management Planning tool.`,
           },
         },
       }),
@@ -145,7 +147,7 @@ describe("fileUploadHandler", () => {
         jobStatusUpdated: {
           detail: {
             TranscriptionJobStatus: "FAILED",
-            FailureReason: `The Research Project ID (RPID) ${RPID} could not be validated.`,
+            FailureReason: `The Research Project ID (RPID) ${RPID} could not be checked with the Data Management Planning tool. Please try again later.`,
           },
         },
       }),

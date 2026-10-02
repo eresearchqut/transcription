@@ -27,7 +27,7 @@ export const useRpids = (): UseRpidsState => {
       }
       return rpids;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 60 * 1000,
     retry: 3,
   });
 

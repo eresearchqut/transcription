@@ -29,8 +29,12 @@ describe("GET /rpid", () => {
 
   it("returns the user's rpids", async () => {
     const rpids = [
-      { encodedId: "RPID-1", title: "First project", status: "ACTIVE" },
-      { encodedId: "RPID-2", title: "Second project", status: "CLOSED" },
+      { rpid: "RPID-1", title: "First project", lead: "Jane Citizen" },
+      {
+        rpid: "RPID-2",
+        title: "Second project",
+        faculty: "Faculty of Science",
+      },
     ];
     mockListRpids.mockResolvedValue(rpids);
 
@@ -55,7 +59,7 @@ describe("GET /rpid", () => {
   });
 
   it("returns 500 when the DMP API request fails", async () => {
-    mockListRpids.mockRejectedValue(new Error("DMP API request failed: 502"));
+    mockListRpids.mockRejectedValue(new Error("DMP request failed: 502"));
 
     const response = await request(api)
       .get("/rpid")
