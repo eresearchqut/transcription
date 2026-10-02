@@ -61,7 +61,7 @@ createServer((request, response) => {
   if (!rpid) {
     return send(response, 200, matching);
   }
-  const plan = matching.find(({ encodedId }) => encodedId === rpid);
+  const plan = matching.find((candidate) => candidate.rpid === rpid);
   return plan
     ? send(response, 200, plan)
     : notFound(response, "No plan found for researcher");

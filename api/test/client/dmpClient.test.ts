@@ -21,15 +21,18 @@ const tokenResponse = (accessToken = "token-1", expiresIn = 3600) =>
 const PARAMETER_NAME = "/app/dev/transcription/dmp-credentials";
 
 const rpidDto: RpidDto = {
-  encodedId: "RPID-1",
+  rpid: "RPID-1",
   title: "First project",
   status: "ACTIVE",
+  createdDate: "2026-03-02T00:00:00.000Z",
   lead: { id: "1", name: "Jane Citizen", preferredName: "Jane" },
   supervisor: { id: "2", name: "John Smith" },
-  organisation: {
-    faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
-    school: { id: 2, name: "School of Physics", type: "school", parentId: 1 },
-  },
+  faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
+  school: { id: 2, name: "School of Physics", type: "school", parentId: 1 },
+  fieldsOfResearch: [
+    { code: "5101", name: "Astronomical sciences", year: 2020 },
+  ],
+  isHdrProject: true,
 };
 
 const basicAuth = (clientId: string, clientSecret: string) =>
