@@ -13,10 +13,16 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
     env:
       # Evaluate IAM, so a handler missing a grant fails the suite. See the
       # AUTH setting in docker-compose.yml for why local development doesn't.
       MINISTACK_AUTH: "true"
+      # Installs @eresearchqut/dmp-api from GitHub Packages, both here and in
+      # the bootstrap container.
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -28,6 +34,9 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+          # The DMP client, @eresearchqut/dmp-api, is published to GitHub Packages.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@eresearchqut'
       - name: Install dependencies
         run: pnpm install
 

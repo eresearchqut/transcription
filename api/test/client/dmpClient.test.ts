@@ -1,28 +1,26 @@
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
+import {
+  ClientCredentialsError,
+  ResponseError,
+  type RpidDto,
+} from "@eresearchqut/dmp-api";
 
 import { mockClient } from "aws-sdk-client-mock";
 
-import {
-  clearTokenCache,
-  getRpid,
-  listRpids,
-} from "../../src/client/dmpClient";
+import { getRpid, listRpids, resetDmpClient } from "../../src/client/dmpClient";
 
 const jsonResponse = (status: number, body: unknown) =>
-  ({
-    ok: status >= 200 && status < 300,
+  new Response(JSON.stringify(body), {
     status,
-    statusText: `${status}`,
-    json: async () => body,
-  }) as Response;
+    headers: { "Content-Type": "application/json" },
+  });
 
 const tokenResponse = (accessToken = "token-1", expiresIn = 3600) =>
   jsonResponse(200, { access_token: accessToken, expires_in: expiresIn });
 
 const PARAMETER_NAME = "/app/dev/transcription/dmp-credentials";
 
-/** The SDK 1.1 shape the DMP serves today. */
-const encodedIdDto = {
+const rpidDto: RpidDto = {
   encodedId: "RPID-1",
   title: "First project",
   status: "ACTIVE",
@@ -34,16 +32,8 @@ const encodedIdDto = {
   },
 };
 
-/** The shape the next DMP release serves. */
-const rpidDto = {
-  rpid: "RPID-2",
-  title: "Second project",
-  status: "ACTIVE",
-  lead: { id: "1", name: "Jane Citizen" },
-  faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
-  school: { id: 2, name: "School of Physics", type: "school" },
-  fieldsOfResearch: [{ code: "5101", name: "Astronomical sciences" }],
-};
+const basicAuth = (clientId: string, clientSecret: string) =>
+  `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
 
 describe("dmpClient", () => {
   const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
@@ -61,14 +51,18 @@ describe("dmpClient", () => {
     fetchMock.mockReset();
     ssmMock.reset();
     delete process.env.DMP_CREDENTIALS_PARAMETER;
-    clearTokenCache();
+    resetDmpClient();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it("requests a client_credentials token with basic auth and reuses it", async () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(200, []))
-      .mockResolvedValueOnce(jsonResponse(200, encodedIdDto));
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
 
     await listRpids("user-1");
     await getRpid("user-1", "RPID-1");
@@ -80,9 +74,9 @@ describe("dmpClient", () => {
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
-          Authorization: `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`,
-          "Content-Type": "application/x-www-form-urlencoded",
+          Authorization: basicAuth("client-id", "client-secret"),
         }),
+        signal: expect.any(AbortSignal),
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -90,6 +84,7 @@ describe("dmpClient", () => {
       "https://api.dmp.example.com/v1/rpid/user/user-1?status=ACTIVE",
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer token-1" }),
+        signal: expect.any(AbortSignal),
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -104,7 +99,7 @@ describe("dmpClient", () => {
   it("encodes the user and the RPID in the path", async () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
-      .mockResolvedValueOnce(jsonResponse(200, encodedIdDto));
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
 
     await getRpid("user/1", "RPID 1");
 
@@ -114,31 +109,12 @@ describe("dmpClient", () => {
     );
   });
 
-  it("maps both DMP shapes to the transcription model", async () => {
+  it("returns the DMP's projects", async () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
-      .mockResolvedValueOnce(
-        jsonResponse(200, [encodedIdDto, rpidDto, { title: "No RPID" }]),
-      );
+      .mockResolvedValueOnce(jsonResponse(200, [rpidDto]));
 
-    await expect(listRpids("user-1")).resolves.toEqual([
-      {
-        rpid: "RPID-1",
-        title: "First project",
-        lead: "Jane Citizen",
-        supervisor: "John Smith",
-        faculty: "Faculty of Science",
-        school: "School of Physics",
-      },
-      {
-        rpid: "RPID-2",
-        title: "Second project",
-        lead: "Jane Citizen",
-        supervisor: undefined,
-        faculty: "Faculty of Science",
-        school: "School of Physics",
-      },
-    ]);
+    await expect(listRpids("user-1")).resolves.toEqual([rpidDto]);
   });
 
   it("lists no RPIDs when the DMP doesn't know the user", async () => {
@@ -163,12 +139,13 @@ describe("dmpClient", () => {
 
   it("refreshes the token once it has expired", async () => {
     fetchMock
-      .mockResolvedValueOnce(tokenResponse("token-1", 30))
+      .mockResolvedValueOnce(tokenResponse("token-1", 3600))
       .mockResolvedValueOnce(jsonResponse(200, []))
       .mockResolvedValueOnce(tokenResponse("token-2"))
       .mockResolvedValueOnce(jsonResponse(200, []));
 
     await listRpids("user-1");
+    jest.spyOn(Date, "now").mockReturnValue(Date.now() + 3600 * 1000);
     await listRpids("user-1");
 
     expect(fetchMock).toHaveBeenCalledTimes(4);
@@ -194,7 +171,7 @@ describe("dmpClient", () => {
       });
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
-      .mockResolvedValue(jsonResponse(200, []));
+      .mockImplementation(async () => jsonResponse(200, []));
 
     await listRpids("user-1");
     await listRpids("user-1");
@@ -204,7 +181,7 @@ describe("dmpClient", () => {
       expect.any(String),
       expect.objectContaining({
         headers: expect.objectContaining({
-          Authorization: `Basic ${Buffer.from("stored-id:stored-secret").toString("base64")}`,
+          Authorization: basicAuth("stored-id", "stored-secret"),
         }),
       }),
     );
@@ -231,6 +208,29 @@ describe("dmpClient", () => {
     );
   });
 
+  it("re-reads the credentials after they could not be read", async () => {
+    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
+    ssmMock
+      .on(GetParameterCommand)
+      .rejectsOnce(new Error("Throttled"))
+      .resolves({
+        Parameter: {
+          Value: JSON.stringify({
+            clientId: "client-id",
+            clientSecret: "client-secret",
+          }),
+        },
+      });
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, []));
+
+    await expect(listRpids("user-1")).rejects.toThrow("Throttled");
+    await expect(listRpids("user-1")).resolves.toEqual([]);
+
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(2);
+  });
+
   it("re-reads the credentials after a failed token request", async () => {
     process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
     ssmMock.on(GetParameterCommand).resolves({
@@ -246,9 +246,7 @@ describe("dmpClient", () => {
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(200, []));
 
-    await expect(listRpids("user-1")).rejects.toThrow(
-      "DMP token request failed: 401",
-    );
+    await expect(listRpids("user-1")).rejects.toThrow(ClientCredentialsError);
     await expect(listRpids("user-1")).resolves.toEqual([]);
 
     expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(2);
@@ -261,8 +259,9 @@ describe("dmpClient", () => {
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(status, {}));
 
-    await expect(getRpid("user-1", "RPID-1")).rejects.toThrow(
-      `DMP request failed: GET /v1/rpid/user/user-1/RPID-1 ${status}`,
-    );
+    const error = await getRpid("user-1", "RPID-1").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ResponseError);
+    expect((error as ResponseError).response.status).toBe(status);
   });
 });
