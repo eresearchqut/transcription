@@ -20,12 +20,10 @@ export const RpidInput: FunctionComponent<RpidInputProps> = ({
   value,
   ...props
 }) => {
-  const rpidOptions: RpidOption[] = (rpids ?? []).map(
-    ({ encodedId, title }) => ({
-      label: title ? `${encodedId}: ${title}` : encodedId,
-      value: encodedId,
-    }),
-  );
+  const rpidOptions: RpidOption[] = (rpids ?? []).map(({ rpid, title }) => ({
+    label: title ? `${rpid}: ${title}` : rpid,
+    value: rpid,
+  }));
 
   const selectedRpidOption =
     rpidOptions.find((option) => option.value === value) ?? null;

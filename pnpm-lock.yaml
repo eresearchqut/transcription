@@ -59,8 +59,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       '@eresearchqut/dmp-api':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.0
+        version: 1.2.0
       aws-xray-sdk:
         specifier: ^3.12.0
         version: 3.12.0
@@ -187,8 +187,8 @@ importers:
         specifier: ^11.14.0
         version: 11.14.0(@types/react@19.2.17)(react@19.2.7)
       '@eresearchqut/dmp-api':
-        specifier: ^1.1.0
-        version: 1.1.0
+        specifier: ^1.2.0
+        version: 1.2.0
       '@splunk/otel-web':
         specifier: ^3.0.0
         version: 3.0.0
@@ -1418,8 +1418,8 @@ packages:
   '@emotion/weak-memoize@0.4.0':
     resolution: {integrity: sha512-snKqtPW01tN0ui7yu9rGv69aJXr/a/Ywvl11sUjNtEcRc+ng/mQriFL0wLXMef74iHa/EkftbDzU9F8iFbH+zg==}
 
-  '@eresearchqut/dmp-api@1.1.0':
-    resolution: {integrity: sha512-lY6BXjmqYm45DuavfJHlSgUih5revifaAYiX8WohQbR+rgjUnBvaPywoUvgN+Ht3vNhOAxdAi1PugC03Omg8Eg==, tarball: https://npm.pkg.github.com/download/@eresearchqut/dmp-api/1.1.0/5dc48872bc9317afa43b6f3e05f366a48fcd8f84}
+  '@eresearchqut/dmp-api@1.2.0':
+    resolution: {integrity: sha512-d/bz7ds7UMpr7Rtp06NQEljQNhpY21SsWuhQpE8JKJnX6TgkE0fCEn4wDGh6Jkale7BkkM9hlgnsGA+clYnnww==, tarball: https://npm.pkg.github.com/download/@eresearchqut/dmp-api/1.2.0/bfc75a551953ff9ccc0de453224b73f76bd8adf3}
 
   '@esbuild/aix-ppc64@0.28.1':
     resolution: {integrity: sha512-Svl7tq8k/08+p6CXPpRjQ1fKX+1odH/BQbb48fV6fj3CWHhsoIOoY87w1oHXm0qEpkIK3ZfVgp0hed3XBXzXMQ==}
@@ -8370,7 +8370,7 @@ snapshots:
 
   '@emotion/weak-memoize@0.4.0': {}
 
-  '@eresearchqut/dmp-api@1.1.0': {}
+  '@eresearchqut/dmp-api@1.2.0': {}
 
   '@esbuild/aix-ppc64@0.28.1':
     optional: true

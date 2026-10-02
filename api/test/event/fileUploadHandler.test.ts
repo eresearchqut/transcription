@@ -42,8 +42,9 @@ describe("fileUploadHandler", () => {
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
     mockGetRpid.mockResolvedValue({
-      encodedId: RPID,
+      rpid: RPID,
       title: "Project",
+      createdDate: "2026-03-02T00:00:00.000Z",
       lead: { id: "1", name: "Jane Citizen" },
     });
 
