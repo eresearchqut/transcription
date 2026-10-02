@@ -218,11 +218,7 @@ const Upload: NextPageWithLayout = () => {
 
 Upload.getLayout = (page) => {
   return (
-    <AuthenticatedLayout
-      isLanding={false}
-      pageTitle={"Upload Media"}
-      contentMaxWidth={"4xl"}
-    >
+    <AuthenticatedLayout isLanding={false} pageTitle={"Upload Media"}>
       {page}
     </AuthenticatedLayout>
   );

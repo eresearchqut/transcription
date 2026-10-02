@@ -1,12 +1,12 @@
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import { useQuery } from "@tanstack/react-query";
-import type { Rpid } from "model";
 import { getter } from "../client/fetchers";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
 
 export interface UseRpidsState {
-  rpids: Rpid[] | undefined;
+  rpids: RpidDto[] | undefined;
   isLoading: boolean;
   isError: boolean;
 }
@@ -18,7 +18,7 @@ export interface UseRpidsState {
 export const useRpids = (): UseRpidsState => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["rpids"],
-    queryFn: async (): Promise<Rpid[]> => {
+    queryFn: async (): Promise<RpidDto[]> => {
       const rpids = await getter({ apiUrl: API_ENDPOINT, resource: "rpid" });
       if (rpids === undefined) {
         // getter resolves undefined on transient auth token failures; throw

@@ -20,6 +20,7 @@
         "@aws-sdk/client-translate": "^3.1078.0",
         "@aws-sdk/util-dynamodb": "^3.996.5",
         "@codegenie/serverless-express": "^5.0.0",
+        "@eresearchqut/dmp-api": "^1.1.0",
         "aws-xray-sdk": "^3.12.0",
         "body-parser": "^2.3.0",
         "cors": "^2.8.6",
