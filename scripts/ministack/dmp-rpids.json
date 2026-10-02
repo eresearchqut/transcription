@@ -1,0 +1,40 @@
+{
+  "researcher1001": [
+    {
+      "encodedId": "A1B2C3D4",
+      "title": "Oral histories of Queensland flood recovery",
+      "status": "ACTIVE",
+      "lead": { "id": "researcher1001", "name": "Researcher One" },
+      "organisation": {
+        "faculty": {
+          "id": 1,
+          "name": "Faculty of Creative Industries, Education and Social Justice",
+          "type": "faculty"
+        },
+        "school": {
+          "id": 2,
+          "name": "School of Justice",
+          "type": "school",
+          "parentId": 1
+        }
+      }
+    },
+    {
+      "encodedId": "E5F6G7H8",
+      "title": "Clinician interviews on remote patient monitoring",
+      "status": "ACTIVE",
+      "lead": { "id": "student3003", "name": "Student Three" },
+      "supervisor": { "id": "researcher1001", "name": "Researcher One" },
+      "organisation": {
+        "faculty": { "id": 3, "name": "Faculty of Health", "type": "faculty" }
+      }
+    },
+    {
+      "encodedId": "J9K0L1M2",
+      "title": "Archived focus group study",
+      "status": "ARCHIVED",
+      "lead": { "id": "researcher1001", "name": "Researcher One" }
+    }
+  ],
+  "researcher2002": []
+}

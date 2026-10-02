@@ -77,6 +77,8 @@ Without this, everything except sign-in works. Clicking through the browser warn
 
 Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
+Every upload needs an RPID from the Data Management Planning tool, which a Compose container stands in for. `researcher1` has two active plans to choose from. `researcher2` has none, so the upload form shows the warning a researcher without a plan sees. The plans are in `scripts/ministack/dmp-rpids.json`.
+
 ### Everyday commands
 
 | Command | What it does |
