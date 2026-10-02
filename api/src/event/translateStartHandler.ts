@@ -24,7 +24,11 @@ import {
   translationJob as updateTranslationJob,
   translationKey as updateTranslationKey,
 } from "../service/transcriptionService";
-import { segmentTexts, type TranscriptDocument } from "../util/transcript";
+import {
+  segmentTexts,
+  type TranscriptDocument,
+  translationCharacterCount,
+} from "../util/transcript";
 import { buildXliff, XLIFF_FILE_NAME } from "../util/xliff";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
@@ -139,12 +143,11 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
   // Write the segments as an XLIFF document and start an asynchronous batch
   // translation job. Completion is handled by translateJobStateChangeHandler.
   const transcript: TranscriptDocument = JSON.parse(transcriptRaw);
-  const segments = segmentTexts(transcript);
-  const translationCharacters = segments.reduce(
-    (total, text) => total + text.length,
-    0,
+  const xliff = buildXliff(
+    segmentTexts(transcript),
+    sourceLanguage,
+    targetLanguage,
   );
-  const xliff = buildXliff(segments, sourceLanguage, targetLanguage);
   const inputPrefix = `translations/input/${identityId}/${jobId}/`;
   await s3Client.send(
     new PutObjectCommand({
@@ -197,7 +200,7 @@ export const handler = async (event: { detail?: TranscriptionJob }) => {
       jobId: startResponse.JobId ?? "",
       status: startResponse.JobStatus ?? "SUBMITTED",
     },
-    translationCharacters,
+    translationCharacterCount(transcript),
   );
 
   return `Started translation job ${startResponse.JobId} (${sourceLanguage} -> ${targetLanguage})`;

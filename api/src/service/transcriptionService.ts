@@ -1,5 +1,7 @@
 import type { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
+
 import {
   createResource,
   getResource,
@@ -19,16 +21,14 @@ export const jobStarted = (
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
-  rpidPayload?: Record<string, unknown>,
+  researchProject?: RpidDto,
 ) =>
   putResource(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
-    ...(rpidPayload && {
-      rpidPayload: JSON.parse(JSON.stringify(rpidPayload)),
-    }),
+    researchProject,
   });
 
 /**

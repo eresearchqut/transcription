@@ -259,7 +259,10 @@ const Login: NextPageWithLayout = () => {
               <List.Root listStylePosition={"inside"}>
                 <List.Item>
                   The research project (RPID) the transcription was assigned to,
-                  and its faculty and supervisor
+                  with the project's details from the Data Management Planning
+                  tool, such as its title, lead, supervisor, school, faculty,
+                  fields of research, and whether it is a Higher Degree Research
+                  (HDR) project
                 </List.Item>
                 <List.Item>
                   Who submitted it, and when it started and finished
