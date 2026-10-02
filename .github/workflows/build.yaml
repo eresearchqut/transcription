@@ -4,6 +4,9 @@ on:
 jobs:
   install:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -15,8 +18,13 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+          # The DMP client, @eresearchqut/dmp-api, is published to GitHub Packages.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@eresearchqut'
       - name: Install dependencies
         run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Linting
         run: pnpm lint
       - name: Formatting

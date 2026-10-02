@@ -7,10 +7,7 @@ import { Layout, type LayoutProps } from "./layout";
 
 export const AuthenticatedLayout: FunctionComponent<
   PropsWithChildren<
-    Pick<
-      LayoutProps,
-      "pageTitle" | "headerAction" | "isLanding" | "contentMaxWidth"
-    >
+    Pick<LayoutProps, "pageTitle" | "headerAction" | "isLanding">
   >
 > = ({ children, ...layoutProps }) => {
   const { loading, authenticated } = useAuth();

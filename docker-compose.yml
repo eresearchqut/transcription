@@ -187,6 +187,9 @@ services:
     environment:
       # Use config/local.json and the local-safe stack.
       - LOCAL_DEPLOY=true
+      # Installs @eresearchqut/dmp-api from GitHub Packages. `pnpm ministack:up`
+      # passes the host's token through.
+      - NODE_AUTH_TOKEN
       # The asset bucket bin/deployment.ts deploys into, which GitHubStack
       # creates in a deployed environment. The command above creates it here,
       # in place of `cdk bootstrap`, from the account in config/local.json.

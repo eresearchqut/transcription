@@ -29,11 +29,15 @@ describe("GET /rpid", () => {
 
   it("returns the user's rpids", async () => {
     const rpids = [
-      { rpid: "RPID-1", title: "First project", lead: "Jane Citizen" },
       {
-        rpid: "RPID-2",
+        encodedId: "RPID-1",
+        title: "First project",
+        lead: { id: "1", name: "Jane Citizen" },
+      },
+      {
+        encodedId: "RPID-2",
         title: "Second project",
-        faculty: "Faculty of Science",
+        lead: { id: "2", name: "John Smith" },
       },
     ];
     mockListRpids.mockResolvedValue(rpids);
