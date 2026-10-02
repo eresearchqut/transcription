@@ -6,7 +6,7 @@ import {
 
 import { mockClient } from "aws-sdk-client-mock";
 
-import { clearTokenCache } from "../../src/client/dmpClient";
+import { getRpid } from "../../src/client/dmpClient";
 import { handler } from "../../src/event/fileUploadHandler";
 import { getResource } from "../../src/repository/repository";
 import fileMetadata from "./fileMetadata.json";
@@ -16,37 +16,20 @@ const IDENTITY_ID = "76c65a59-1c57-489b-be96-020ceaa9675a";
 const JOB_ID = "2e9b38b5-1df0-4841-8308-f174fb88aac7";
 const RPID = "RPID-1234";
 
-const jsonResponse = (status: number, body: unknown) =>
-  ({
-    ok: status >= 200 && status < 300,
-    status,
-    statusText: `${status}`,
-    json: async () => body,
-  }) as Response;
+jest.mock("../../src/client/dmpClient", () => ({
+  getRpid: jest.fn(),
+}));
 
-const tokenResponse = jsonResponse(200, {
-  access_token: "test-token",
-  expires_in: 3600,
-});
+const mockGetRpid = getRpid as jest.MockedFunction<typeof getRpid>;
 
 describe("fileUploadHandler", () => {
   const transcribeMock = mockClient(TranscribeClient);
   const s3Mock = mockClient(S3Client);
-  const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
-
-  beforeAll(() => {
-    process.env.DMP_TOKEN_URL = "https://auth.dmp.example.com/oauth2/token";
-    process.env.DMP_API_URL = "https://api.dmp.example.com";
-    process.env.DMP_CLIENT_ID = "client-id";
-    process.env.DMP_CLIENT_SECRET = "client-secret";
-    global.fetch = fetchMock as unknown as typeof fetch;
-  });
 
   beforeEach(() => {
     transcribeMock.reset();
     s3Mock.reset();
-    fetchMock.mockReset();
-    clearTokenCache();
+    mockGetRpid.mockReset();
     transcribeMock.on(StartTranscriptionJobCommand).resolves({
       TranscriptionJob: {
         TranscriptionJobName: "A-Job",
@@ -58,22 +41,15 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    fetchMock
-      .mockResolvedValueOnce(tokenResponse)
-      .mockResolvedValueOnce(
-        jsonResponse(200, { encodedId: RPID, title: "Project" }),
-      );
+    mockGetRpid.mockResolvedValue({
+      encodedId: RPID,
+      title: "Project",
+      lead: { id: "1", name: "Jane Citizen" },
+    });
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      `https://api.dmp.example.com/v1/rpid/user/${IDENTITY_ID}/${RPID}?status=ACTIVE`,
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer test-token",
-        }),
-      }),
-    );
+    expect(mockGetRpid).toHaveBeenCalledWith(IDENTITY_ID, RPID);
     expect(
       transcribeMock.commandCalls(StartTranscriptionJobCommand),
     ).toHaveLength(1);
@@ -89,7 +65,7 @@ describe("fileUploadHandler", () => {
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
 
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(mockGetRpid).not.toHaveBeenCalled();
     expect(
       transcribeMock.commandCalls(StartTranscriptionJobCommand),
     ).toHaveLength(0);
@@ -110,9 +86,7 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    fetchMock
-      .mockResolvedValueOnce(tokenResponse)
-      .mockResolvedValueOnce(jsonResponse(404, { message: "Not found" }));
+    mockGetRpid.mockResolvedValue(undefined);
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
 
@@ -135,7 +109,7 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    fetchMock.mockRejectedValue(new Error("connect ECONNREFUSED"));
+    mockGetRpid.mockRejectedValue(new Error("connect ECONNREFUSED"));
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
 
