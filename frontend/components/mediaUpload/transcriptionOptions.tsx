@@ -22,8 +22,9 @@ import features from "@/public/features.json";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
 import { useRpids } from "../../hooks/useRpids";
 import { LanguageInput } from "../../inputs/languageInput";
-import { RpidInput } from "../../inputs/rpidInput";
+import { RpidAlerts, RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
+import { DMP_URL } from "../../utils/dmp";
 
 export interface TranscribeProps {
   languages: string[];
@@ -60,7 +61,8 @@ export const TranscriptionOptions: FunctionComponent<
   );
   const [rpid, setRpid] = useState<string | undefined>();
 
-  const { rpids, isLoading: rpidsLoading, isError: rpidsError } = useRpids();
+  const rpidsState = useRpids();
+  const { rpids, isLoading: rpidsLoading, isError: rpidsError } = rpidsState;
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -131,7 +133,7 @@ export const TranscriptionOptions: FunctionComponent<
         <Text fontSize={"sm"} color={"fg.muted"}>
           Every transcription must be assigned to one of your research projects.
           Your Research Project IDs (RPIDs) are sourced from the{" "}
-          <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
+          <ExternalLink href={DMP_URL}>
             Data Management Planning tool
           </ExternalLink>
           .
@@ -155,29 +157,7 @@ export const TranscriptionOptions: FunctionComponent<
             />
           </Box>
         </Stack>
-        {rpidsError && (
-          <Alert
-            status={"error"}
-            title={"Your research projects could not be retrieved."}
-          >
-            <Text>
-              Please try again later. If the problem persists, contact eResearch
-              support.
-            </Text>
-          </Alert>
-        )}
-        {!rpidsError && !rpidsLoading && rpids?.length === 0 && (
-          <Alert status={"warning"} title={"You have no research projects."}>
-            <Text>
-              A Research Project ID (RPID) is required to use this service.
-              Create a data management plan in the{" "}
-              <ExternalLink href={"https://data-mgmt-plan.qut.edu.au/"}>
-                Data Management Planning tool
-              </ExternalLink>{" "}
-              to obtain one.
-            </Text>
-          </Alert>
-        )}
+        <RpidAlerts {...rpidsState} />
       </Field>
       <Field
         invalid={languageSizeLimitExceeded}

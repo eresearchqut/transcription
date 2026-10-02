@@ -40,10 +40,8 @@ import {
   TranscriptionsContextProvider,
 } from "../context/transcriptions-context";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
+import { dmpPlanUrl } from "../utils/dmp";
 import { decodeFilename } from "../utils/filename";
-
-const DMP_PLAN_SEARCH_URL =
-  "https://data-mgmt-plan.qut.edu.au/project/plan/search";
 
 const Transcriptions: NextPageWithLayout = () => {
   const [open, setOpen] = useState(false);
@@ -171,10 +169,7 @@ const Transcriptions: NextPageWithLayout = () => {
           return null;
         }
         return (
-          <ExternalLink
-            href={`${DMP_PLAN_SEARCH_URL}?plan%5Bquery%5D=${encodeURIComponent(rpid)}`}
-            fontFamily={"mono"}
-          >
+          <ExternalLink href={dmpPlanUrl(rpid)} fontFamily={"mono"}>
             {rpid}
           </ExternalLink>
         );
