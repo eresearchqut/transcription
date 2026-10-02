@@ -30,13 +30,15 @@ describe("GET /rpid", () => {
   it("returns the user's rpids", async () => {
     const rpids = [
       {
-        encodedId: "RPID-1",
+        rpid: "RPID-1",
         title: "First project",
+        createdDate: "2026-03-02T00:00:00.000Z",
         lead: { id: "1", name: "Jane Citizen" },
       },
       {
-        encodedId: "RPID-2",
+        rpid: "RPID-2",
         title: "Second project",
+        createdDate: "2026-05-18T00:00:00.000Z",
         lead: { id: "2", name: "John Smith" },
       },
     ];
