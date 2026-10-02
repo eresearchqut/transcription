@@ -1,0 +1,47 @@
+{
+  "researcher1001": [
+    {
+      "rpid": "A1B2C3D4",
+      "title": "Oral histories of Queensland flood recovery",
+      "status": "ACTIVE",
+      "createdDate": "2026-03-02T00:00:00.000Z",
+      "lead": { "id": "researcher1001", "name": "Researcher One" },
+      "faculty": {
+        "id": 1,
+        "name": "Faculty of Creative Industries, Education and Social Justice",
+        "type": "faculty"
+      },
+      "school": {
+        "id": 2,
+        "name": "School of Justice",
+        "type": "school",
+        "parentId": 1
+      },
+      "fieldsOfResearch": [
+        { "code": "4303", "name": "Historical studies", "year": 2020 }
+      ],
+      "isHdrProject": false
+    },
+    {
+      "rpid": "E5F6G7H8",
+      "title": "Clinician interviews on remote patient monitoring",
+      "status": "ACTIVE",
+      "createdDate": "2026-05-18T00:00:00.000Z",
+      "lead": { "id": "student3003", "name": "Student Three" },
+      "supervisor": { "id": "researcher1001", "name": "Researcher One" },
+      "faculty": { "id": 3, "name": "Faculty of Health", "type": "faculty" },
+      "fieldsOfResearch": [
+        { "code": "4203", "name": "Health services and systems", "year": 2020 }
+      ],
+      "isHdrProject": true
+    },
+    {
+      "rpid": "J9K0L1M2",
+      "title": "Archived focus group study",
+      "status": "ARCHIVED",
+      "createdDate": "2025-08-11T00:00:00.000Z",
+      "lead": { "id": "researcher1001", "name": "Researcher One" }
+    }
+  ],
+  "researcher2002": []
+}

@@ -115,6 +115,25 @@ services:
     networks:
       - transcription-network
 
+  # Stands in for the Data Management Planning tool, which the handlers check
+  # each upload's RPID against (see scripts/ministack/dmp-stub.mjs). Only the
+  # Lambda containers call it, so nothing is published on the host.
+  transcription-dmp:
+    container_name: "${TRANSCRIPTION_DMP_DOCKER_NAME:-transcription-dmp}"
+    image: node:24-alpine
+    command: ["node", "/dmp/dmp-stub.mjs"]
+    volumes:
+      - "./scripts/ministack/dmp-stub.mjs:/dmp/dmp-stub.mjs:ro"
+      - "./scripts/ministack/dmp-rpids.json:/dmp/dmp-rpids.json:ro"
+    healthcheck:
+      test: "wget --quiet --output-document=/dev/null http://localhost:8080/_healthz"
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 20
+    networks:
+      - transcription-network
+
   # Deploys the CDK app once MiniStack is healthy, then watches for Lambda code
   # changes.
   transcription-bootstrap:
@@ -168,6 +187,9 @@ services:
     environment:
       # Use config/local.json and the local-safe stack.
       - LOCAL_DEPLOY=true
+      # Installs @eresearchqut/dmp-api from GitHub Packages. `pnpm ministack:up`
+      # passes the host's token through.
+      - NODE_AUTH_TOKEN
       # The asset bucket bin/deployment.ts deploys into, which GitHubStack
       # creates in a deployed environment. The command above creates it here,
       # in place of `cdk bootstrap`, from the account in config/local.json.

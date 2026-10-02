@@ -30,6 +30,10 @@ interface EnvironmentConfig {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
+    DmpApiUrl: string;
+    DmpCredentialsParameter: string;
+    DmpTokenUrl: string;
+    DmpWebUrl?: string;
     Environment: Environment;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
@@ -73,13 +77,16 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig =>
 
 /**
  * Parameters that a local deploy leaves empty because it has no VPC, custom
- * domain, certificate, WAF or hosted zone. ApiStack skips the resource that
- * depends on each one, and FrontEndStack is not created locally. In a real
- * environment an empty value means the SSM parameter is incomplete, so fail
- * rather than deploy without it.
+ * domain, certificate, WAF, hosted zone or DMP credentials. ApiStack skips the
+ * resource that depends on each one, and FrontEndStack is not created locally.
+ * In a real environment an empty value means the SSM parameter is incomplete,
+ * so fail rather than deploy without it.
  */
 const REQUIRED_DEPLOYED_PARAMETERS = [
   "ApiDomainName",
+  "DmpApiUrl",
+  "DmpCredentialsParameter",
+  "DmpTokenUrl",
   "FrontEndDomainName",
   "GlobalCertificateArn",
   "GlobalWafArn",
@@ -100,7 +107,7 @@ const assertDeployedParameters = (
   });
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs or DNS records.`,
+      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs, DNS records or RPID checks.`,
     );
   }
 };
