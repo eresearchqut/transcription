@@ -49,6 +49,11 @@ const ddb = new DynamoDBClient(clientConfig);
 
 const identityId = "researcher1001";
 
+// Plans of researcher1001 in scripts/ministack/dmp-rpids.json, which the
+// Compose DMP stub serves.
+const ACTIVE_RPID = "A1B2C3D4";
+const ARCHIVED_RPID = "J9K0L1M2";
+
 /** The chain settles in a few seconds locally; allow for a Lambda cold start. */
 const CHAIN_TIMEOUT_MS = 120_000;
 /** Outlasts the polling deadline so waitForRecord's diagnostic surfaces first. */
@@ -95,6 +100,7 @@ type UploadOptions = {
   generateSummary?: boolean;
   enablePiiRedaction?: boolean;
   languages?: string;
+  rpid?: string;
 };
 
 /**
@@ -106,6 +112,7 @@ const upload = async ({
   generateSummary = false,
   enablePiiRedaction = false,
   languages = "en-AU",
+  rpid = ACTIVE_RPID,
 }: UploadOptions) => {
   const jobId = randomUUID();
   const key = `users/${identityId}/${jobId}.upload`;
@@ -124,6 +131,7 @@ const upload = async ({
         enablePiiRedaction: String(enablePiiRedaction),
         generateSummary: String(generateSummary),
         targetLanguage,
+        rpid,
       },
     }),
   );
@@ -137,7 +145,9 @@ type JobRecord = {
   transcriptionResponse?: {
     TranscriptionJob?: { TranscriptionJobName?: string };
   };
-  jobStatusUpdated?: { detail?: { TranscriptionJobStatus?: string } };
+  jobStatusUpdated?: {
+    detail?: { TranscriptionJobStatus?: string; FailureReason?: string };
+  };
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
@@ -369,6 +379,36 @@ describe("upload chain", () => {
         `users/${identityId}/redacted-${jobId}.json`,
       );
       expect(record.summaryKey).toBe(`users/${identityId}/summary/${jobId}`);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+describe("rpid check", () => {
+  // fileUploadHandler asks the DMP stub for the plan, and writes a failed
+  // record instead of starting a job when it is not one of the user's active
+  // plans.
+  it.each([
+    ["an archived", ARCHIVED_RPID],
+    ["someone else's", "Z9Y8X7W6"],
+  ])(
+    "refuses %s plan without starting a transcription",
+    async (_, rpid) => {
+      const jobId = await upload({ rpid });
+
+      const record = await waitForRecord(
+        jobId,
+        (r) => Boolean(r.jobStatusUpdated),
+        "the rejected job status",
+      );
+
+      expect(record.jobStatusUpdated?.detail).toEqual({
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: expect.stringContaining(
+          `${rpid} is not one of your active projects`,
+        ),
+      });
+      expect(record.transcriptionResponse).toBeUndefined();
     },
     TEST_TIMEOUT_MS,
   );

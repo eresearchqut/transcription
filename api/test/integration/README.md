@@ -2,6 +2,8 @@
 
 `chain.test.ts` uploads a `.upload` object to the local stack and follows it through to a stored transcript, summary and translation. Every other test in `api/test` mocks the AWS SDK, so this suite is the only check on the wiring in `deployment/lib/api-stack.ts`: the three overlapping S3 notification filters on one bucket, the two EventBridge rules on the same detail type, and the IAM grants each handler needs. The grants are only checked when MiniStack evaluates IAM, which CI turns on and local development leaves off.
 
+Each upload names an RPID, which `fileUploadHandler` checks with the stand-in for the Data Management Planning tool that Compose runs. The suite uses one of researcher1001's active plans from `scripts/ministack/dmp-rpids.json`, and checks that an archived or unknown RPID fails the job without starting a transcription.
+
 ## Running it
 
 The suite needs a deployed local stack and does not start one:

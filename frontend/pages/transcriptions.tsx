@@ -19,6 +19,7 @@ import { TRANSCRIBE_QUOTAS, type Transcription } from "model";
 import NextLink from "next/link";
 import { useContext, useState } from "react";
 import DataTable from "@/components/dataTable";
+import { ExternalLink } from "@/components/externalLink";
 import { MappedIcon } from "@/components/mappedIcon";
 import { MediaPlayerDrawer } from "@/components/mediaPlayerDrawer";
 import type { MediaPlayerDrawerProps } from "@/components/mediaPlayerDrawer/mediaPlayerDrawer";
@@ -39,6 +40,7 @@ import {
   TranscriptionsContextProvider,
 } from "../context/transcriptions-context";
 import AuthenticatedLayout from "../layout/authenticatedLayout";
+import { dmpPlanUrl } from "../utils/dmp";
 import { decodeFilename } from "../utils/filename";
 
 const Transcriptions: NextPageWithLayout = () => {
@@ -154,6 +156,23 @@ const Transcriptions: NextPageWithLayout = () => {
         const filename = decodeFilename(transcription.metadata.filename);
 
         return <Text overflowWrap={"anywhere"}>{filename}</Text>;
+      },
+    },
+    {
+      id: "rpid",
+      header: "RPID",
+      accessorFn: (transcription) => transcription.metadata.rpid,
+      meta: fitColumn,
+      cell: (props) => {
+        const rpid = props.row.original.metadata.rpid;
+        if (!rpid) {
+          return null;
+        }
+        return (
+          <ExternalLink href={dmpPlanUrl(rpid)} fontFamily={"mono"}>
+            {rpid}
+          </ExternalLink>
+        );
       },
     },
     {

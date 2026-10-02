@@ -19,9 +19,12 @@ import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
+import { useRpids } from "../../hooks/useRpids";
 import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
 import { LanguageInput } from "../../inputs/languageInput";
+import { RpidAlerts, RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
+import { DMP_URL } from "../../utils/dmp";
 import type { TranscribeProps } from "./transcriptionOptions";
 
 export type { TranscribeProps };
@@ -40,6 +43,10 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
   const [enableTranslation, setEnableTranslation] = useState<boolean>(false);
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>();
+  const [rpid, setRpid] = useState<string | undefined>();
+
+  const rpidsState = useRpids();
+  const { rpids, isLoading: rpidsLoading } = rpidsState;
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -78,6 +85,7 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
         enablePiiRedaction,
         generateSummary,
         targetLanguage: enableTranslation ? targetLanguage : undefined,
+        rpid,
       },
       files,
     );
@@ -98,12 +106,53 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
 
   return (
     <VStack align={"stretch"} gap={4}>
+      <RpidAlerts {...rpidsState} />
       <Stack
         direction={{ base: "column", sm: "row" }}
         gap={4}
         alignSelf={"flex-start"}
         alignItems={{ sm: "center" }}
       >
+        <Field
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          minWidth={"max-content"}
+          label={
+            <Box as={"span"} whiteSpace={"nowrap"}>
+              Research Project ID
+            </Box>
+          }
+        >
+          <Box minWidth={"15rem"}>
+            <RpidInput
+              rpids={rpids}
+              value={rpid}
+              onChange={setRpid}
+              isLoading={rpidsLoading}
+              placeholder={"Select a research project..."}
+              chakraStyles={{
+                menu: (provided) => ({
+                  ...provided,
+                  minWidth: "100%",
+                  width: "max-content",
+                  maxWidth: "min(36rem, 90vw)",
+                }),
+              }}
+            />
+          </Box>
+          <HelpPopover
+            ariaLabel={"Help with Research Project ID"}
+            header={"Research Project ID"}
+          >
+            Every transcription must be assigned to one of your research
+            projects. Your Research Project IDs (RPIDs) are sourced from the{" "}
+            <ExternalLink href={DMP_URL}>
+              Data Management Planning tool
+            </ExternalLink>
+            .
+          </HelpPopover>
+        </Field>
         <Field
           display={"flex"}
           flexDirection={"row"}
@@ -266,7 +315,9 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
       <FilePicker
         {...filePickerProps}
         disabled={
-          languageSizeLimitExceeded || (enableTranslation && !targetLanguage)
+          !rpid ||
+          languageSizeLimitExceeded ||
+          (enableTranslation && !targetLanguage)
         }
       />
     </VStack>

@@ -13,6 +13,19 @@ This application is a monorepo using a pnpm workspace.
 * `pnpm test`
 * `pnpm test:integration` (needs a running local stack, see below)
 
+## Installing dependencies
+
+The API reads research projects through the DMP's client, `@eresearchqut/dmp-api`, which is a private package on GitHub Packages. `.npmrc` points the `@eresearchqut` scope at that registry, and `pnpm install` needs a GitHub token with `read:packages` in your user config. With the GitHub CLI:
+
+```
+gh auth refresh -h github.com -s read:packages
+npm config set //npm.pkg.github.com/:_authToken "$(gh auth token)"
+```
+
+Keep the token out of the repo's `.npmrc`. pnpm reads `${NODE_AUTH_TOKEN}` there, but an unset variable then hides the token in your user config. `pnpm config set` is no substitute either, as pnpm 10 writes the token to a file its installs don't read.
+
+The workflows install with the `GITHUB_TOKEN`, which can only read the package once the package's settings grant this repository access.
+
 ## Local frontend development against the deployed dev environment
 1. Copy the dev environment variables into your local `.env.development.local`
 ```
@@ -39,7 +52,7 @@ The CDK app can be deployed against [MiniStack](https://ministack.org), a local 
 
 - Docker, with the daemon running. Handlers run in sibling containers, so the Docker socket must be readable.
 - The AWS CLI, which the helper scripts use. No AWS credentials are needed.
-- `pnpm install` at the repo root.
+- `pnpm install` at the repo root. The bootstrap container runs its own install, and `pnpm ministack:up` passes it the same GitHub Packages token, from `NODE_AUTH_TOKEN` or else your user config.
 
 ### Start it
 
@@ -76,6 +89,8 @@ Without this, everything except sign-in works. Clicking through the browser warn
 ### Sign in
 
 Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
+
+Every upload needs an RPID from the Data Management Planning tool, which a Compose container stands in for. `researcher1` has two active plans to choose from. `researcher2` has none, so the upload form shows the warning a researcher without a plan sees. The plans are in `scripts/ministack/dmp-rpids.json`.
 
 ### Everyday commands
 

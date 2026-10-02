@@ -18,6 +18,7 @@ jobs:
       actions: write
       contents: read
       id-token: write
+      packages: read
     steps:
       - uses: actions/checkout@v7
         with:
@@ -31,8 +32,13 @@ jobs:
         with:
           node-version: '24'
           cache: 'pnpm'
+          # The DMP client, @eresearchqut/dmp-api, is published to GitHub Packages.
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@eresearchqut'
       - name: Install dependencies
         run: pnpm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build dependencies
         run: pnpm build
       - uses: aws-actions/configure-aws-credentials@v6
