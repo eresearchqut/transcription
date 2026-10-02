@@ -41,7 +41,7 @@ A local deploy differs from a deployed environment in four ways.
 
 **Parameters come from a file.** `config/local.json` replaces the SSM parameter, because the emulator starts empty and would need the parameter written on every start before it could be read.
 
-**Some parameters are blank.** `ApiDomainName`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`.
+**Some parameters are blank.** `ApiDomainName`, `DmpCredentialsParameter`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DMP credentials, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`. `DmpApiUrl` and `DmpTokenUrl` point at a stand-in for the Data Management Planning tool that Compose runs. It accepts any client and serves the plans in `scripts/ministack/dmp-rpids.json`.
 
 **The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The asset bucket those GitHub stacks would create is made by the Compose bootstrap command instead.
 
