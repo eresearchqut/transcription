@@ -38,6 +38,10 @@ const rpidDto: RpidDto = {
 const basicAuth = (clientId: string, clientSecret: string) =>
   `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
 
+const storedCredentials = (clientId: string, clientSecret: string) => ({
+  Parameter: { Value: JSON.stringify({ clientId, clientSecret }) },
+});
+
 describe("dmpClient", () => {
   const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
   const ssmMock = mockClient(SSMClient);
@@ -45,15 +49,16 @@ describe("dmpClient", () => {
   beforeAll(() => {
     process.env.DMP_TOKEN_URL = "https://auth.dmp.example.com/oauth2/token";
     process.env.DMP_API_URL = "https://api.dmp.example.com/";
-    process.env.DMP_CLIENT_ID = "client-id";
-    process.env.DMP_CLIENT_SECRET = "client-secret";
     global.fetch = fetchMock as unknown as typeof fetch;
   });
 
   beforeEach(() => {
     fetchMock.mockReset();
     ssmMock.reset();
-    delete process.env.DMP_CREDENTIALS_PARAMETER;
+    ssmMock
+      .on(GetParameterCommand)
+      .resolves(storedCredentials("client-id", "client-secret"));
+    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
     resetDmpClient();
   });
 
@@ -160,18 +165,10 @@ describe("dmpClient", () => {
     );
   });
 
-  it("reads the credentials from Parameter Store once when a parameter is set", async () => {
-    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
+  it("reads the credentials from Parameter Store once", async () => {
     ssmMock
       .on(GetParameterCommand, { Name: PARAMETER_NAME, WithDecryption: true })
-      .resolves({
-        Parameter: {
-          Value: JSON.stringify({
-            clientId: "stored-id",
-            clientSecret: "stored-secret",
-          }),
-        },
-      });
+      .resolves(storedCredentials("stored-id", "stored-secret"));
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockImplementation(async () => jsonResponse(200, []));
@@ -191,8 +188,16 @@ describe("dmpClient", () => {
     expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(1);
   });
 
+  it("rejects when no credentials parameter is configured", async () => {
+    delete process.env.DMP_CREDENTIALS_PARAMETER;
+
+    await expect(listRpids("user-1")).rejects.toThrow(
+      "DMP_CREDENTIALS_PARAMETER is not set",
+    );
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(0);
+  });
+
   it("rejects when the Parameter Store credentials are empty", async () => {
-    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
     ssmMock.on(GetParameterCommand).resolves({});
 
     await expect(listRpids("user-1")).rejects.toThrow(
@@ -201,7 +206,6 @@ describe("dmpClient", () => {
   });
 
   it("rejects when the Parameter Store credentials are incomplete", async () => {
-    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
     ssmMock.on(GetParameterCommand).resolves({
       Parameter: { Value: JSON.stringify({ clientId: "client-id" }) },
     });
@@ -212,18 +216,10 @@ describe("dmpClient", () => {
   });
 
   it("re-reads the credentials after they could not be read", async () => {
-    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
     ssmMock
       .on(GetParameterCommand)
       .rejectsOnce(new Error("Throttled"))
-      .resolves({
-        Parameter: {
-          Value: JSON.stringify({
-            clientId: "client-id",
-            clientSecret: "client-secret",
-          }),
-        },
-      });
+      .resolves(storedCredentials("client-id", "client-secret"));
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(200, []));
@@ -235,15 +231,6 @@ describe("dmpClient", () => {
   });
 
   it("re-reads the credentials after a failed token request", async () => {
-    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
-    ssmMock.on(GetParameterCommand).resolves({
-      Parameter: {
-        Value: JSON.stringify({
-          clientId: "client-id",
-          clientSecret: "client-secret",
-        }),
-      },
-    });
     fetchMock
       .mockResolvedValueOnce(jsonResponse(401, {}))
       .mockResolvedValueOnce(tokenResponse())

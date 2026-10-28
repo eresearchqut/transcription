@@ -42,7 +42,7 @@ const localProps: Partial<ApiStackProps> = {
     ...parameters,
     ApiDomainName: "",
     DmpApiUrl: "http://transcription-dmp:8080",
-    DmpCredentialsParameter: "",
+    DmpCredentialsParameter: "/app/local/transcription/dmp-credentials",
     DmpTokenUrl: "http://transcription-dmp:8080/oauth2/token",
     DmpWebUrl: undefined,
     Environment: "local",
@@ -239,20 +239,6 @@ describe("ApiStack", () => {
       expect(summariseEnvironment(synthesise())).not.toHaveProperty(
         "BEDROCK_MODEL_ID",
       );
-    });
-
-    it("leaves the dmp credentials out of parameter store", () => {
-      const synthesised = localTemplate();
-      Object.values(synthesised.findResources("AWS::Lambda::Function")).forEach(
-        (fn) => {
-          expect(fn.Properties.Environment?.Variables ?? {}).not.toHaveProperty(
-            "DMP_CREDENTIALS_PARAMETER",
-          );
-        },
-      );
-      expect(
-        JSON.stringify(synthesised.findResources("AWS::IAM::Policy")),
-      ).not.toContain("ssm:GetParameter");
     });
 
     it("tolerates a missing x-ray daemon in the application functions", () => {
