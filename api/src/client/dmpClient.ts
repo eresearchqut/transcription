@@ -27,16 +27,13 @@ interface DmpCredentials {
 }
 
 /**
- * Deployed environments read the client credentials from Parameter Store. Tests
- * and the local stack, whose DMP stub accepts any client, use the environment.
+ * Every environment, the local stack included, keeps the client credentials in
+ * Parameter Store.
  */
 const getCredentials = async (): Promise<DmpCredentials> => {
   const parameterName = process.env.DMP_CREDENTIALS_PARAMETER;
   if (!parameterName) {
-    return {
-      clientId: process.env.DMP_CLIENT_ID ?? "",
-      clientSecret: process.env.DMP_CLIENT_SECRET ?? "",
-    };
+    throw new Error("DMP_CREDENTIALS_PARAMETER is not set");
   }
   const { Parameter } = await ssmClient.send(
     new GetParameterCommand({ Name: parameterName, WithDecryption: true }),

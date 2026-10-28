@@ -49,8 +49,8 @@ const ddb = new DynamoDBClient(clientConfig);
 
 const identityId = "researcher1001";
 
-// Plans of researcher1001 in scripts/ministack/dmp-rpids.json, which the
-// Compose DMP stub serves.
+// Plans of researcher1001 that the Compose stand-in for the DMP serves, from
+// scripts/ministack/dmp.
 const ACTIVE_RPID = "A1B2C3D4";
 const ARCHIVED_RPID = "J9K0L1M2";
 
@@ -385,7 +385,7 @@ describe("upload chain", () => {
 });
 
 describe("rpid check", () => {
-  // fileUploadHandler asks the DMP stub for the plan, and writes a failed
+  // fileUploadHandler asks the DMP stand-in for the plan, and writes a failed
   // record instead of starting a job when it is not one of the user's active
   // plans.
   it.each([
