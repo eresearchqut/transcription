@@ -15,16 +15,14 @@ This application is a monorepo using a pnpm workspace.
 
 ## Installing dependencies
 
-The API reads research projects through the DMP's client, `@eresearchqut/dmp-api`, which is a private package on GitHub Packages. `.npmrc` points the `@eresearchqut` scope at that registry, and `pnpm install` needs a GitHub token with `read:packages` in your user config. With the GitHub CLI:
+`@eresearchqut/dmp-api` is a private package on GitHub Packages, so `pnpm install` needs a GitHub token with `read:packages` in your user npm config:
 
 ```
 gh auth refresh -h github.com -s read:packages
 npm config set //npm.pkg.github.com/:_authToken "$(gh auth token)"
 ```
 
-Keep the token out of the repo's `.npmrc`. pnpm reads `${NODE_AUTH_TOKEN}` there, but an unset variable then hides the token in your user config. `pnpm config set` is no substitute either, as pnpm 10 writes the token to a file its installs don't read.
-
-The workflows install with the `GITHUB_TOKEN`, which can only read the package once the package's settings grant this repository access.
+Don't put the token in the repo's `.npmrc`, and don't use `pnpm config set`, because pnpm 10 installs don't read the token it writes. CI installs with `GITHUB_TOKEN`, which needs access granted in the package's settings.
 
 ## Local frontend development against the deployed dev environment
 1. Copy the dev environment variables into your local `.env.development.local`
@@ -52,7 +50,7 @@ The CDK app can be deployed against [MiniStack](https://ministack.org), a local 
 
 - Docker, with the daemon running. Handlers run in sibling containers, so the Docker socket must be readable.
 - The AWS CLI, which the helper scripts use. No AWS credentials are needed.
-- `pnpm install` at the repo root. The bootstrap container runs its own install, and `pnpm ministack:up` passes it the same GitHub Packages token, from `NODE_AUTH_TOKEN` or else your user config.
+- `pnpm install` at the repo root.
 
 ### Start it
 
@@ -90,7 +88,20 @@ Without this, everything except sign-in works. Clicking through the browser warn
 
 Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
-Every upload needs an RPID from the Data Management Planning tool, which a Compose container stands in for. `researcher1` has two active plans to choose from. `researcher2` has none, so the upload form shows the warning a researcher without a plan sees. The plans are in `scripts/ministack/dmp-rpids.json`.
+### Data Management Planning tool
+
+Uploads need an RPID from the Data Management Planning tool (DMP). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
+
+To use a real DMP, set these in your shell or in a `.env` file at the repo root, then run `pnpm ministack:up`:
+
+| Variable | Value |
+| --- | --- |
+| `DMP_API_URL` | API host, e.g. `https://api-qut.dev.data-management-checklist.info` |
+| `DMP_TOKEN_URL` | Token endpoint, e.g. `https://auth.dev.data-management-checklist.info/oauth2/token` |
+| `DMP_CLIENT_ID`, `DMP_CLIENT_SECRET` | The client credentials the DMP issued |
+| `DMP_WEB_URL` | Optional. Where RPID links go |
+
+The real DMP doesn't know `researcher1` or `researcher2`. To see your own plans, set a user's `custom:qutIdentityId` in `scripts/ministack/cognito-users.json` to your identity id and run `pnpm ministack:seed-users`, without committing the change. `pnpm test:integration` only passes against the stand-in.
 
 ### Everyday commands
 
@@ -113,7 +124,7 @@ The bootstrap container runs `cdklocal watch`, but on macOS it doesn't see edits
 
 The emulator is published on http://localhost:20005, because Amplify Storage's local testing flag hardcodes that address. The flag is broken in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. The patch is pinned to the installed version, so upgrading Amplify fails `pnpm install` until the patch is regenerated or removed.
 
-The emulator and the sign-in proxy are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
+The emulator, the sign-in proxy and the DMP stand-in are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
 
 ### Keeping the emulator image current
 

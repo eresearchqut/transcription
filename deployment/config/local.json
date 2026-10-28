@@ -8,7 +8,7 @@
     "ApplicationName": "Transcription",
     "AwsRoute53CloudFrontHostedZoneId": "",
     "DmpApiUrl": "http://transcription-dmp:8080",
-    "DmpCredentialsParameter": "",
+    "DmpCredentialsParameter": "/app/local/transcription/dmp-credentials",
     "DmpTokenUrl": "http://transcription-dmp:8080/oauth2/token",
     "Environment": "local",
     "FrontEndDomainName": "localhost:3000",

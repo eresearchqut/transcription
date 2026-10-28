@@ -197,20 +197,17 @@ export class ApiStack extends cdk.Stack {
 
     // The handlers read the DMP client credentials from Parameter Store at
     // runtime, so the secret never appears in the template. A local deploy
-    // leaves the parameter empty, because the DMP stub accepts any client.
-    const dmpCredentials = props.parameters.DmpCredentialsParameter
-      ? ssm.StringParameter.fromSecureStringParameterAttributes(
-          this,
-          "DmpCredentials",
-          { parameterName: props.parameters.DmpCredentialsParameter },
-        )
-      : undefined;
+    // does the same, with a parameter the Compose bootstrap container writes.
+    const dmpCredentials =
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        "DmpCredentials",
+        { parameterName: props.parameters.DmpCredentialsParameter },
+      );
     const dmpEnvironment: Record<string, string> = {
       DMP_API_URL: props.parameters.DmpApiUrl,
       DMP_TOKEN_URL: props.parameters.DmpTokenUrl,
-      ...(dmpCredentials && {
-        DMP_CREDENTIALS_PARAMETER: dmpCredentials.parameterName,
-      }),
+      DMP_CREDENTIALS_PARAMETER: dmpCredentials.parameterName,
     };
 
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
@@ -236,7 +233,7 @@ export class ApiStack extends cdk.Stack {
       ...vpcConfiguration,
     });
     dataTable.grantReadWriteData(apiFunction);
-    dmpCredentials?.grantRead(apiFunction);
+    dmpCredentials.grantRead(apiFunction);
 
     const userPoolArn = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolArn`,
@@ -355,7 +352,7 @@ export class ApiStack extends cdk.Stack {
     );
     dataTable.grantReadWriteData(jobStartFunction);
     dataBucket.grantReadWrite(jobStartFunction);
-    dmpCredentials?.grantRead(jobStartFunction);
+    dmpCredentials.grantRead(jobStartFunction);
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),
