@@ -24,7 +24,7 @@ import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
 import { LanguageInput } from "../../inputs/languageInput";
 import { RpidAlerts, RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
-import { DMP_URL } from "../../utils/dmp";
+import { activeRpid, DMP_URL } from "../../utils/dmp";
 import type { TranscribeProps } from "./transcriptionOptions";
 
 export type { TranscribeProps };
@@ -43,10 +43,11 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
   const [generateSummary, setGenerateSummary] = useState<boolean>(true);
   const [enableTranslation, setEnableTranslation] = useState<boolean>(false);
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>();
-  const [rpid, setRpid] = useState<string | undefined>();
+  const [selectedRpid, setRpid] = useState<string | undefined>();
 
   const rpidsState = useRpids();
   const { rpids, isLoading: rpidsLoading } = rpidsState;
+  const rpid = activeRpid(rpids, selectedRpid);
 
   const { showNewFeature } = useNewFeatureStorage({
     features,

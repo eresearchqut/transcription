@@ -85,13 +85,18 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata.rpid,
       );
       if (rejection) {
-        await jobRejected(
+        const recorded = await jobRejected(
           identityId,
           jobId,
           record.s3,
           headResponse.Metadata,
           rejection,
         );
+        if (!recorded) {
+          console.log(
+            `Ignored a repeated upload event for ${jobId}, which already has a record`,
+          );
+        }
         continue;
       }
 

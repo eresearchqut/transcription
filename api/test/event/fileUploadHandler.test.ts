@@ -8,7 +8,7 @@ import { mockClient } from "aws-sdk-client-mock";
 
 import { getRpid } from "../../src/client/dmpClient";
 import { handler } from "../../src/event/fileUploadHandler";
-import { getResource } from "../../src/repository/repository";
+import { getResource, putResource } from "../../src/repository/repository";
 import fileMetadata from "./fileMetadata.json";
 import fileUploadEvent from "./fileUploadEvent.json";
 
@@ -126,6 +126,24 @@ describe("fileUploadHandler", () => {
           },
         },
       }),
+    );
+  });
+
+  it("leaves a finished job alone when a repeated upload event is rejected", async () => {
+    const finished = {
+      downloadKey: `users/${IDENTITY_ID}/${JOB_ID}.json`,
+      jobStatusUpdated: { detail: { TranscriptionJobStatus: "COMPLETED" } },
+    };
+    await putResource(IDENTITY_ID, JOB_ID, finished);
+    s3Mock.on(HeadObjectCommand).resolves({
+      Metadata: { ...fileMetadata.Metadata, rpid: RPID },
+    });
+    mockGetRpid.mockRejectedValue(new Error("connect ECONNREFUSED"));
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining(finished),
     );
   });
 });
