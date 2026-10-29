@@ -2,7 +2,7 @@ import { fetchAuthSession } from "aws-amplify/auth";
 
 export interface FetcherProps {
   apiUrl: string;
-  resource: "transcription";
+  resource: "transcription" | "rpid";
   id?: string | string[];
   params?: any;
   init?: RequestInit;

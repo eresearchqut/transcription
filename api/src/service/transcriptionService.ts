@@ -1,6 +1,7 @@
 import type { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
 import {
+  createResource,
   getResource,
   getResources,
   putResource,
@@ -23,6 +24,28 @@ export const jobStarted = (
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
+  });
+
+/**
+ * Records a job that never started. Resolves false, leaving the record alone,
+ * when the job already has one, as it does when S3 redelivers the upload event.
+ */
+export const jobRejected = (
+  identityId: string,
+  jobId: string,
+  uploadEvent: Record<string, unknown>,
+  metadata: Record<string, unknown>,
+  failureReason: string,
+) =>
+  createResource(identityId, jobId, {
+    uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
+    metadata: JSON.parse(JSON.stringify(metadata)),
+    jobStatusUpdated: {
+      detail: {
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: failureReason,
+      },
+    },
   });
 
 export const jobStatusUpdated = (

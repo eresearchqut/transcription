@@ -1,0 +1,27 @@
+{
+  "rpid": "E5F6G7H8",
+  "title": "Clinician interviews on remote patient monitoring",
+  "status": "ACTIVE",
+  "createdDate": "2026-05-18T00:00:00.000Z",
+  "lead": {
+    "id": "student3003",
+    "name": "Student Three"
+  },
+  "supervisor": {
+    "id": "researcher1001",
+    "name": "Researcher One"
+  },
+  "faculty": {
+    "id": 3,
+    "name": "Faculty of Health",
+    "type": "faculty"
+  },
+  "fieldsOfResearch": [
+    {
+      "code": "4203",
+      "name": "Health services and systems",
+      "year": 2020
+    }
+  ],
+  "isHdrProject": true
+}

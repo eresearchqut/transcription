@@ -110,3 +110,7 @@ out
 
 # Copy of the local TLS proxy certificate authority, taken during setup.
 ministack-root.crt
+
+# Compose reads this for local stack settings, such as the credentials of a
+# real DMP.
+/.env

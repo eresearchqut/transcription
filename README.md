@@ -13,6 +13,17 @@ This application is a monorepo using a pnpm workspace.
 * `pnpm test`
 * `pnpm test:integration` (needs a running local stack, see below)
 
+## Installing dependencies
+
+`@eresearchqut/dmp-api` is a private package on GitHub Packages, so `pnpm install` needs a GitHub token with `read:packages` in your user npm config:
+
+```
+gh auth refresh -h github.com -s read:packages
+npm config set //npm.pkg.github.com/:_authToken "$(gh auth token)"
+```
+
+Don't put the token in the repo's `.npmrc`, and don't use `pnpm config set`, because pnpm 10 installs don't read the token it writes. CI installs with `GITHUB_TOKEN`, which needs access granted in the package's settings.
+
 ## Local frontend development against the deployed dev environment
 1. Copy the dev environment variables into your local `.env.development.local`
 ```
@@ -77,6 +88,21 @@ Without this, everything except sign-in works. Clicking through the browser warn
 
 Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
+### Data Management Planning tool
+
+Uploads need an RPID from the Data Management Planning tool (DMP). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
+
+To use a real DMP, set these in your shell or in a `.env` file at the repo root, then run `pnpm ministack:up`:
+
+| Variable | Value |
+| --- | --- |
+| `DMP_API_URL` | API host, e.g. `https://api-qut.dev.data-management-checklist.info` |
+| `DMP_TOKEN_URL` | Token endpoint, e.g. `https://auth.dev.data-management-checklist.info/oauth2/token` |
+| `DMP_CLIENT_ID`, `DMP_CLIENT_SECRET` | The client credentials the DMP issued |
+| `DMP_WEB_URL` | Optional. Where RPID links go |
+
+The real DMP doesn't know `researcher1` or `researcher2`. To see your own plans, set a user's `custom:qutIdentityId` in `scripts/ministack/cognito-users.json` to your identity id and run `pnpm ministack:seed-users`, without committing the change. `pnpm test:integration` only passes against the stand-in.
+
 ### Everyday commands
 
 | Command | What it does |
@@ -98,7 +124,7 @@ The bootstrap container runs `cdklocal watch`, but on macOS it doesn't see edits
 
 The emulator is published on http://localhost:20005, because Amplify Storage's local testing flag hardcodes that address. The flag is broken in the released package, so `patches/@aws-amplify__storage@6.16.0.patch` fixes it. The patch is pinned to the installed version, so upgrading Amplify fails `pnpm install` until the patch is regenerated or removed.
 
-The emulator and the sign-in proxy are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
+The emulator, the sign-in proxy and the DMP stand-in are bound to 127.0.0.1. The emulator is unauthenticated and its container has the Docker socket, so anyone who can reach it can run containers on your machine.
 
 ### Keeping the emulator image current
 

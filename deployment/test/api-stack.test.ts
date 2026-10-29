@@ -6,6 +6,10 @@ const parameters: ApiStackProps["parameters"] = {
   ApiDomainName: "transcription-api.example.com",
   ApplicationName: "Transcription",
   AwsRoute53CloudFrontHostedZoneId: "Z2FDTNDATAQYW2",
+  DmpApiUrl: "https://dmp-api.example.com",
+  DmpCredentialsParameter: "/app/dev/transcription/dmp-credentials",
+  DmpTokenUrl: "https://dmp-auth.example.com/oauth2/token",
+  DmpWebUrl: "https://dmp.example.com",
   Environment: "dev",
   FrontEndDomainName: "transcription.example.com",
   GlobalCertificateArn:
@@ -37,6 +41,10 @@ const localProps: Partial<ApiStackProps> = {
   parameters: {
     ...parameters,
     ApiDomainName: "",
+    DmpApiUrl: "http://transcription-dmp:8080",
+    DmpCredentialsParameter: "/app/local/transcription/dmp-credentials",
+    DmpTokenUrl: "http://transcription-dmp:8080/oauth2/token",
+    DmpWebUrl: undefined,
     Environment: "local",
     FrontEndDomainName: "localhost:3000",
     HostedZoneName: "",
@@ -87,6 +95,34 @@ describe("ApiStack", () => {
         Name: `${parameters.ApiDomainName}.`,
         Type: "A",
       });
+    });
+
+    it("lets the functions that check rpids read the dmp credentials", () => {
+      const synthesised = template();
+      const dmpFunctions = Object.values(
+        synthesised.findResources("AWS::Lambda::Function"),
+      ).filter((fn) => fn.Properties.Environment?.Variables?.DMP_API_URL);
+      expect(dmpFunctions).toHaveLength(2);
+      dmpFunctions.forEach((fn) => {
+        expect(fn.Properties.Environment.Variables).toMatchObject({
+          DMP_API_URL: parameters.DmpApiUrl,
+          DMP_TOKEN_URL: parameters.DmpTokenUrl,
+          DMP_CREDENTIALS_PARAMETER: parameters.DmpCredentialsParameter,
+        });
+      });
+      const policies = JSON.stringify(
+        synthesised.findResources("AWS::IAM::Policy"),
+      );
+      expect(policies).toContain("ssm:GetParameter");
+      expect(policies).toContain(
+        `:parameter${parameters.DmpCredentialsParameter}`,
+      );
+    });
+
+    it("links the front end to the dmp", () => {
+      expect(
+        JSON.stringify(template().findOutputs("FrontEndEnvironment")),
+      ).toContain(`NEXT_PUBLIC_DMP_URL=${parameters.DmpWebUrl}`);
     });
 
     it("leaves the x-ray daemon address at the lambda default", () => {
