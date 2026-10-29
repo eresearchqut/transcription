@@ -13,11 +13,11 @@ pnpm ministack:up         # returns once the deploy is done; follow it with pnpm
 pnpm test:integration
 ```
 
-That checks the event wiring. To check the grants as well, start the stack with IAM evaluation, as CI does. Sign-in uploads from the frontend are denied in this mode, so recreate the stack without it before using the app:
+That checks the event wiring. To check the grants as well, start the stack with IAM evaluation, as CI does. Sign-in uploads from the frontend are denied in this mode, so recreate the stack without it before using the app. Use MiniStack 1.5.26, which CI is pinned to, because later releases reject the summariser's Bedrock calls in this mode:
 
 ```sh
 pnpm ministack:down
-MINISTACK_AUTH=true pnpm ministack:up
+MINISTACK_AUTH=true MINISTACK_IMAGE=ministackorg/ministack:1.5.26 pnpm ministack:up
 pnpm test:integration
 ```
 

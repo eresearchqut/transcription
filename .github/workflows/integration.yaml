@@ -20,6 +20,11 @@ jobs:
       # Evaluate IAM, so a handler missing a grant fails the suite. See the
       # AUTH setting in docker-compose.yml for why local development doesn't.
       MINISTACK_AUTH: "true"
+      # From 1.5.27, MiniStack verifies session-key signatures under AUTH but
+      # drops the HTTP/2 :authority header that the Bedrock Runtime client
+      # signs, so every summary fails with InvalidSignatureException. Unpin
+      # once a release fixes it.
+      MINISTACK_IMAGE: ministackorg/ministack:1.5.26
       # Installs @eresearchqut/dmp-api from GitHub Packages, both here and in
       # the bootstrap container.
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
