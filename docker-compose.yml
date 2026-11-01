@@ -115,6 +115,32 @@ services:
     networks:
       - transcription-network
 
+  # Stands in for the Data Management Planning tool, which the handlers check
+  # each upload's RPID against. WireMock serves the stubs in
+  # scripts/ministack/dmp: a token endpoint for the local client, and the v1
+  # RPID routes for two fake researchers. Published so the stubs and the
+  # requests the handlers made (/__admin/requests) can be inspected. The
+  # handlers call a real DMP instead when DMP_API_URL and the variables that go
+  # with it are set (see README.md).
+  transcription-dmp:
+    container_name: "${TRANSCRIPTION_DMP_DOCKER_NAME:-transcription-dmp}"
+    image: wiremock/wiremock:3.13.2-alpine
+    command: ["--disable-banner"]
+    ports:
+      # Loopback only: the admin API lets anyone who can reach it change the
+      # stubs.
+      - "127.0.0.1:20006:8080"
+    volumes:
+      - "./scripts/ministack/dmp:/home/wiremock:ro"
+    healthcheck:
+      test: "wget --quiet --output-document=/dev/null http://localhost:8080/__admin/health"
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 20
+    networks:
+      - transcription-network
+
   # Deploys the CDK app once MiniStack is healthy, then watches for Lambda code
   # changes.
   transcription-bootstrap:
@@ -139,9 +165,11 @@ services:
       - "transcription-pnpm-store:/pnpm-store"
     # `model` resolves to its compiled `dist`, and nothing else in the startup
     # path builds it, so esbuild cannot bundle the handlers on a clean checkout
-    # until it has been built here. Synthesis goes to /tmp rather than
-    # deployment/cdk.out, so the container never writes a cloud assembly into
-    # the bind-mounted tree or deletes one the host synthesised.
+    # until it has been built here. The DMP client credentials are written to
+    # the emulator's Parameter Store before each deploy, because the emulator
+    # starts empty. Synthesis goes to /tmp rather than deployment/cdk.out, so
+    # the container never writes a cloud assembly into the bind-mounted tree or
+    # deletes one the host synthesised.
     # `pnpm ministack:deploy` synthesises to /tmp/cdk.out.deploy instead,
     # because the watch process below holds this one for as long as it runs.
     command: >
@@ -150,6 +178,7 @@ services:
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
                pnpm --filter 'api^...' build &&
                cd deployment &&
+               npx ts-node --prefer-ts-exts bin/put-local-dmp-credentials.ts &&
                rm -rf /tmp/cdk.out &&
                (curl -sfI $$ASSET_BUCKET_URL > /dev/null ||
                 curl -sf -X PUT $$ASSET_BUCKET_URL -d '<CreateBucketConfiguration><LocationConstraint>ap-southeast-2</LocationConstraint></CreateBucketConfiguration>') &&
@@ -168,6 +197,16 @@ services:
     environment:
       # Use config/local.json and the local-safe stack.
       - LOCAL_DEPLOY=true
+      # Installs @eresearchqut/dmp-api from GitHub Packages. `pnpm ministack:up`
+      # passes the host's token through.
+      - NODE_AUTH_TOKEN
+      # Point the handlers at a real DMP rather than transcription-dmp. Unset,
+      # they use the stand-in. See deployment/lib/local-dmp.ts.
+      - DMP_API_URL
+      - DMP_TOKEN_URL
+      - DMP_CLIENT_ID
+      - DMP_CLIENT_SECRET
+      - DMP_WEB_URL
       # The asset bucket bin/deployment.ts deploys into, which GitHubStack
       # creates in a deployed environment. The command above creates it here,
       # in place of `cdk bootstrap`, from the account in config/local.json.

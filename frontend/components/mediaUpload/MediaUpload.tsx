@@ -43,8 +43,9 @@ const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
     enablePiiRedaction: false,
     generateSummary: true,
     targetLanguage: undefined,
+    rpid: undefined,
   },
-  valid: true,
+  valid: false,
 };
 
 export interface MediaUploadProps {
@@ -64,6 +65,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
 }) => {
   const [step, setStep] = useState<number>(0);
   const [filePickerKey, setFilePickerKey] = useState<number>(0);
+  const [optionsKey, setOptionsKey] = useState<number>(0);
   const [uploadStarted, setUploadStarted] = useState<boolean>(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [optionsValue, setOptionsValue] =
@@ -90,6 +92,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     setUploadStarted(false);
     setSelectedFiles([]);
     setOptionsValue(DEFAULT_OPTIONS);
+    setOptionsKey((key) => key + 1);
     setFilePickerKey((key) => key + 1);
     setStep(0);
   };
@@ -186,6 +189,7 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
         <VStack align={"stretch"} gap={4} pt={4}>
           {stepHeading(1)}
           <TranscriptionOptions
+            key={optionsKey}
             identityId={identityId}
             onChange={setOptionsValue}
             direction={{ base: "column" }}

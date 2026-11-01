@@ -7,6 +7,7 @@ import * as cdk from "aws-cdk-lib";
 import { ApiStack } from "../lib/api-stack";
 import { FrontEndStack } from "../lib/front-end-stack";
 import { GitHubStack } from "../lib/github-stack";
+import { readLocalDmp } from "../lib/local-dmp";
 import { LocalUserPoolStack } from "../lib/local-user-pool-stack";
 
 const devDeployOverride = process.env.DEV_DEPLOY_OVERRIDE;
@@ -30,6 +31,10 @@ interface EnvironmentConfig {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
+    DmpApiUrl: string;
+    DmpCredentialsParameter: string;
+    DmpTokenUrl: string;
+    DmpWebUrl?: string;
     Environment: Environment;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
@@ -62,24 +67,37 @@ const isLocalDeploy: boolean = process.env.LOCAL_DEPLOY
 
 /**
  * A file rather than SSM. The emulator starts empty, so a local deploy would
- * have to write the parameter before it could read it, on every start.
+ * have to write the parameter before it could read it, on every start. The
+ * environment can point the DMP parameters at a real DMP.
  */
-const readLocalEnvironmentConfig = (): EnvironmentConfig =>
-  JSON.parse(
+const readLocalEnvironmentConfig = (): EnvironmentConfig => {
+  const config: EnvironmentConfig = JSON.parse(
     readFileSync(resolve(__dirname, "../config/local.json"), {
       encoding: "utf8",
     }),
   );
+  return {
+    ...config,
+    parameters: {
+      ...config.parameters,
+      ...readLocalDmp(process.env).parameters,
+    },
+  };
+};
 
 /**
- * Parameters that a local deploy leaves empty because it has no VPC, custom
- * domain, certificate, WAF or hosted zone. ApiStack skips the resource that
- * depends on each one, and FrontEndStack is not created locally. In a real
- * environment an empty value means the SSM parameter is incomplete, so fail
- * rather than deploy without it.
+ * Parameters a deployed environment must set. A local deploy leaves most of
+ * them empty because it has no VPC, custom domain, certificate, WAF or hosted
+ * zone, and ApiStack skips the resource that depends on each one, while
+ * FrontEndStack is not created locally. The DMP parameters point at a local
+ * stand-in instead. In a real environment an empty value means the SSM
+ * parameter is incomplete, so fail rather than deploy without it.
  */
 const REQUIRED_DEPLOYED_PARAMETERS = [
   "ApiDomainName",
+  "DmpApiUrl",
+  "DmpCredentialsParameter",
+  "DmpTokenUrl",
   "FrontEndDomainName",
   "GlobalCertificateArn",
   "GlobalWafArn",
@@ -100,7 +118,7 @@ const assertDeployedParameters = (
   });
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs or DNS records.`,
+      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs, DNS records or RPID checks.`,
     );
   }
 };

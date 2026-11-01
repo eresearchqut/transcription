@@ -1,0 +1,77 @@
+{
+  "mappings": [
+    {
+      "name": "Lists researcher1001's active plans",
+      "request": {
+        "method": "GET",
+        "urlPath": "/v1/rpid/user/researcher1001",
+        "queryParameters": { "status": { "equalTo": "ACTIVE" } }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "researcher1001/active.json"
+      }
+    },
+    {
+      "name": "Lists researcher1001's archived plans",
+      "request": {
+        "method": "GET",
+        "urlPath": "/v1/rpid/user/researcher1001",
+        "queryParameters": { "status": { "equalTo": "ARCHIVED" } }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "researcher1001/archived.json"
+      }
+    },
+    {
+      "name": "Lists all of researcher1001's plans",
+      "request": {
+        "method": "GET",
+        "urlPath": "/v1/rpid/user/researcher1001",
+        "queryParameters": { "status": { "absent": true } }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "researcher1001/all.json"
+      }
+    },
+    {
+      "name": "Gets an active plan of researcher1001",
+      "request": {
+        "method": "GET",
+        "urlPathTemplate": "/v1/rpid/user/researcher1001/{rpid}",
+        "pathParameters": {
+          "rpid": { "matches": "A1B2C3D4|E5F6G7H8" }
+        },
+        "queryParameters": {
+          "status": { "or": [{ "absent": true }, { "equalTo": "ACTIVE" }] }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "plans/{{request.path.rpid}}.json",
+        "transformers": ["response-template"]
+      }
+    },
+    {
+      "name": "Gets an archived plan of researcher1001",
+      "request": {
+        "method": "GET",
+        "urlPath": "/v1/rpid/user/researcher1001/J9K0L1M2",
+        "queryParameters": {
+          "status": { "or": [{ "absent": true }, { "equalTo": "ARCHIVED" }] }
+        }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "bodyFileName": "plans/J9K0L1M2.json"
+      }
+    }
+  ]
+}

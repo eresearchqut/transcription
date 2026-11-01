@@ -37,11 +37,13 @@ AWS_PROFILE=dev DEV_DEPLOY_OVERRIDE=true pnpm cdk deploy TranscriptionStack
 
 `LOCAL_DEPLOY=true` makes `bin/deployment.ts` deploy to MiniStack instead of AWS. You rarely set it yourself, because `docker compose up` deploys from the bootstrap container with it already set. See the local development section of the root README.
 
-A local deploy differs from a deployed environment in four ways.
+A local deploy differs from a deployed environment in five ways.
 
 **Parameters come from a file.** `config/local.json` replaces the SSM parameter, because the emulator starts empty and would need the parameter written on every start before it could be read.
 
 **Some parameters are blank.** `ApiDomainName`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`.
+
+**The DMP is a stand-in.** `DmpApiUrl` and `DmpTokenUrl` point at the WireMock container, and `bin/put-local-dmp-credentials.ts` writes its client credentials to `DmpCredentialsParameter` before each deploy. The `DMP_*` variables in the root README point a local deploy at a real DMP instead.
 
 **The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The asset bucket those GitHub stacks would create is made by the Compose bootstrap command instead.
 
