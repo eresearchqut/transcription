@@ -203,6 +203,7 @@ export const Player: FunctionComponent<PlayerProps> = (props) => {
 
   return (
     <VStack align="stretch" gap={2} h="100%" minH={0}>
+      {/* biome-ignore lint/a11y/useMediaCaption: the track below carries the transcript, but its kind depends on what was loaded, captions for the original language and subtitles for a translation, which needs plumbing from the caller. ERP-5184 */}
       <audio
         style={{ width: "100%", flexShrink: 0 }}
         controls

@@ -16,7 +16,8 @@
       "!**/storybook-static",
       "!frontend/public",
       "!model/src/supported_transcription_languages.json",
-      "!model/src/supported_translation_languages.json"
+      "!model/src/supported_translation_languages.json",
+      "!api/test/fixtures/transcribe"
     ]
   },
   "formatter": {
