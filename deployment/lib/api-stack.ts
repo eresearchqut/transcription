@@ -723,14 +723,6 @@ export class ApiStack extends cdk.Stack {
         "sts:AssumeRoleWithWebIdentity",
       ).withSessionTags(),
       inlinePolicies: {
-        "cognito-authorized-policy": new iam.PolicyDocument({
-          statements: [
-            new iam.PolicyStatement({
-              actions: ["cognito-identity:*"],
-              resources: ["*"],
-            }),
-          ],
-        }),
         "s3-authorized-policy": new iam.PolicyDocument({
           statements: [
             // Access files stored under the qutIdentityId prefix
