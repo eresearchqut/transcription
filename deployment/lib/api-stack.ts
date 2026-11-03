@@ -690,6 +690,12 @@ export class ApiStack extends cdk.Stack {
           authorizationCodeGrant: true,
           implicitCodeGrant: false,
         },
+        scopes: [
+          cognito.OAuthScope.EMAIL,
+          cognito.OAuthScope.OPENID,
+          cognito.OAuthScope.PHONE,
+          cognito.OAuthScope.PROFILE,
+        ],
       },
     });
     (

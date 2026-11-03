@@ -48,13 +48,7 @@ Amplify.configure({
       loginWith: {
         oauth: {
           domain: process.env.NEXT_PUBLIC_AUTH_DOMAIN!,
-          scopes: [
-            "phone",
-            "email",
-            "profile",
-            "openid",
-            "aws.cognito.signin.user.admin",
-          ],
+          scopes: ["phone", "email", "profile", "openid"],
           redirectSignIn: [process.env.NEXT_PUBLIC_AUTH_SIGN_IN_REDIRECT!],
           redirectSignOut: [process.env.NEXT_PUBLIC_AUTH_SIGN_OUT_REDIRECT!],
           responseType: "code",
