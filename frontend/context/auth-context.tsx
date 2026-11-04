@@ -1,9 +1,4 @@
-import {
-  type AuthSession,
-  fetchAuthSession,
-  fetchUserAttributes,
-  signOut,
-} from "aws-amplify/auth";
+import { type AuthSession, fetchAuthSession, signOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { useRouter } from "next/router";
 import {
@@ -63,10 +58,14 @@ const AuthProvider: FunctionComponent<PropsWithChildren> = ({ children }) => {
   const { setAttributes } = useMonitoring();
 
   useEffect(() => {
-    fetchUserAttributes()
-      .then((userAttributes) => {
+    fetchAuthSession()
+      .then(({ tokens }) => {
+        const claims = tokens?.idToken?.payload;
+        if (!claims) {
+          throw new Error("Not signed in");
+        }
         const { "custom:qutIdentityId": id, "custom:uid": username } =
-          userAttributes as UserAttributes;
+          claims as UserAttributes;
         setState((current) => ({
           ...current,
           user: { username, id },

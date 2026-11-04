@@ -11,12 +11,16 @@
     "clean": "rimraf node_modules && rimraf cdk.out && rimraf cdk.context.json",
     "build": "tsc",
     "watch": "tsc -w",
+    "test": "jest",
     "cdk": "cdk"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^26.1.0",
     "aws-cdk": "^2.1129.0",
     "esbuild": "^0.28.1",
+    "jest": "^30.4.2",
+    "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "rimraf": "^6.1.3"

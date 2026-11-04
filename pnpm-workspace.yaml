@@ -23,3 +23,7 @@ overrides:
   # api: jest/@types/jest/aws-sdk-client-mock-jest -> micromatch, jest-util, anymatch
   "picomatch@<2.3.2": "^2.3.2"
   "picomatch@>=4.0.0 <4.0.4": "^4.0.4"
+
+patchedDependencies:
+  # frontend: dangerouslyConnectToHttpEndpointForTesting falls through to the https-only branch and throws InvalidCustomEndpoint. See frontend/pages/_app.tsx.
+  "@aws-amplify/storage@6.16.0": patches/@aws-amplify__storage@6.16.0.patch

@@ -1,0 +1,9 @@
+# The image copies nothing, since the repo is bind-mounted at run time. This
+# keeps the build context small.
+node_modules
+**/node_modules
+**/cdk.out
+**/.next
+**/dist
+**/coverage
+.git
