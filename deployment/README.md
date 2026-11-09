@@ -52,5 +52,6 @@ A local deploy differs from a deployed environment in four ways.
 - The REST API id is pinned, so the execute-api URL survives a redeploy and `frontend/.env.development.local` stays valid.
 - The Cognito callback URL and allowed origin use `http`, because `next dev` serves the frontend over plain HTTP.
 - The frontend is given the emulator endpoint, which `frontend/pages/_app.tsx` points Amplify Storage at.
+- The summarise function calls Claude Haiku 5.5 by its foundation model id rather than the `au.` inference profile. MiniStack 1.5.39 authorises `InvokeModel` against `foundation-model/<model id>`, so it denies the profile id that AWS requires, while AWS rejects the foundation model id because Haiku 5.5 is only offered through inference profiles. Remove this once MiniStack checks the inference profile.
 
 Sign-in goes through the Cognito hosted UI in both cases. A deployed pool federates to QUT SSO, so the hosted UI redirects there. The local pool has no federation and shows its own username and password form. Amplify hardcodes `https` into the hosted UI URL, so Compose runs a TLS proxy in front of the gateway for it.

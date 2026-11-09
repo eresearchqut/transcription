@@ -190,6 +190,21 @@ describe("ApiStack", () => {
       localTemplate().resourceCountIs("AWS::Route53::RecordSet", 0);
     });
 
+    it("summarises with the foundation model id, which AWS rejects", () => {
+      const summariseEnvironment = (template: Template) =>
+        Object.values(template.findResources("AWS::Lambda::Function")).find(
+          (fn) =>
+            fn.Properties.Description ===
+            "Generates a summary of the transcription output",
+        )?.Properties.Environment.Variables;
+      expect(summariseEnvironment(localTemplate())).toMatchObject({
+        BEDROCK_MODEL_ID: "anthropic.claude-haiku-5-5",
+      });
+      expect(summariseEnvironment(synthesise())).not.toHaveProperty(
+        "BEDROCK_MODEL_ID",
+      );
+    });
+
     it("tolerates a missing x-ray daemon in the application functions", () => {
       const applicationFunctions = Object.values(
         localTemplate().findResources("AWS::Lambda::Function"),
