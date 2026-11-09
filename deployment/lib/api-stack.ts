@@ -470,7 +470,9 @@ export class ApiStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ["bedrock:InvokeModel"],
         resources: [
-          "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/au.anthropic.claude-haiku-5-5`,
+          "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-haiku-5-5",
+          "arn:aws:bedrock:ap-southeast-4::foundation-model/anthropic.claude-haiku-5-5",
         ],
       }),
     );

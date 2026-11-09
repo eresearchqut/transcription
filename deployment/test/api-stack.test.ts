@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { Match, Template } from "aws-cdk-lib/assertions";
+import { Capture, Match, Template } from "aws-cdk-lib/assertions";
 import { ApiStack, type ApiStackProps } from "../lib/api-stack";
 
 const parameters: ApiStackProps["parameters"] = {
@@ -118,6 +118,31 @@ describe("ApiStack", () => {
           Rules: Match.arrayWith([
             Match.objectLike({
               AbortIncompleteMultipartUpload: { DaysAfterInitiation: 7 },
+            }),
+          ]),
+        },
+      });
+    });
+
+    it("allows summarisation through the Australian inference profile", () => {
+      const stack = template();
+      const role = new Capture();
+      stack.hasResourceProperties("AWS::Lambda::Function", {
+        Description: "Generates a summary of the transcription output",
+        Role: { "Fn::GetAtt": role },
+      });
+      stack.hasResourceProperties("AWS::IAM::Policy", {
+        Roles: [{ Ref: role.asArray()[0] }],
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: "bedrock:InvokeModel",
+              Effect: "Allow",
+              Resource: [
+                `arn:aws:bedrock:${env.region}:${env.account}:inference-profile/au.anthropic.claude-haiku-5-5`,
+                "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-haiku-5-5",
+                "arn:aws:bedrock:ap-southeast-4::foundation-model/anthropic.claude-haiku-5-5",
+              ],
             }),
           ]),
         },
