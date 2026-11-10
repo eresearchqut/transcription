@@ -124,13 +124,13 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
           >
             <VStack gap={3}>
               <Text>
-                This service is powered by{" "}
+                This service uses{" "}
                 <ExternalLink href={"https://aws.amazon.com/bedrock/"}>
                   Amazon Bedrock
-                </ExternalLink>
-                . Using generative AI and the Claude Haiku model, a summary is
-                generated from the transcription of the provided media.
-                Classifier metrics are used to identify potential violations of{" "}
+                </ExternalLink>{" "}
+                with Claude Haiku 5.5 to summarise your transcript in the AWS
+                Sydney or Melbourne region. AWS may automatically check inputs
+                and outputs for violations of its{" "}
                 <ExternalLink href={"https://aws.amazon.com/aup/"}>
                   Acceptable Use
                 </ExternalLink>{" "}
@@ -138,21 +138,30 @@ export const LegacyMediaUpload: FunctionComponent<LegacyMediaUploadProps> = ({
                 <ExternalLink
                   href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
                 >
-                  Responsible Use
+                  Responsible AI
                 </ExternalLink>{" "}
-                policies.
-              </Text>
-              <Text>
-                By using this service you are expected to comply with{" "}
+                policies and{" "}
                 <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
-                  Anthropic&apos;s Usage Policy.
+                  Anthropic&apos;s Usage Policy
                 </ExternalLink>
+                .
               </Text>
               <Text>
-                Please be aware that factual assertions in the output should not
-                be relied upon without independently checking their accuracy, as
-                they may be false, incomplete, misleading or not reflective of
-                recent events or information.
+                When you enable summaries, you must comply with these policies
+                and{" "}
+                <ExternalLink
+                  href={
+                    "https://aws.amazon.com/legal/bedrock/third-party-models/"
+                  }
+                >
+                  Anthropic&apos;s Bedrock terms
+                </ExternalLink>
+                .
+              </Text>
+              <Text>
+                Independently check factual claims before using or sharing a
+                summary, as they may be false, incomplete, misleading or out of
+                date.
               </Text>
             </VStack>
           </HelpPopover>

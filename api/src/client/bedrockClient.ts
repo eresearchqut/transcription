@@ -9,7 +9,12 @@ export const bedrockClientConfig = {
 
 const ANTHROPIC_VERSION = process.env.ANTHROPIC_VERSION ?? "bedrock-2023-05-31";
 const BEDROCK_MODEL_ID =
-  process.env.BEDROCK_MODEL_ID ?? "anthropic.claude-3-haiku-20240307-v1:0";
+  process.env.BEDROCK_MODEL_ID ?? "au.anthropic.claude-haiku-5-5";
+
+interface ContentBlock {
+  type: string;
+  text?: string;
+}
 
 export const invokeModel = async (
   client: BedrockRuntimeClient,
@@ -19,7 +24,7 @@ export const invokeModel = async (
   // Prepare the payload for the model.
   const payload = {
     anthropic_version: ANTHROPIC_VERSION,
-    max_tokens: 1000,
+    max_tokens: 32000,
     messages: [
       {
         role: "user",
@@ -36,7 +41,15 @@ export const invokeModel = async (
   });
   const apiResponse = await client.send(command);
 
-  // Decode and return the response(s)
+  // Decode and return the text block, skipping any thinking blocks
   const responseBody = JSON.parse(new TextDecoder().decode(apiResponse.body));
-  return responseBody.content[0].text;
+  const text = (responseBody.content as ContentBlock[]).find(
+    (block) => block.type === "text",
+  )?.text;
+  if (!text) {
+    throw new Error(
+      `Model returned no text (stop_reason: ${responseBody.stop_reason})`,
+    );
+  }
+  return text;
 };
