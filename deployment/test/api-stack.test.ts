@@ -1,5 +1,5 @@
 import * as cdk from "aws-cdk-lib";
-import { Match, Template } from "aws-cdk-lib/assertions";
+import { Capture, Match, Template } from "aws-cdk-lib/assertions";
 import { ApiStack, type ApiStackProps } from "../lib/api-stack";
 
 const parameters: ApiStackProps["parameters"] = {
@@ -123,6 +123,31 @@ describe("ApiStack", () => {
         },
       });
     });
+
+    it("allows summarisation through the Australian inference profile", () => {
+      const stack = template();
+      const role = new Capture();
+      stack.hasResourceProperties("AWS::Lambda::Function", {
+        Description: "Generates a summary of the transcription output",
+        Role: { "Fn::GetAtt": role },
+      });
+      stack.hasResourceProperties("AWS::IAM::Policy", {
+        Roles: [{ Ref: role.asArray()[0] }],
+        PolicyDocument: {
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: "bedrock:InvokeModel",
+              Effect: "Allow",
+              Resource: [
+                `arn:aws:bedrock:${env.region}:${env.account}:inference-profile/au.anthropic.claude-haiku-5-5`,
+                "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-haiku-5-5",
+                "arn:aws:bedrock:ap-southeast-4::foundation-model/anthropic.claude-haiku-5-5",
+              ],
+            }),
+          ]),
+        },
+      });
+    });
   });
 
   describe("with an individual parameter left empty", () => {
@@ -163,6 +188,21 @@ describe("ApiStack", () => {
       localTemplate().resourceCountIs("AWS::ApiGateway::DomainName", 0);
       localTemplate().resourceCountIs("AWS::ApiGateway::BasePathMapping", 0);
       localTemplate().resourceCountIs("AWS::Route53::RecordSet", 0);
+    });
+
+    it("summarises with the foundation model id, which AWS rejects", () => {
+      const summariseEnvironment = (template: Template) =>
+        Object.values(template.findResources("AWS::Lambda::Function")).find(
+          (fn) =>
+            fn.Properties.Description ===
+            "Generates a summary of the transcription output",
+        )?.Properties.Environment.Variables;
+      expect(summariseEnvironment(localTemplate())).toMatchObject({
+        BEDROCK_MODEL_ID: "anthropic.claude-haiku-5-5",
+      });
+      expect(summariseEnvironment(synthesise())).not.toHaveProperty(
+        "BEDROCK_MODEL_ID",
+      );
     });
 
     it("tolerates a missing x-ray daemon in the application functions", () => {

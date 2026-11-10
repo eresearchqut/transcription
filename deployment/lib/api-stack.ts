@@ -109,6 +109,15 @@ export class ApiStack extends cdk.Stack {
       ? { NEXT_PUBLIC_AWS_ENDPOINT: emulator.endpoint }
       : {};
 
+    // MiniStack (1.5.39) authorises InvokeModel against
+    // foundation-model/<model id>, so it denies the inference profile id that
+    // AWS requires. Locally, summaries call the foundation model id instead,
+    // which the summarise policy already allows. Remove this once MiniStack
+    // checks the inference profile.
+    const emulatorSummariseEnvironment: Record<string, string> = emulator
+      ? { BEDROCK_MODEL_ID: "anthropic.claude-haiku-5-5" }
+      : {};
+
     if (emulator) {
       cdk.Aspects.of(this).add(new TolerateMissingXrayDaemon());
     }
@@ -448,6 +457,7 @@ export class ApiStack extends cdk.Stack {
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
           ...localHandlerEnvironment,
+          ...emulatorSummariseEnvironment,
         },
       },
     );
@@ -470,7 +480,9 @@ export class ApiStack extends cdk.Stack {
       new iam.PolicyStatement({
         actions: ["bedrock:InvokeModel"],
         resources: [
-          "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/au.anthropic.claude-haiku-5-5`,
+          "arn:aws:bedrock:ap-southeast-2::foundation-model/anthropic.claude-haiku-5-5",
+          "arn:aws:bedrock:ap-southeast-4::foundation-model/anthropic.claude-haiku-5-5",
         ],
       }),
     );
