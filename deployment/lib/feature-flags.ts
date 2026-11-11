@@ -11,4 +11,5 @@ export const featureFlagsParameterName = (envName: string): string =>
  */
 export const LOCAL_FEATURE_FLAGS = {
   rpid: true,
+  usageLog: true,
 };

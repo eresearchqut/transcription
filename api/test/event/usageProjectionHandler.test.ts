@@ -2,10 +2,19 @@ import { GetItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import type { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
-import type { UsageRecord } from "model";
+import { FEATURES_OFF, type UsageRecord } from "model";
 
+import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 import { handler } from "../../src/event/usageProjectionHandler";
 import dynamoDBClient from "../../src/repository/dynamoDBClient";
+
+jest.mock("../../src/client/featureFlagsClient", () => ({
+  getFeatureFlags: jest.fn(),
+}));
+
+const mockGetFeatureFlags = getFeatureFlags as jest.MockedFunction<
+  typeof getFeatureFlags
+>;
 
 const usageTableName = process.env.USAGE_TABLE_NAME || "transcription-usage";
 
@@ -61,6 +70,10 @@ const getUsageRecord = () =>
     .then(({ Item }) => Item && (unmarshall(Item) as UsageRecord));
 
 describe("usageProjectionHandler", () => {
+  beforeEach(() => {
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog: true });
+  });
+
   it("projects a new transcription record into the usage table", async () => {
     const result = await handler(
       event(streamRecord("INSERT", transcriptionRecord())),
@@ -213,5 +226,25 @@ describe("usageProjectionHandler", () => {
     );
 
     expect(result.batchItemFailures).toEqual([]);
+  });
+
+  it("records nothing while the usage log is off", async () => {
+    mockGetFeatureFlags.mockResolvedValue(FEATURES_OFF);
+
+    const result = await handler(
+      event(streamRecord("INSERT", transcriptionRecord())),
+    );
+
+    expect(result.batchItemFailures).toEqual([]);
+    expect(await getUsageRecord()).toBeUndefined();
+  });
+
+  it("fails the batch when the feature flags can't be read", async () => {
+    mockGetFeatureFlags.mockRejectedValue(new Error("ThrottlingException"));
+
+    await expect(
+      handler(event(streamRecord("INSERT", transcriptionRecord()))),
+    ).rejects.toThrow("ThrottlingException");
+    expect(await getUsageRecord()).toBeUndefined();
   });
 });

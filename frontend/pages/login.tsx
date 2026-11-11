@@ -21,6 +21,7 @@ import type { FunctionComponent, PropsWithChildren } from "react";
 import { ExternalLink } from "@/components/externalLink";
 import { handleLogin, type NextPageWithLayout } from "@/pages/_app";
 import { useAuth } from "../context/auth-context";
+import { useFeatures } from "../hooks/useFeatures";
 import { bytesToSize } from "../inputs/filePicker";
 import Layout from "../layout/layout";
 
@@ -111,6 +112,11 @@ const Login: NextPageWithLayout = () => {
       bgColor: { base: "gray.100", _dark: "gray.700" },
     },
   };
+  // If the flags can't be fetched, describe everything that may be kept
+  // rather than risk leaving out something that is.
+  const { features, isError } = useFeatures();
+  const usageLogged = isError || !!features?.usageLog;
+  const rpidLogged = isError || !!features?.rpid;
 
   return (
     <Grid
@@ -246,45 +252,49 @@ const Login: NextPageWithLayout = () => {
                 .
               </Text>
             </Box>
-            <Box>
-              <Heading as={"h3"} fontSize={"md"} pb={1}>
-                Usage information
-              </Heading>
-              <Text>
-                So we can report on how the service is used and what it costs,
-                we keep a record of each transcription after the media and
-                transcript themselves have been deleted. This record is kept
-                indefinitely and covers:
-              </Text>
-              <List.Root listStylePosition={"inside"}>
-                <List.Item>
-                  The research project (RPID) the transcription was assigned to,
-                  with the project's details from the Data Management Planning
-                  tool, such as its title, lead, supervisor, school, faculty,
-                  fields of research, and whether it is a Higher Degree Research
-                  (HDR) project
-                </List.Item>
-                <List.Item>
-                  Who submitted it, and when it started and finished
-                </List.Item>
-                <List.Item>
-                  The languages, media format, and options chosen, such as PII
-                  redaction, summaries, and translation
-                </List.Item>
-                <List.Item>
-                  How much was processed: minutes of audio, bytes uploaded,
-                  summary tokens, and translated characters
-                </List.Item>
-                <List.Item>
-                  Whether the transcription succeeded, and why it failed if it
-                  did not
-                </List.Item>
-              </List.Root>
-              <Text mt={2}>
-                It never includes your media, transcripts, translations,
-                summaries, or file names.
-              </Text>
-            </Box>
+            {usageLogged && (
+              <Box>
+                <Heading as={"h3"} fontSize={"md"} pb={1}>
+                  Usage information
+                </Heading>
+                <Text>
+                  So we can report on how the service is used and what it costs,
+                  we keep a record of each transcription after the media and
+                  transcript themselves have been deleted. This record is kept
+                  indefinitely and covers:
+                </Text>
+                <List.Root listStylePosition={"inside"}>
+                  {rpidLogged && (
+                    <List.Item>
+                      The research project (RPID) the transcription was assigned
+                      to, with the project's details from the Data Management
+                      Planning tool, such as its title, lead, supervisor,
+                      school, faculty, fields of research, and whether it is a
+                      Higher Degree Research (HDR) project
+                    </List.Item>
+                  )}
+                  <List.Item>
+                    Who submitted it, and when it started and finished
+                  </List.Item>
+                  <List.Item>
+                    The languages, media format, and options chosen, such as PII
+                    redaction, summaries, and translation
+                  </List.Item>
+                  <List.Item>
+                    How much was processed: minutes of audio, bytes uploaded,
+                    summary tokens, and translated characters
+                  </List.Item>
+                  <List.Item>
+                    Whether the transcription succeeded, and why it failed if it
+                    did not
+                  </List.Item>
+                </List.Root>
+                <Text mt={2}>
+                  It never includes your media, transcripts, translations,
+                  summaries, or file names.
+                </Text>
+              </Box>
+            )}
             <Box>
               <Heading as={"h3"} fontSize={"md"} pb={1}>
                 PII redaction
