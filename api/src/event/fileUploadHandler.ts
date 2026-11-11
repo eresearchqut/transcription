@@ -12,6 +12,7 @@ import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import { getRpid } from "../client/dmpClient";
+import { getFeatureFlags } from "../client/featureFlagsClient";
 import s3client from "../client/s3Client";
 import { jobRejected, jobStarted } from "../service/transcriptionService";
 
@@ -47,6 +48,9 @@ const rpidRejection = async (
 };
 
 export const handler = async (event: S3Event) => {
+  // Read before the loop, whose errors are logged and skipped, so a failed
+  // read fails the invocation and Lambda retries the S3 event.
+  const { rpid: rpidRequired } = await getFeatureFlags();
   let uploadsCount = 0;
   for (const record of event.Records) {
     try {
@@ -80,10 +84,9 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
 
-      const rejection = await rpidRejection(
-        identityId,
-        headResponse.Metadata.rpid,
-      );
+      const rejection = rpidRequired
+        ? await rpidRejection(identityId, headResponse.Metadata.rpid)
+        : undefined;
       if (rejection) {
         const recorded = await jobRejected(
           identityId,
