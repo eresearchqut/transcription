@@ -90,7 +90,7 @@ Sign-in goes through the Cognito hosted UI, as in a deployed environment. The lo
 
 ### Data Management Planning tool
 
-Uploads need an RPID from the Data Management Planning tool (DMP). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
+Uploads need an RPID from the Data Management Planning tool (DMP) while the `rpid` feature flag is on, as it is locally (see [Feature flags](deployment/README.md#feature-flags)). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
 
 To use a real DMP, set these in your shell or in a `.env` file at the repo root, then run `pnpm ministack:up`:
 

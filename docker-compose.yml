@@ -165,11 +165,11 @@ services:
       - "transcription-pnpm-store:/pnpm-store"
     # `model` resolves to its compiled `dist`, and nothing else in the startup
     # path builds it, so esbuild cannot bundle the handlers on a clean checkout
-    # until it has been built here. The DMP client credentials are written to
-    # the emulator's Parameter Store before each deploy, because the emulator
-    # starts empty. Synthesis goes to /tmp rather than deployment/cdk.out, so
-    # the container never writes a cloud assembly into the bind-mounted tree or
-    # deletes one the host synthesised.
+    # until it has been built here. The DMP client credentials and the feature
+    # flags are written to the emulator's Parameter Store before each deploy,
+    # because the emulator starts empty. Synthesis goes to /tmp rather than
+    # deployment/cdk.out, so the container never writes a cloud assembly into
+    # the bind-mounted tree or deletes one the host synthesised.
     # `pnpm ministack:deploy` synthesises to /tmp/cdk.out.deploy instead,
     # because the watch process below holds this one for as long as it runs.
     command: >
@@ -179,6 +179,7 @@ services:
                pnpm --filter 'api^...' build &&
                cd deployment &&
                npx ts-node --prefer-ts-exts bin/put-local-dmp-credentials.ts &&
+               npx ts-node --prefer-ts-exts bin/put-local-feature-flags.ts &&
                rm -rf /tmp/cdk.out &&
                (curl -sfI $$ASSET_BUCKET_URL > /dev/null ||
                 curl -sf -X PUT $$ASSET_BUCKET_URL -d '<CreateBucketConfiguration><LocationConstraint>ap-southeast-2</LocationConstraint></CreateBucketConfiguration>') &&

@@ -5,8 +5,10 @@ import {
 } from "@aws-sdk/client-transcribe";
 
 import { mockClient } from "aws-sdk-client-mock";
+import { FEATURES_OFF } from "model";
 
 import { getRpid } from "../../src/client/dmpClient";
+import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 import { handler } from "../../src/event/fileUploadHandler";
 import { getResource, putResource } from "../../src/repository/repository";
 import fileMetadata from "./fileMetadata.json";
@@ -20,7 +22,14 @@ jest.mock("../../src/client/dmpClient", () => ({
   getRpid: jest.fn(),
 }));
 
+jest.mock("../../src/client/featureFlagsClient", () => ({
+  getFeatureFlags: jest.fn(),
+}));
+
 const mockGetRpid = getRpid as jest.MockedFunction<typeof getRpid>;
+const mockGetFeatureFlags = getFeatureFlags as jest.MockedFunction<
+  typeof getFeatureFlags
+>;
 
 describe("fileUploadHandler", () => {
   const transcribeMock = mockClient(TranscribeClient);
@@ -30,6 +39,7 @@ describe("fileUploadHandler", () => {
     transcribeMock.reset();
     s3Mock.reset();
     mockGetRpid.mockReset();
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, rpid: true });
     transcribeMock.on(StartTranscriptionJobCommand).resolves({
       TranscriptionJob: {
         TranscriptionJobName: "A-Job",
@@ -127,6 +137,30 @@ describe("fileUploadHandler", () => {
         },
       }),
     );
+  });
+
+  it("starts a transcription job without an rpid when the rpid flag is off", async () => {
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, rpid: false });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
+
+    expect(mockGetRpid).not.toHaveBeenCalled();
+    expect(
+      transcribeMock.commandCalls(StartTranscriptionJobCommand),
+    ).toHaveLength(1);
+  });
+
+  it("fails the invocation when the feature flags can't be read", async () => {
+    mockGetFeatureFlags.mockRejectedValue(new Error("ThrottlingException"));
+
+    await expect(handler(fileUploadEvent)).rejects.toThrow(
+      "ThrottlingException",
+    );
+
+    expect(
+      transcribeMock.commandCalls(StartTranscriptionJobCommand),
+    ).toHaveLength(0);
   });
 
   it("leaves a finished job alone when a repeated upload event is rejected", async () => {

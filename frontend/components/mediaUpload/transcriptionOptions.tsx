@@ -19,6 +19,7 @@ import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
+import { useFeatures } from "../../hooks/useFeatures";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
 import { useRpids } from "../../hooks/useRpids";
 import { LanguageInput } from "../../inputs/languageInput";
@@ -61,6 +62,8 @@ export const TranscriptionOptions: FunctionComponent<
   );
   const [selectedRpid, setRpid] = useState<string | undefined>();
 
+  const { features: featureFlags, isLoading: featuresLoading } = useFeatures();
+  const rpidRequired = !!featureFlags?.rpid;
   const rpidsState = useRpids();
   const { rpids, isLoading: rpidsLoading, isError: rpidsError } = rpidsState;
   const rpid = activeRpid(rpids, selectedRpid);
@@ -98,7 +101,8 @@ export const TranscriptionOptions: FunctionComponent<
 
   useEffect(() => {
     const valid =
-      !!rpid &&
+      !featuresLoading &&
+      (!rpidRequired || !!rpid) &&
       !languageSizeLimitExceeded &&
       !(enableTranslation && !targetLanguage) &&
       !(enablePiiRedaction && !piiLanguageValid);
@@ -120,6 +124,8 @@ export const TranscriptionOptions: FunctionComponent<
     enableTranslation,
     targetLanguage,
     rpid,
+    rpidRequired,
+    featuresLoading,
     piiLanguageValid,
     onChange,
     languageSizeLimitExceeded,
@@ -127,39 +133,41 @@ export const TranscriptionOptions: FunctionComponent<
 
   return (
     <Stack direction={direction} gap={6} alignSelf={"stretch"}>
-      <Field invalid={rpidsError} alignItems={"flex-start"} gap={1.5}>
-        <Heading as={"h3"} size={"md"}>
-          Research Project
-        </Heading>
-        <Text fontSize={"sm"} color={"fg.muted"}>
-          Every transcription must be assigned to one of your research projects.
-          Your Research Project IDs (RPIDs) are sourced from the{" "}
-          <ExternalLink href={DMP_URL}>
-            Data Management Planning tool
-          </ExternalLink>
-          .
-        </Text>
-        <Stack
-          direction={{ base: "column", sm: "row" }}
-          gap={{ base: 1.5, sm: 3 }}
-          align={{ base: "stretch", sm: "center" }}
-          width={"full"}
-        >
-          <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
-            Research Project ID
+      {rpidRequired && (
+        <Field invalid={rpidsError} alignItems={"flex-start"} gap={1.5}>
+          <Heading as={"h3"} size={"md"}>
+            Research Project
+          </Heading>
+          <Text fontSize={"sm"} color={"fg.muted"}>
+            Every transcription must be assigned to one of your research
+            projects. Your Research Project IDs (RPIDs) are sourced from the{" "}
+            <ExternalLink href={DMP_URL}>
+              Data Management Planning tool
+            </ExternalLink>
+            .
           </Text>
-          <Box flex={"1"} minWidth={0} width={"full"}>
-            <RpidInput
-              rpids={rpids}
-              value={rpid}
-              onChange={setRpid}
-              isLoading={rpidsLoading}
-              placeholder={"Select a research project..."}
-            />
-          </Box>
-        </Stack>
-        <RpidAlerts {...rpidsState} />
-      </Field>
+          <Stack
+            direction={{ base: "column", sm: "row" }}
+            gap={{ base: 1.5, sm: 3 }}
+            align={{ base: "stretch", sm: "center" }}
+            width={"full"}
+          >
+            <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
+              Research Project ID
+            </Text>
+            <Box flex={"1"} minWidth={0} width={"full"}>
+              <RpidInput
+                rpids={rpids}
+                value={rpid}
+                onChange={setRpid}
+                isLoading={rpidsLoading}
+                placeholder={"Select a research project..."}
+              />
+            </Box>
+          </Stack>
+          <RpidAlerts {...rpidsState} />
+        </Field>
+      )}
       <Field
         invalid={languageSizeLimitExceeded}
         alignItems={"flex-start"}

@@ -31,6 +31,8 @@ const parameters: ApiStackProps["parameters"] = {
 
 const env = { account: "111111111111", region: "ap-southeast-2" };
 
+const FEATURE_FLAGS_PARAMETER = "/app/dev/transcription/features";
+
 /**
  * A local deploy is described by its configuration, not by a flag: the emulator
  * endpoint is set and the parameters for resources with no local counterpart
@@ -60,6 +62,7 @@ const synthesise = (props?: Partial<ApiStackProps>): Template => {
   const stack = new ApiStack(app, "TranscriptionStack", {
     stackName: "dev-transcription",
     parameters,
+    featureFlagsParameterName: FEATURE_FLAGS_PARAMETER,
     env,
     ...props,
   });
@@ -125,6 +128,39 @@ describe("ApiStack", () => {
       ).toContain(`NEXT_PUBLIC_DMP_URL=${parameters.DmpWebUrl}`);
     });
 
+    it("lets the functions that check feature flags read them at runtime", () => {
+      const synthesised = template();
+      const flagFunctions = Object.values(
+        synthesised.findResources("AWS::Lambda::Function"),
+      ).filter(
+        (fn) => fn.Properties.Environment?.Variables?.FEATURE_FLAGS_PARAMETER,
+      );
+      expect(flagFunctions).toHaveLength(2);
+      flagFunctions.forEach((fn) => {
+        expect(
+          fn.Properties.Environment.Variables.FEATURE_FLAGS_PARAMETER,
+        ).toBe(FEATURE_FLAGS_PARAMETER);
+      });
+      expect(
+        JSON.stringify(synthesised.findResources("AWS::IAM::Policy")),
+      ).toContain(`:parameter${FEATURE_FLAGS_PARAMETER}`);
+      synthesised.resourceCountIs("AWS::SSM::Parameter", 0);
+    });
+
+    it("serves the feature flags without a token", () => {
+      const synthesised = template();
+      const [featuresResource] = Object.keys(
+        synthesised.findResources("AWS::ApiGateway::Resource", {
+          Properties: { PathPart: "features" },
+        }),
+      );
+      synthesised.hasResourceProperties("AWS::ApiGateway::Method", {
+        HttpMethod: "GET",
+        AuthorizationType: "NONE",
+        ResourceId: { Ref: featuresResource },
+      });
+    });
+
     it("leaves the x-ray daemon address at the lambda default", () => {
       Object.values(template().findResources("AWS::Lambda::Function")).forEach(
         (fn) => {
@@ -158,6 +194,33 @@ describe("ApiStack", () => {
           ]),
         },
       });
+    });
+  });
+
+  describe("with no dmp configured", () => {
+    const { DmpApiUrl, DmpCredentialsParameter, DmpTokenUrl, ...withoutDmp } =
+      parameters;
+
+    it("gives the functions neither the dmp nor its credentials", () => {
+      const template = synthesise({ parameters: withoutDmp });
+      Object.values(template.findResources("AWS::Lambda::Function")).forEach(
+        (fn) => {
+          expect(fn.Properties.Environment?.Variables ?? {}).not.toHaveProperty(
+            "DMP_API_URL",
+          );
+        },
+      );
+      expect(
+        JSON.stringify(template.findResources("AWS::IAM::Policy")),
+      ).not.toContain(`:parameter${DmpCredentialsParameter}`);
+    });
+
+    it("refuses a partly configured dmp", () => {
+      expect(() =>
+        synthesise({ parameters: { ...withoutDmp, DmpApiUrl } }),
+      ).toThrow(
+        "Set all of DmpApiUrl, DmpCredentialsParameter and DmpTokenUrl, or none of them.",
+      );
     });
   });
 

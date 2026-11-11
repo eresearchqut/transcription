@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 
+import featureRoutes from "../routes/featureRoutes";
 import rpidRoutes from "../routes/rpidRoutes";
 import transcriptionRoutes from "../routes/transcriptionRoutes";
 import userRoutes from "../routes/userRoutes";
@@ -28,6 +29,7 @@ const api = express().use(
 api.use("/transcription", transcriptionRoutes);
 api.use("/user", userRoutes);
 api.use("/rpid", rpidRoutes);
+api.use("/features", featureRoutes);
 api.use(errorHandler);
 api.use(xray.express.closeSegment());
 

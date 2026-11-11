@@ -1,16 +1,25 @@
 process.env.AWS_XRAY_SDK_ENABLED = "false";
 process.env.AWS_XRAY_CONTEXT_MISSING = "IGNORE_ERROR";
 
+import { FEATURES_OFF } from "model";
 import request from "supertest";
 
 import api from "../../src/api/api";
 import { listRpids } from "../../src/client/dmpClient";
+import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 
 jest.mock("../../src/client/dmpClient", () => ({
   listRpids: jest.fn(),
 }));
 
+jest.mock("../../src/client/featureFlagsClient", () => ({
+  getFeatureFlags: jest.fn(),
+}));
+
 const mockListRpids = listRpids as jest.MockedFunction<typeof listRpids>;
+const mockGetFeatureFlags = getFeatureFlags as jest.MockedFunction<
+  typeof getFeatureFlags
+>;
 
 const authorizationHeader = (claims: Record<string, unknown>): string => {
   const payload = Buffer.from(JSON.stringify(claims)).toString("base64");
@@ -25,6 +34,7 @@ const AUTHORIZATION = authorizationHeader({
 describe("GET /rpid", () => {
   beforeEach(() => {
     jest.resetAllMocks();
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, rpid: true });
   });
 
   it("returns the user's rpids", async () => {
@@ -88,6 +98,17 @@ describe("GET /rpid", () => {
       .set("Authorization", authorizationHeader({ username: "someone" }));
 
     expect(response.status).toBe(500);
+    expect(mockListRpids).not.toHaveBeenCalled();
+  });
+
+  it("returns 404 when the rpid flag is off", async () => {
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, rpid: false });
+
+    const response = await request(api)
+      .get("/rpid")
+      .set("Authorization", AUTHORIZATION);
+
+    expect(response.status).toBe(404);
     expect(mockListRpids).not.toHaveBeenCalled();
   });
 });

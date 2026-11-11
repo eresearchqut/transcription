@@ -14,6 +14,24 @@ Run these from `deployment/`:
 
 The environment is the current git branch: `dev`, `qa` or `prod`. Its parameters, including the account and region to deploy to, are read from SSM at `/app/<env>/transcription/env`. On any other branch the lookup fails, so set `DEV_DEPLOY_OVERRIDE=true` to use `dev`. `LOCAL_DEPLOY=true` targets the local emulator instead, described below.
 
+## Feature flags
+
+Some features can be turned on and off while the service runs, without a deploy. Their flags are a JSON object in the SSM parameter `/app/<env>/transcription/features`, such as `{"rpid": true}`.
+
+| Flag | Turns on |
+| --- | --- |
+| `rpid` | Requiring each upload to be assigned an RPID, which the upload handler checks with the DMP. Set `DmpApiUrl`, `DmpTokenUrl` and `DmpCredentialsParameter` in the environment's parameters before turning it on, or every upload is rejected. |
+
+A flag is off unless it is `true`, and every flag is off while the parameter doesn't exist. No stack creates the parameter, so a deploy never changes a flag. To change them:
+
+```sh
+aws ssm put-parameter --name /app/dev/transcription/features --type String --overwrite --value '{"rpid": true}'
+```
+
+Each Lambda container reads the parameter at most once a minute. The frontend fetches the flags from `GET /features`, which needs no token so the landing page can use it, and fetches them again once they are a minute old. A change therefore reaches everyone within a couple of minutes. Until then a page opened earlier can disagree with the handlers: an upload sent from it without an RPID after `rpid` is turned on fails, with the reason shown in My Transcriptions.
+
+Locally, the Compose bootstrap container turns every flag on with `bin/put-local-feature-flags.ts`. To change one, run the command above with `--endpoint-url http://localhost:20005 --region ap-southeast-2`, `AWS_ACCESS_KEY_ID=test`, `AWS_SECRET_ACCESS_KEY=test` and the name `/app/local/transcription/features`.
+
 ## Stacks
 
 | Stack | Contents | Created for |

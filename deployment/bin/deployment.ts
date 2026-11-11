@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import * as cdk from "aws-cdk-lib";
 import { ApiStack } from "../lib/api-stack";
+import { featureFlagsParameterName } from "../lib/feature-flags";
 import { FrontEndStack } from "../lib/front-end-stack";
 import { GitHubStack } from "../lib/github-stack";
 import { readLocalDmp } from "../lib/local-dmp";
@@ -31,9 +32,9 @@ interface EnvironmentConfig {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
-    DmpApiUrl: string;
-    DmpCredentialsParameter: string;
-    DmpTokenUrl: string;
+    DmpApiUrl?: string;
+    DmpCredentialsParameter?: string;
+    DmpTokenUrl?: string;
     DmpWebUrl?: string;
     Environment: Environment;
     FrontEndDomainName: string;
@@ -86,18 +87,15 @@ const readLocalEnvironmentConfig = (): EnvironmentConfig => {
 };
 
 /**
- * Parameters a deployed environment must set. A local deploy leaves most of
- * them empty because it has no VPC, custom domain, certificate, WAF or hosted
- * zone, and ApiStack skips the resource that depends on each one, while
- * FrontEndStack is not created locally. The DMP parameters point at a local
- * stand-in instead. In a real environment an empty value means the SSM
- * parameter is incomplete, so fail rather than deploy without it.
+ * Parameters that a local deploy leaves empty because it has no VPC, custom
+ * domain, certificate, WAF or hosted zone. ApiStack skips the resource that
+ * depends on each one, and FrontEndStack is not created locally. In a real
+ * environment an empty value means the SSM parameter is incomplete, so fail
+ * rather than deploy without it. The DMP parameters are optional everywhere,
+ * because RPIDs are only checked while the rpid feature flag is on.
  */
 const REQUIRED_DEPLOYED_PARAMETERS = [
   "ApiDomainName",
-  "DmpApiUrl",
-  "DmpCredentialsParameter",
-  "DmpTokenUrl",
   "FrontEndDomainName",
   "GlobalCertificateArn",
   "GlobalWafArn",
@@ -118,7 +116,7 @@ const assertDeployedParameters = (
   });
   if (missing.length > 0) {
     throw new Error(
-      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs, DNS records or RPID checks.`,
+      `Missing ${missing.join(", ")} in /app/${envName}/${repo}/env. These are only optional for a local deploy; leaving them empty here would skip or break the VPC, custom domains, certificates, WAFs or DNS records.`,
     );
   }
 };
@@ -192,6 +190,7 @@ loadEnvironment().then((env) => {
   const apiStack = new ApiStack(app, "TranscriptionStack", {
     stackName: apiStackName,
     parameters: env.parameters,
+    featureFlagsParameterName: featureFlagsParameterName(envName),
     env: { account: env.account, region: env.region },
     synthesizer: assetSynthesizer(env.account, env.region),
     ...(isLocalDeploy && { emulator: { endpoint: requireEndpoint(env) } }),
