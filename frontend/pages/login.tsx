@@ -178,17 +178,29 @@ const Login: NextPageWithLayout = () => {
                   Amazon Bedrock
                 </ExternalLink>{" "}
                 using{" "}
-                <ExternalLink href={"https://www.anthropic.com/claude/haiku"}>
-                  Anthropic&apos;s Claude Haiku
+                <ExternalLink
+                  href={
+                    "https://docs.aws.amazon.com/bedrock/latest/userguide/model-card-anthropic-claude-haiku-5-5.html"
+                  }
+                >
+                  Anthropic&apos;s Claude Haiku 5.5
                 </ExternalLink>{" "}
-                model. By using this service you are expected to comply with{" "}
+                model. When you enable summaries, you must comply with{" "}
                 <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
                   Anthropic&apos;s Usage Policy
+                </ExternalLink>{" "}
+                and{" "}
+                <ExternalLink
+                  href={
+                    "https://aws.amazon.com/legal/bedrock/third-party-models/"
+                  }
+                >
+                  Anthropic&apos;s Bedrock terms
                 </ExternalLink>
-                . Summaries are intended to provide an overview of the
-                transcript and should not replace review of the source
-                transcription. They may omit context or nuance from the original
-                content.
+                . Review the source transcript and independently check factual
+                claims before using or sharing a summary. Summaries may omit
+                context or contain false, incomplete, misleading or out-of-date
+                information.
               </Text>
             </Box>
           </VStack>
@@ -213,8 +225,8 @@ const Login: NextPageWithLayout = () => {
               <Heading as={"h3"} fontSize={"md"} pb={1}>
                 Data storage
               </Heading>
-              Uploaded media, generated transcriptions, and generated
-              translations are:
+              Uploaded media and generated transcriptions, translations, and
+              summaries are:
               <List.Root listStylePosition={"inside"}>
                 <List.Item>
                   Stored in the Amazon Web Services (AWS) Sydney region
@@ -262,14 +274,19 @@ const Login: NextPageWithLayout = () => {
               <Heading as={"h3"} fontSize={"md"} pb={1}>
                 Summaries
               </Heading>
-              Generated transcription summaries:
+              When you enable summaries:
               <List.Root listStylePosition={"inside"}>
                 <List.Item>
-                  Do not use your prompts and completions to train any AWS
-                  models, and are not distributed to third parties.
+                  Your transcript is processed in the AWS Sydney or Melbourne
+                  region using an Australian inference profile.
                 </List.Item>
                 <List.Item>
-                  Use classifier metrics to identify potential violations of{" "}
+                  Your inputs and summaries are not used to train AWS or
+                  Anthropic models and are not shared with Anthropic.
+                </List.Item>
+                <List.Item>
+                  AWS may automatically check inputs and outputs for violations
+                  of its{" "}
                   <ExternalLink href={"https://aws.amazon.com/aup/"}>
                     Acceptable Use
                   </ExternalLink>{" "}
@@ -277,21 +294,41 @@ const Login: NextPageWithLayout = () => {
                   <ExternalLink
                     href={"https://aws.amazon.com/ai/responsible-ai/policy/"}
                   >
-                    Responsible Use
+                    Responsible AI
                   </ExternalLink>{" "}
-                  policies.
+                  policies and{" "}
+                  <ExternalLink href={"https://www.anthropic.com/legal/aup"}>
+                    Anthropic&apos;s Usage Policy
+                  </ExternalLink>
+                  .
                 </List.Item>
               </List.Root>
               <Text mt={2}>
-                For more information refer to the{" "}
+                See Amazon Bedrock&apos;s{" "}
                 <ExternalLink
                   href={
-                    "https://docs.aws.amazon.com/bedrock/latest/userguide/security.html"
+                    "https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html"
                   }
                 >
-                  Amazon Bedrock Security Documentation
+                  data protection
                 </ExternalLink>
-                .
+                ,{" "}
+                <ExternalLink
+                  href={
+                    "https://docs.aws.amazon.com/bedrock/latest/userguide/data-retention.html"
+                  }
+                >
+                  data retention
+                </ExternalLink>{" "}
+                and{" "}
+                <ExternalLink
+                  href={
+                    "https://docs.aws.amazon.com/bedrock/latest/userguide/abuse-detection.html"
+                  }
+                >
+                  abuse detection
+                </ExternalLink>{" "}
+                documentation.
               </Text>
             </Box>
           </VStack>
