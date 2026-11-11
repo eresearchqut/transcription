@@ -135,7 +135,7 @@ describe("ApiStack", () => {
       ).filter(
         (fn) => fn.Properties.Environment?.Variables?.FEATURE_FLAGS_PARAMETER,
       );
-      expect(flagFunctions).toHaveLength(2);
+      expect(flagFunctions).toHaveLength(3);
       flagFunctions.forEach((fn) => {
         expect(
           fn.Properties.Environment.Variables.FEATURE_FLAGS_PARAMETER,

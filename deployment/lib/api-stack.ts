@@ -800,6 +800,7 @@ export class ApiStack extends cdk.Stack {
           USAGE_TABLE_NAME: usageTable.tableName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...featureFlagsEnvironment,
         },
       },
     );
@@ -820,6 +821,7 @@ export class ApiStack extends cdk.Stack {
       }),
     );
     usageTable.grantWriteData(usageProjectionFunction);
+    featureFlags.grantRead(usageProjectionFunction);
 
     // Deduplicated because a local deploy serves the frontend from
     // localhost:3000 over http, which is already the first entry, and Cognito

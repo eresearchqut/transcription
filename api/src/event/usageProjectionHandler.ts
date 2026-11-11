@@ -8,6 +8,7 @@ import type {
 } from "aws-lambda";
 import type { Transcription } from "model";
 
+import { getFeatureFlags } from "../client/featureFlagsClient";
 import {
   markUsageRecordExpired,
   putUsageRecord,
@@ -18,6 +19,14 @@ export const handler = async (
   event: DynamoDBStreamEvent,
 ): Promise<DynamoDBBatchResponse> => {
   const batchItemFailures: DynamoDBBatchResponse["batchItemFailures"] = [];
+
+  // While the usage log is off the stream is consumed without recording
+  // anything, so turning it back on leaves a gap rather than a backlog. A
+  // failed read rejects the batch, which the event source mapping retries.
+  const { usageLog } = await getFeatureFlags();
+  if (!usageLog) {
+    return { batchItemFailures };
+  }
 
   for (const record of event.Records) {
     try {
