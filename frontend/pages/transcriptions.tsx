@@ -158,23 +158,27 @@ const Transcriptions: NextPageWithLayout = () => {
         return <Text overflowWrap={"anywhere"}>{filename}</Text>;
       },
     },
-    {
-      id: "rpid",
-      header: "RPID",
-      accessorFn: (transcription) => transcription.metadata.rpid,
-      meta: fitColumn,
-      cell: (props) => {
-        const rpid = props.row.original.metadata.rpid;
-        if (!rpid) {
-          return null;
-        }
-        return (
-          <ExternalLink href={dmpPlanUrl(rpid)} fontFamily={"mono"}>
-            {rpid}
-          </ExternalLink>
-        );
-      },
-    },
+    ...(transcriptions.some(({ metadata }) => metadata.rpid)
+      ? [
+          {
+            id: "rpid",
+            header: "RPID",
+            accessorFn: (transcription) => transcription.metadata.rpid,
+            meta: fitColumn,
+            cell: (props) => {
+              const rpid = props.row.original.metadata.rpid;
+              if (!rpid) {
+                return null;
+              }
+              return (
+                <ExternalLink href={dmpPlanUrl(rpid)} fontFamily={"mono"}>
+                  {rpid}
+                </ExternalLink>
+              );
+            },
+          } satisfies ColumnDef<Transcription>,
+        ]
+      : []),
     {
       id: "summary",
       header: "Summary",

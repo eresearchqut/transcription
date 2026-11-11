@@ -1,6 +1,7 @@
 import type { RpidDto } from "@eresearchqut/dmp-api";
 import { useQuery } from "@tanstack/react-query";
 import { getter } from "../client/fetchers";
+import { useFeatures } from "./useFeatures";
 
 const API_ENDPOINT =
   process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:3001";
@@ -16,6 +17,7 @@ export interface UseRpidsState {
  * Data Management Planning (DMP) API via the transcription API.
  */
 export const useRpids = (): UseRpidsState => {
+  const { features } = useFeatures();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["rpids"],
     queryFn: async (): Promise<RpidDto[]> => {
@@ -29,6 +31,7 @@ export const useRpids = (): UseRpidsState => {
     },
     staleTime: 60 * 1000,
     retry: 3,
+    enabled: !!features?.rpid,
   });
 
   return { rpids: data, isLoading, isError };
