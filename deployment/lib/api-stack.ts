@@ -15,6 +15,7 @@ import * as route53targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import { HttpMethods } from "aws-cdk-lib/aws-s3";
 import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as ssm from "aws-cdk-lib/aws-ssm";
 import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import type { IConstruct } from "constructs";
 
@@ -51,6 +52,10 @@ export interface ApiStackProps extends cdk.StackProps {
     ApiDomainName: string;
     ApplicationName: string;
     AwsRoute53CloudFrontHostedZoneId: string;
+    DmpApiUrl?: string;
+    DmpCredentialsParameter?: string;
+    DmpTokenUrl?: string;
+    DmpWebUrl?: string;
     Environment: string;
     FrontEndDomainName: string;
     GlobalCertificateArn: string;
@@ -76,7 +81,32 @@ export interface ApiStackProps extends cdk.StackProps {
    * their own parameter being empty instead.
    */
   emulator?: { endpoint: string };
+  /**
+   * The parameter the handlers read the feature flags from at runtime. See
+   * lib/feature-flags.ts.
+   */
+  featureFlagsParameterName: string;
 }
+
+/**
+ * The DMP the handlers check RPIDs with, or undefined when none is configured,
+ * in which case turning the rpid flag on rejects every upload.
+ */
+const dmpParameters = ({
+  DmpApiUrl,
+  DmpCredentialsParameter,
+  DmpTokenUrl,
+}: ApiStackProps["parameters"]) => {
+  if (!DmpApiUrl && !DmpCredentialsParameter && !DmpTokenUrl) {
+    return undefined;
+  }
+  if (!DmpApiUrl || !DmpCredentialsParameter || !DmpTokenUrl) {
+    throw new Error(
+      "Set all of DmpApiUrl, DmpCredentialsParameter and DmpTokenUrl, or none of them.",
+    );
+  }
+  return { DmpApiUrl, DmpCredentialsParameter, DmpTokenUrl };
+};
 
 export class ApiStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props: ApiStackProps) {
@@ -199,10 +229,40 @@ export class ApiStack extends cdk.Stack {
         })()
       : {};
 
+    // The handlers read the DMP client credentials from Parameter Store at
+    // runtime, so the secret never appears in the template. A local deploy
+    // does the same, with a parameter the Compose bootstrap container writes.
+    const dmp = dmpParameters(props.parameters);
+    const dmpCredentials =
+      dmp &&
+      ssm.StringParameter.fromSecureStringParameterAttributes(
+        this,
+        "DmpCredentials",
+        { parameterName: dmp.DmpCredentialsParameter },
+      );
+    const dmpEnvironment: Record<string, string> = dmp
+      ? {
+          DMP_API_URL: dmp.DmpApiUrl,
+          DMP_TOKEN_URL: dmp.DmpTokenUrl,
+          DMP_CREDENTIALS_PARAMETER: dmp.DmpCredentialsParameter,
+        }
+      : {};
+
+    // Created outside any stack and read while the handlers run, so a flag
+    // can change without a deploy.
+    const featureFlags = ssm.StringParameter.fromStringParameterName(
+      this,
+      "FeatureFlags",
+      props.featureFlagsParameterName,
+    );
+    const featureFlagsEnvironment: Record<string, string> = {
+      FEATURE_FLAGS_PARAMETER: featureFlags.parameterName,
+    };
+
     const apiFunction = new NodejsFunction(this, "ApiFunction", {
       runtime: lambda.Runtime.NODEJS_24_X,
       description: "Serve the HTTP API",
-      timeout: cdk.Duration.seconds(15),
+      timeout: cdk.Duration.seconds(30),
       memorySize: 1024,
       entry: "../api/src/api/apiHandler.ts",
       handler: "handler",
@@ -216,11 +276,15 @@ export class ApiStack extends cdk.Stack {
         BUCKET_NAME: dataBucket.bucketName,
         APPLICATION_NAME: props.parameters.ApplicationName,
         ENVIRONMENT: props.parameters.Environment,
+        ...dmpEnvironment,
+        ...featureFlagsEnvironment,
         ...localHandlerEnvironment,
       },
       ...vpcConfiguration,
     });
     dataTable.grantReadWriteData(apiFunction);
+    dmpCredentials?.grantRead(apiFunction);
+    featureFlags.grantRead(apiFunction);
 
     const userPoolArn = cdk.Fn.importValue(
       `${props.parameters.UserPoolStackName}-UserPoolArn`,
@@ -271,6 +335,9 @@ export class ApiStack extends cdk.Stack {
     apiResourceAuthorized.addMethod("ANY", apiFunctionIntegration, {
       authorizer: auth,
     });
+    // The landing page reads the feature flags before anyone signs in. API
+    // Gateway matches this resource before the authorized proxy.
+    api.root.addResource("features").addMethod("GET", apiFunctionIntegration);
 
     if (props.parameters.RegionalWafArn) {
       new wafv2.CfnWebACLAssociation(this, "ApiWebACLAssociation", {
@@ -308,7 +375,7 @@ export class ApiStack extends cdk.Stack {
       {
         runtime: lambda.Runtime.NODEJS_24_X,
         description: "Starts transcription jobs when triggered by S3 events",
-        timeout: cdk.Duration.seconds(15),
+        timeout: cdk.Duration.seconds(60),
         memorySize: 1024,
         entry: "../api/src/event/fileUploadHandler.ts",
         handler: "handler",
@@ -322,6 +389,8 @@ export class ApiStack extends cdk.Stack {
           BUCKET_NAME: dataBucket.bucketName,
           APPLICATION_NAME: props.parameters.ApplicationName,
           ENVIRONMENT: props.parameters.Environment,
+          ...dmpEnvironment,
+          ...featureFlagsEnvironment,
           ...localHandlerEnvironment,
         },
       },
@@ -338,6 +407,8 @@ export class ApiStack extends cdk.Stack {
     );
     dataTable.grantReadWriteData(jobStartFunction);
     dataBucket.grantReadWrite(jobStartFunction);
+    dmpCredentials?.grantRead(jobStartFunction);
+    featureFlags.grantRead(jobStartFunction);
     dataBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(jobStartFunction),
@@ -830,6 +901,9 @@ export class ApiStack extends cdk.Stack {
               NEXT_PUBLIC_SPLUNK_RUM_ACCESS_TOKEN:
                 props.parameters.SplunkRumAccessToken,
             }
+          : {}),
+        ...(props.parameters.DmpWebUrl
+          ? { NEXT_PUBLIC_DMP_URL: props.parameters.DmpWebUrl }
           : {}),
         ...(props.parameters.UmamiWebsiteId && props.parameters.UmamiUrl
           ? {

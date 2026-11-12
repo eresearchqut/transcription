@@ -35,7 +35,13 @@ const OptionBadge = ({ label, value }: OptionBadgeProps) => (
 );
 
 export const OptionsSummary: FunctionComponent<OptionsSummaryProps> = ({
-  options: { languages, enablePiiRedaction, generateSummary, targetLanguage },
+  options: {
+    languages,
+    enablePiiRedaction,
+    generateSummary,
+    targetLanguage,
+    rpid,
+  },
 }) => {
   return (
     <Flex alignItems={"center"} gap={2} flexWrap={"wrap"}>
@@ -43,6 +49,7 @@ export const OptionsSummary: FunctionComponent<OptionsSummaryProps> = ({
         Selected options:
       </Text>
       <Wrap gap={2}>
+        {rpid && <OptionBadge label={"Research Project"} value={rpid} />}
         <OptionBadge
           label={"Source languages"}
           value={languages

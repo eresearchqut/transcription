@@ -1,0 +1,16 @@
+{
+  "mappings": [
+    {
+      "name": "Lists researcher2002's plans, of which there are none",
+      "request": {
+        "method": "GET",
+        "urlPath": "/v1/rpid/user/researcher2002"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": []
+      }
+    }
+  ]
+}

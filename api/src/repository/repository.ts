@@ -1,5 +1,6 @@
 import type { AttributeValue } from "@aws-sdk/client-dynamodb";
 import {
+  ConditionalCheckFailedException,
   DeleteItemCommand,
   GetItemCommand,
   PutItemCommand,
@@ -23,6 +24,22 @@ export const getResource = (pk: string, sk: string) =>
     )
     .then((result) => result.Item && unmarshall(result.Item));
 
+const resourceItem = (
+  pk: string,
+  sk: string,
+  attributes: Record<string, unknown>,
+) =>
+  marshall(
+    {
+      pk,
+      sk,
+      ...attributes,
+      date: new Date().toISOString(),
+      ttl: Math.floor(Date.now() / 1000) + TTL_DELTA,
+    },
+    { removeUndefinedValues: true },
+  );
+
 export const putResource = (
   pk: string,
   sk: string,
@@ -31,18 +48,31 @@ export const putResource = (
   dynamoDBClient.send(
     new PutItemCommand({
       TableName: tableName,
-      Item: marshall(
-        {
-          pk,
-          sk,
-          ...attributes,
-          date: new Date().toISOString(),
-          ttl: Math.floor(Date.now() / 1000) + TTL_DELTA,
-        },
-        { removeUndefinedValues: true },
-      ),
+      Item: resourceItem(pk, sk, attributes),
     }),
   );
+
+/** Resolves false, without writing, when the item already exists. */
+export const createResource = (
+  pk: string,
+  sk: string,
+  attributes: Record<string, unknown>,
+) =>
+  dynamoDBClient
+    .send(
+      new PutItemCommand({
+        TableName: tableName,
+        Item: resourceItem(pk, sk, attributes),
+        ConditionExpression: "attribute_not_exists(pk)",
+      }),
+    )
+    .then(() => true)
+    .catch((error) => {
+      if (error instanceof ConditionalCheckFailedException) {
+        return false;
+      }
+      throw error;
+    });
 
 export const updateResource = (
   pk: string,

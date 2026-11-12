@@ -11,8 +11,10 @@ import {
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
+import { getRpid } from "../client/dmpClient";
+import { getFeatureFlags } from "../client/featureFlagsClient";
 import s3client from "../client/s3Client";
-import { jobStarted } from "../service/transcriptionService";
+import { jobRejected, jobStarted } from "../service/transcriptionService";
 
 const region = process.env.AWS_REGION || "ap-southeast-2";
 const transcribeBucket = process.env.BUCKET_NAME || "transcriptions";
@@ -23,7 +25,32 @@ const transcribeClient = new TranscribeClient({ region });
 xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
+/**
+ * The reason to refuse the upload, shown to the user as the job's failure
+ * reason, or undefined when the RPID is one of their active projects.
+ */
+const rpidRejection = async (
+  identityId: string,
+  rpid: string | undefined,
+): Promise<string | undefined> => {
+  if (!rpid) {
+    return "A Research Project ID (RPID) is required to start a transcription.";
+  }
+  try {
+    if (await getRpid(identityId, rpid)) {
+      return undefined;
+    }
+    return `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`;
+  } catch (error) {
+    console.error(`Failed to validate RPID ${rpid}`, error);
+    return `The Research Project ID (RPID) ${rpid} could not be checked with the Data Management Planning tool. Please try again later.`;
+  }
+};
+
 export const handler = async (event: S3Event) => {
+  // Read before the loop, whose errors are logged and skipped, so a failed
+  // read fails the invocation and Lambda retries the S3 event.
+  const { rpid: rpidRequired } = await getFeatureFlags();
   let uploadsCount = 0;
   for (const record of event.Records) {
     try {
@@ -56,6 +83,25 @@ export const handler = async (event: S3Event) => {
       const enablePiiRedaction: boolean = JSON.parse(
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
+
+      const rejection = rpidRequired
+        ? await rpidRejection(identityId, headResponse.Metadata.rpid)
+        : undefined;
+      if (rejection) {
+        const recorded = await jobRejected(
+          identityId,
+          jobId,
+          record.s3,
+          headResponse.Metadata,
+          rejection,
+        );
+        if (!recorded) {
+          console.log(
+            `Ignored a repeated upload event for ${jobId}, which already has a record`,
+          );
+        }
+        continue;
+      }
 
       const languageParams = {
         ...(enablePiiRedaction

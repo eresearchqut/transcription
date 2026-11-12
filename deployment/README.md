@@ -14,6 +14,24 @@ Run these from `deployment/`:
 
 The environment is the current git branch: `dev`, `qa` or `prod`. Its parameters, including the account and region to deploy to, are read from SSM at `/app/<env>/transcription/env`. On any other branch the lookup fails, so set `DEV_DEPLOY_OVERRIDE=true` to use `dev`. `LOCAL_DEPLOY=true` targets the local emulator instead, described below.
 
+## Feature flags
+
+Some features can be turned on and off while the service runs, without a deploy. Their flags are a JSON object in the SSM parameter `/app/<env>/transcription/features`, such as `{"rpid": true}`.
+
+| Flag | Turns on |
+| --- | --- |
+| `rpid` | Requiring each upload to be assigned an RPID, which the upload handler checks with the DMP. Set `DmpApiUrl`, `DmpTokenUrl` and `DmpCredentialsParameter` in the environment's parameters before turning it on, or every upload is rejected. |
+
+A flag is off unless it is `true`, and every flag is off while the parameter doesn't exist. No stack creates the parameter, so a deploy never changes a flag. To change them:
+
+```sh
+aws ssm put-parameter --name /app/dev/transcription/features --type String --overwrite --value '{"rpid": true}'
+```
+
+Each Lambda container reads the parameter at most once a minute. The frontend fetches the flags from `GET /features`, which needs no token so the landing page can use it, and fetches them again once they are a minute old. A change therefore reaches everyone within a couple of minutes. Until then a page opened earlier can disagree with the handlers: an upload sent from it without an RPID after `rpid` is turned on fails, with the reason shown in My Transcriptions.
+
+Locally, the Compose bootstrap container turns every flag on with `bin/put-local-feature-flags.ts`. To change one, run the command above with `--endpoint-url http://localhost:20005 --region ap-southeast-2`, `AWS_ACCESS_KEY_ID=test`, `AWS_SECRET_ACCESS_KEY=test` and the name `/app/local/transcription/features`.
+
 ## Stacks
 
 | Stack | Contents | Created for |
@@ -37,11 +55,13 @@ AWS_PROFILE=dev DEV_DEPLOY_OVERRIDE=true pnpm cdk deploy TranscriptionStack
 
 `LOCAL_DEPLOY=true` makes `bin/deployment.ts` deploy to MiniStack instead of AWS. You rarely set it yourself, because `docker compose up` deploys from the bootstrap container with it already set. See the local development section of the root README.
 
-A local deploy differs from a deployed environment in four ways.
+A local deploy differs from a deployed environment in five ways.
 
 **Parameters come from a file.** `config/local.json` replaces the SSM parameter, because the emulator starts empty and would need the parameter written on every start before it could be read.
 
 **Some parameters are blank.** `ApiDomainName`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`.
+
+**The DMP is a stand-in.** `DmpApiUrl` and `DmpTokenUrl` point at the WireMock container, and `bin/put-local-dmp-credentials.ts` writes its client credentials to `DmpCredentialsParameter` before each deploy. The `DMP_*` variables in the root README point a local deploy at a real DMP instead.
 
 **The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The asset bucket those GitHub stacks would create is made by the Compose bootstrap command instead.
 
