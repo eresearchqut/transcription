@@ -61,6 +61,11 @@ const project = async (record: DynamoDBRecord) => {
     console.error("Skipping record with no key", { eventId: record.eventID });
     return;
   }
+  // Without this, a job uploaded while the log was off would be recorded when
+  // TTL removes it, if the log had been turned on since.
+  if (!transcription.usageLogged) {
+    return;
+  }
 
   const usageRecord = toUsageRecord(transcription);
   await putUsageRecord(usageRecord);

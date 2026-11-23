@@ -21,7 +21,7 @@ Some features can be turned on and off while the service runs, without a deploy.
 | Flag | Turns on |
 | --- | --- |
 | `rpid` | Requiring each upload to be assigned an RPID, which the upload handler checks with the DMP. Set `DmpApiUrl`, `DmpTokenUrl` and `DmpCredentialsParameter` in the environment's parameters before turning it on, or every upload is rejected. |
-| `usageLog` | Copying job records into the permanent usage table, and the landing page's "Usage information" section that tells users so. A job that finishes while it is off gets no usage record. A job still running when it is turned back on is recorded in full at its next change. |
+| `usageLog` | Recording jobs in the permanent usage table, and the landing page's "Usage information" section that tells users so. Only a job uploaded while it is on is recorded, even if it is turned on before the job finishes or expires. Changes to a recorded job while it is off are skipped, and its usage record catches up at the job's next change once it is back on. |
 
 A flag is off unless it is `true`, and every flag is off while the parameter doesn't exist. No stack creates the parameter, so a deploy never changes a flag. To change them:
 

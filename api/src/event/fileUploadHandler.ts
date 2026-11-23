@@ -60,7 +60,7 @@ const checkRpid = async (
 export const handler = async (event: S3Event) => {
   // Read before the loop, whose errors are logged and skipped, so a failed
   // read fails the invocation and Lambda retries the S3 event.
-  const { rpid: rpidRequired } = await getFeatureFlags();
+  const { rpid: rpidRequired, usageLog } = await getFeatureFlags();
   let uploadsCount = 0;
   for (const record of event.Records) {
     try {
@@ -104,6 +104,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           headResponse.Metadata,
           rpidCheck.rejection,
+          usageLog,
         );
         if (!recorded) {
           console.log(
@@ -176,6 +177,7 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
+          usageLog,
           rpidCheck.project,
         ).then(() => uploadsCount++);
       } catch (error) {

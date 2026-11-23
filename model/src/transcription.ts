@@ -26,6 +26,12 @@ export interface Transcription {
   date: string;
   /** The DMP project details for the RPID, as they were at upload. */
   researchProject?: ResearchProject;
+  /**
+   * Whether the usage log was on when the upload was processed. Only these
+   * jobs get a usage record, as only their uploaders could have seen the log
+   * described on the landing page.
+   */
+  usageLogged?: boolean;
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;

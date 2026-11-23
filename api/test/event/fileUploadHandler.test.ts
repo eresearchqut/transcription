@@ -161,6 +161,38 @@ describe("fileUploadHandler", () => {
     ).toHaveLength(1);
   });
 
+  it.each([
+    true,
+    false,
+  ])("records on a started job whether the usage log is on: %s", async (usageLog) => {
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+
+    await handler(fileUploadEvent);
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({ usageLogged: usageLog }),
+    );
+  });
+
+  it("records on a rejected job whether the usage log is on", async () => {
+    mockGetFeatureFlags.mockResolvedValue({
+      ...FEATURES_OFF,
+      rpid: true,
+      usageLog: true,
+    });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({
+        jobStatusUpdated: expect.anything(),
+        usageLogged: true,
+      }),
+    );
+  });
+
   it("fails the invocation when the feature flags can't be read", async () => {
     mockGetFeatureFlags.mockRejectedValue(new Error("ThrottlingException"));
 

@@ -39,9 +39,16 @@ const transcriptionRecord = (overrides: Record<string, unknown> = {}) => ({
     title: "Project",
     lead: { id: "1", name: "Lead" },
   },
+  usageLogged: true,
   uploadEvent: { object: { key: "users/x/y.upload", size: 1292288 } },
   ...overrides,
 });
+
+/** A job recorded before jobs noted whether the usage log was on. */
+const unstampedRecord = () => {
+  const { usageLogged: _, ...record } = transcriptionRecord();
+  return record;
+};
 
 const APPROXIMATE_CREATION_TIME = 1786000000;
 
@@ -238,6 +245,25 @@ describe("usageProjectionHandler", () => {
 
     const result = await handler(
       event(streamRecord("INSERT", transcriptionRecord())),
+    );
+
+    expect(result.batchItemFailures).toEqual([]);
+    expect(await getUsageRecord()).toBeUndefined();
+  });
+
+  it.each([
+    [
+      "while the usage log was off",
+      transcriptionRecord({ usageLogged: false }),
+    ],
+    ["before jobs noted the usage log", unstampedRecord()],
+  ])("doesn't record a job uploaded %s, even when it expires", async (_, image) => {
+    const result = await handler(
+      event(
+        streamRecord("INSERT", image, "1"),
+        streamRecord("MODIFY", image, "2"),
+        streamRecord("REMOVE", image, "3"),
+      ),
     );
 
     expect(result.batchItemFailures).toEqual([]);

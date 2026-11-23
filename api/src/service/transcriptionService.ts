@@ -21,6 +21,7 @@ export const jobStarted = (
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
+  usageLogged: boolean,
   researchProject?: ResearchProject,
 ) =>
   putResource(identityId, jobId, {
@@ -29,6 +30,7 @@ export const jobStarted = (
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
     researchProject: researchProject && toResearchProject(researchProject),
+    usageLogged,
   });
 
 /**
@@ -41,6 +43,7 @@ export const jobRejected = (
   uploadEvent: Record<string, unknown>,
   metadata: Record<string, unknown>,
   failureReason: string,
+  usageLogged: boolean,
 ) =>
   createResource(identityId, jobId, {
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
@@ -51,6 +54,7 @@ export const jobRejected = (
         FailureReason: failureReason,
       },
     },
+    usageLogged,
   });
 
 export const jobStatusUpdated = (
