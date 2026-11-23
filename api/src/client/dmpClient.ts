@@ -1,8 +1,11 @@
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import {
   ClientCredentialsError,
   Configuration,
   clientCredentials,
+  FetchError,
   PlanStatus,
   ResponseError,
   RpidApi,
@@ -114,6 +117,40 @@ export const listRpids = async (userId: string): Promise<RpidDto[]> =>
 const RPID_PATTERN = /^[A-Za-z0-9]+$/;
 
 /**
+ * The waits before the second and third attempts to check an RPID. With
+ * FETCH_TIMEOUT_MS, the attempts take at most about 45 seconds, inside the
+ * upload handler's timeout. listRpids doesn't retry, so the API answers within
+ * API Gateway's 29 second limit.
+ */
+const RETRY_DELAYS_MS = [1_000, 3_000];
+
+/**
+ * Whether asking again could succeed: after a timeout or network failure, a
+ * 429 or 5xx answer, or a failed token request, after which `request` reads
+ * the credentials again.
+ */
+const isTransient = (error: unknown) =>
+  error instanceof FetchError ||
+  error instanceof ClientCredentialsError ||
+  (error instanceof ResponseError &&
+    (error.response.status === 429 || error.response.status >= 500));
+
+const withRetries = async <T>(call: () => Promise<T>): Promise<T> => {
+  for (const delay of RETRY_DELAYS_MS) {
+    try {
+      return await call();
+    } catch (error) {
+      if (!isTransient(error)) {
+        throw error;
+      }
+      console.warn(`Retrying a failed DMP request in ${delay} ms`, error);
+      await sleep(delay);
+    }
+  }
+  return call();
+};
+
+/**
  * The messages DMP v1 publishes for a 403 from getRpidForUser when the user is
  * not on the plan, or collaborates on it without access to transcription. Any
  * other 403, such as the one for a client that lacks the scope, is an error.
@@ -139,7 +176,7 @@ const isNoAccess = async (error: unknown) => {
 /**
  * Resolves undefined unless the RPID belongs to an active plan the user is a
  * member of, with access to transcription. Rejects when the DMP could not be
- * asked.
+ * asked, after retrying failures that might not last.
  */
 export const getRpid = async (
   userId: string,
@@ -150,8 +187,10 @@ export const getRpid = async (
   }
   let project: RpidDto | undefined;
   try {
-    project = await request((api) =>
-      api.getRpidForUser({ userId, rpid, status: PlanStatus.Active }),
+    project = await withRetries(() =>
+      request((api) =>
+        api.getRpidForUser({ userId, rpid, status: PlanStatus.Active }),
+      ),
     );
   } catch (error) {
     if (await isNoAccess(error)) {
