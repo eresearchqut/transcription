@@ -1,7 +1,4 @@
-import {
-  ConditionalCheckFailedException,
-  UpdateItemCommand,
-} from "@aws-sdk/client-dynamodb";
+import { UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { marshall } from "@aws-sdk/util-dynamodb";
 
 import type { UsageRecord } from "model";
@@ -16,8 +13,15 @@ const WRITE_ONCE_ATTRIBUTES = new Set([
   "completedAt",
 ]);
 
+/**
+ * Writes a job's usage from one stream image. The stream delivers a job's
+ * images in the order DynamoDB applied them, and each image is complete, so
+ * the latest write is the job's current state. The images' dates can't order
+ * them, because each handler stamps its write before sending it, and two
+ * handlers' writes can be applied in the opposite order.
+ */
 export const putUsageRecord = async (record: UsageRecord) => {
-  const { pk, sk, updatedAt, ...attributes } = record;
+  const { pk, sk, ...attributes } = record;
   const entries = Object.entries(attributes).filter(
     ([, value]) => value !== undefined,
   );
@@ -28,38 +32,22 @@ export const putUsageRecord = async (record: UsageRecord) => {
       : `#n${index} = :v${index}`,
   );
 
-  try {
-    await dynamoDBClient.send(
-      new UpdateItemCommand({
-        TableName: usageTableName,
-        Key: marshall({ pk, sk }),
-        UpdateExpression: `set ${[...assignments, "#updatedAt = :updatedAt"].join(", ")}`,
-        ConditionExpression:
-          "attribute_not_exists(#updatedAt) or #updatedAt <= :updatedAt",
-        ExpressionAttributeNames: {
-          ...Object.fromEntries(
-            entries.map(([name], index) => [`#n${index}`, name]),
-          ),
-          "#updatedAt": "updatedAt",
-        },
-        ExpressionAttributeValues: marshall(
-          {
-            ...Object.fromEntries(
-              entries.map(([, value], index) => [`:v${index}`, value]),
-            ),
-            ":updatedAt": updatedAt,
-          },
-          { removeUndefinedValues: true },
+  await dynamoDBClient.send(
+    new UpdateItemCommand({
+      TableName: usageTableName,
+      Key: marshall({ pk, sk }),
+      UpdateExpression: `set ${assignments.join(", ")}`,
+      ExpressionAttributeNames: Object.fromEntries(
+        entries.map(([name], index) => [`#n${index}`, name]),
+      ),
+      ExpressionAttributeValues: marshall(
+        Object.fromEntries(
+          entries.map(([, value], index) => [`:v${index}`, value]),
         ),
-      }),
-    );
-  } catch (error) {
-    if (error instanceof ConditionalCheckFailedException) {
-      console.log(`Skipped stale usage projection for ${pk} ${sk}`);
-      return;
-    }
-    throw error;
-  }
+        { removeUndefinedValues: true },
+      ),
+    }),
+  );
 };
 
 export const markUsageRecordExpired = (

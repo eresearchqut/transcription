@@ -134,11 +134,20 @@ describe("usageProjectionHandler", () => {
     );
   });
 
-  it("ignores a redelivered older state", async () => {
+  it("keeps the latest image when its handler stamped it first", async () => {
     await handler(
       event(
+        streamRecord("INSERT", transcriptionRecord(), "1"),
         streamRecord(
-          "INSERT",
+          "MODIFY",
+          transcriptionRecord({
+            date: "2026-08-06T01:30:00.040Z",
+            audioSeconds: 612.5,
+          }),
+          "2",
+        ),
+        streamRecord(
+          "MODIFY",
           transcriptionRecord({
             date: "2026-08-06T01:30:00.000Z",
             audioSeconds: 612.5,
@@ -146,18 +155,18 @@ describe("usageProjectionHandler", () => {
               detail: { TranscriptionJobStatus: "COMPLETED" },
             },
           }),
+          "3",
         ),
       ),
     );
 
-    const result = await handler(
-      event(streamRecord("MODIFY", transcriptionRecord(), "2")),
+    expect(await getUsageRecord()).toEqual(
+      expect.objectContaining({
+        status: "COMPLETED",
+        audioSeconds: 612.5,
+        completedAt: "2026-08-06T01:30:00.000Z",
+      }),
     );
-
-    expect(result.batchItemFailures).toEqual([]);
-    const record = await getUsageRecord();
-    expect(record?.status).toEqual("COMPLETED");
-    expect(record?.audioSeconds).toEqual(612.5);
   });
 
   it("keeps the usage record when the transcription record expires", async () => {
@@ -218,7 +227,7 @@ describe("usageProjectionHandler", () => {
     expect(Items).toHaveLength(1);
   });
 
-  it("reports the failed item rather than the whole batch", async () => {
+  it("skips a record with no key", async () => {
     const result = await handler(
       event(
         streamRecord("INSERT", { sk: JOB_ID }, "1"),
@@ -229,6 +238,40 @@ describe("usageProjectionHandler", () => {
     expect(result.batchItemFailures).toEqual([]);
     expect(await getUsageRecord()).toEqual(
       expect.objectContaining({ jobId: JOB_ID }),
+    );
+  });
+
+  it("stops at a failed record so the retry applies the batch in order", async () => {
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    const send = jest
+      .spyOn(dynamoDBClient, "send")
+      .mockRejectedValueOnce(new Error("ThrottlingException") as never);
+    const batch = event(
+      streamRecord("INSERT", transcriptionRecord(), "1"),
+      streamRecord(
+        "MODIFY",
+        transcriptionRecord({
+          date: "2026-08-06T01:30:00.000Z",
+          jobStatusUpdated: { detail: { TranscriptionJobStatus: "COMPLETED" } },
+        }),
+        "2",
+      ),
+    );
+
+    const failed = await handler(batch);
+
+    expect(failed.batchItemFailures).toEqual([{ itemIdentifier: "1" }]);
+    expect(await getUsageRecord()).toBeUndefined();
+
+    send.mockRestore();
+    const retried = await handler(batch);
+
+    expect(retried.batchItemFailures).toEqual([]);
+    expect(await getUsageRecord()).toEqual(
+      expect.objectContaining({
+        status: "COMPLETED",
+        startedAt: "2026-08-06T01:02:03.000Z",
+      }),
     );
   });
 

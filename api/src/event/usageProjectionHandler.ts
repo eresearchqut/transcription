@@ -18,14 +18,12 @@ import { toUsageRecord } from "../service/usageService";
 export const handler = async (
   event: DynamoDBStreamEvent,
 ): Promise<DynamoDBBatchResponse> => {
-  const batchItemFailures: DynamoDBBatchResponse["batchItemFailures"] = [];
-
   // While the usage log is off the stream is consumed without recording
   // anything, so turning it back on leaves a gap rather than a backlog. A
   // failed read rejects the batch, which the event source mapping retries.
   const { usageLog } = await getFeatureFlags();
   if (!usageLog) {
-    return { batchItemFailures };
+    return { batchItemFailures: [] };
   }
 
   for (const record of event.Records) {
@@ -36,15 +34,17 @@ export const handler = async (
         error,
         eventId: record.eventID,
       });
-      if (record.dynamodb?.SequenceNumber) {
-        batchItemFailures.push({
-          itemIdentifier: record.dynamodb.SequenceNumber,
-        });
+      const sequenceNumber = record.dynamodb?.SequenceNumber;
+      if (!sequenceNumber) {
+        throw error;
       }
+      // Lambda retries every record from this one, so the records after it
+      // are applied after it rather than ahead of it.
+      return { batchItemFailures: [{ itemIdentifier: sequenceNumber }] };
     }
   }
 
-  return { batchItemFailures };
+  return { batchItemFailures: [] };
 };
 
 const project = async (record: DynamoDBRecord) => {
