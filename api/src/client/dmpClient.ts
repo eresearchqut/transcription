@@ -114,8 +114,32 @@ export const listRpids = async (userId: string): Promise<RpidDto[]> =>
 const RPID_PATTERN = /^[A-Za-z0-9]+$/;
 
 /**
+ * The messages DMP v1 publishes for a 403 from getRpidForUser when the user is
+ * not on the plan, or collaborates on it without access to transcription. Any
+ * other 403, such as the one for a client that lacks the scope, is an error.
+ */
+const NO_ACCESS_MESSAGES = new Set([
+  "The user does not have access to this RPID.",
+  "The collaborator does not have access to perform this operation on this RPID.",
+]);
+
+const isNoAccess = async (error: unknown) => {
+  if (!(error instanceof ResponseError) || error.response.status !== 403) {
+    return false;
+  }
+  const body = (await error.response
+    .clone()
+    .json()
+    .catch(() => undefined)) as { message?: unknown } | undefined;
+  return (
+    typeof body?.message === "string" && NO_ACCESS_MESSAGES.has(body.message)
+  );
+};
+
+/**
  * Resolves undefined unless the RPID belongs to an active plan the user is a
- * member of. Rejects when the DMP could not be asked.
+ * member of, with access to transcription. Rejects when the DMP could not be
+ * asked.
  */
 export const getRpid = async (
   userId: string,
@@ -124,9 +148,17 @@ export const getRpid = async (
   if (!RPID_PATTERN.test(rpid)) {
     return undefined;
   }
-  const project = await request((api) =>
-    api.getRpidForUser({ userId, rpid, status: PlanStatus.Active }),
-  );
+  let project: RpidDto | undefined;
+  try {
+    project = await request((api) =>
+      api.getRpidForUser({ userId, rpid, status: PlanStatus.Active }),
+    );
+  } catch (error) {
+    if (await isNoAccess(error)) {
+      return undefined;
+    }
+    throw error;
+  }
   // The SDK doesn't check the shape of a response.
   if (project && (Array.isArray(project) || project.rpid !== rpid)) {
     console.warn(`The DMP answered for RPID ${rpid} with another project`);

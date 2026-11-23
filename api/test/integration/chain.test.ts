@@ -53,6 +53,10 @@ const identityId = "researcher1001";
 // scripts/ministack/dmp.
 const ACTIVE_RPID = "A1B2C3D4";
 const ARCHIVED_RPID = "J9K0L1M2";
+// Plans the stand-in says researcher1001 is not on, or collaborates on without
+// access to transcription.
+const OTHER_RESEARCHER_RPID = "N3P4Q5R6";
+const NO_ACCESS_RPID = "S7T8U9V0";
 
 /** The chain settles in a few seconds locally; allow for a Lambda cold start. */
 const CHAIN_TIMEOUT_MS = 120_000;
@@ -389,10 +393,12 @@ describe("rpid check", () => {
   // record instead of starting a job when it is not one of the user's active
   // plans.
   it.each([
-    ["an archived", ARCHIVED_RPID],
-    ["someone else's", "Z9Y8X7W6"],
+    ["an archived plan", ARCHIVED_RPID],
+    ["another researcher's plan", OTHER_RESEARCHER_RPID],
+    ["a plan shared without access to transcription", NO_ACCESS_RPID],
+    ["an RPID the DMP doesn't know", "Z9Y8X7W6"],
   ])(
-    "refuses %s plan without starting a transcription",
+    "refuses %s without starting a transcription",
     async (_, rpid) => {
       const jobId = await upload({ rpid });
 
