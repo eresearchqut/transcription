@@ -9,6 +9,10 @@ export interface UsageRecord {
   identityId: string;
   jobId: string;
 
+  /**
+   * The RPID the DMP confirmed at upload, which keys `byRpid`. Absent when the
+   * upload was rejected or the `rpid` flag was off.
+   */
   rpid?: string;
   researchProject?: ResearchProject;
 

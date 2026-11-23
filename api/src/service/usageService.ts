@@ -41,7 +41,7 @@ export const toUsageRecord = (record: Transcription): UsageRecord => {
     identityId: record.pk,
     jobId: record.sk,
 
-    rpid: metadata.rpid || undefined,
+    rpid: record.researchProject?.rpid,
     researchProject:
       record.researchProject && toResearchProject(record.researchProject),
 

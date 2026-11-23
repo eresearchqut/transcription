@@ -113,6 +113,22 @@ describe("usageService", () => {
     expect(record.researchProject).toEqual(keptProject);
   });
 
+  it("keys byRpid only on an RPID the DMP confirmed", () => {
+    const record = toUsageRecord(
+      transcription({
+        jobStatusUpdated: {
+          detail: {
+            TranscriptionJobStatus: "FAILED",
+            FailureReason:
+              "The Research Project ID (RPID) RPID-1234 is not one of your active projects in the Data Management Planning tool.",
+          },
+        },
+      }),
+    );
+
+    expect(record.rpid).toBeUndefined();
+  });
+
   it("retains no content, filename, or storage keys", () => {
     const record = toUsageRecord(
       transcription({
