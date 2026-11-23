@@ -163,7 +163,7 @@ describe("dmpClient", () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(
-        jsonResponse(404, { message: "No researcher found" }),
+        jsonResponse(404, { message: "The user does not exist." }),
       );
 
     await expect(listRpids("user-1")).resolves.toEqual([]);
@@ -173,7 +173,7 @@ describe("dmpClient", () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(
-        jsonResponse(404, { message: "No plan found for researcher" }),
+        jsonResponse(404, { message: "The RPID does not exist." }),
       );
 
     await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
@@ -277,7 +277,7 @@ describe("dmpClient", () => {
   });
 
   it.each([
-    401, 403, 500,
+    400, 401, 500,
   ])("rejects when the DMP answers %i", async (status) => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
@@ -287,5 +287,35 @@ describe("dmpClient", () => {
 
     expect(error).toBeInstanceOf(ResponseError);
     expect((error as ResponseError).response.status).toBe(status);
+  });
+
+  it.each([
+    "The user does not have access to this RPID.",
+    "The collaborator does not have access to perform this operation on this RPID.",
+  ])("resolves undefined when the DMP answers 403: %s", async (message) => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(
+        jsonResponse(403, { statusCode: 403, message, error: "Forbidden" }),
+      );
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
+  });
+
+  it.each([
+    [
+      "the client lacks the scope",
+      { statusCode: 403, message: "Forbidden resource", error: "Forbidden" },
+    ],
+    ["of API Gateway", { message: "Missing Authentication Token" }],
+  ])("rejects a 403 because %s", async (_, body) => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(403, body));
+
+    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ResponseError);
+    expect((error as ResponseError).response.status).toBe(403);
   });
 });
