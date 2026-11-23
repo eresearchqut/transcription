@@ -21,7 +21,7 @@ const tokenResponse = (accessToken = "token-1", expiresIn = 3600) =>
 const PARAMETER_NAME = "/app/dev/transcription/dmp-credentials";
 
 const rpidDto: RpidDto = {
-  rpid: "RPID-1",
+  rpid: "A1B2C3D4",
   title: "First project",
   status: "ACTIVE",
   createdDate: "2026-03-02T00:00:00.000Z",
@@ -73,7 +73,7 @@ describe("dmpClient", () => {
       .mockResolvedValueOnce(jsonResponse(200, rpidDto));
 
     await listRpids("user-1");
-    await getRpid("user-1", "RPID-1");
+    await getRpid("user-1", "A1B2C3D4");
 
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -97,24 +97,58 @@ describe("dmpClient", () => {
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
-      "https://api.dmp.example.com/v1/rpid/user/user-1/RPID-1?status=ACTIVE",
+      "https://api.dmp.example.com/v1/rpid/user/user-1/A1B2C3D4?status=ACTIVE",
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: "Bearer token-1" }),
       }),
     );
   });
 
-  it("encodes the user and the RPID in the path", async () => {
+  it("encodes the user in the path", async () => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(200, rpidDto));
 
-    await getRpid("user/1", "RPID 1");
+    await getRpid("user/1", "A1B2C3D4");
 
     expect(fetchMock).toHaveBeenLastCalledWith(
-      "https://api.dmp.example.com/v1/rpid/user/user%2F1/RPID%201?status=ACTIVE",
+      "https://api.dmp.example.com/v1/rpid/user/user%2F1/A1B2C3D4?status=ACTIVE",
       expect.anything(),
     );
+  });
+
+  it("resolves the project when the DMP confirms the RPID", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+  });
+
+  it.each([
+    ".",
+    "..",
+    "A1B2/../C3D4",
+    "A1B2 C3D4",
+    "A1B2C3D4?status=ARCHIVED",
+    "",
+  ])("resolves undefined without asking the DMP for the RPID %j", async (rpid) => {
+    await expect(getRpid("user-1", rpid)).resolves.toBeUndefined();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no projects", []],
+    ["a list", [rpidDto]],
+    ["another project", { ...rpidDto, rpid: "E5F6G7H8" }],
+  ])("resolves undefined when the DMP answers with %s", async (_, body) => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, body));
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
   });
 
   it("returns the DMP's projects", async () => {
@@ -142,7 +176,7 @@ describe("dmpClient", () => {
         jsonResponse(404, { message: "No plan found for researcher" }),
       );
 
-    await expect(getRpid("user-1", "RPID-1")).resolves.toBeUndefined();
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
   });
 
   it("refreshes the token once it has expired", async () => {
@@ -249,7 +283,7 @@ describe("dmpClient", () => {
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(status, {}));
 
-    const error = await getRpid("user-1", "RPID-1").catch((e) => e);
+    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
 
     expect(error).toBeInstanceOf(ResponseError);
     expect((error as ResponseError).response.status).toBe(status);

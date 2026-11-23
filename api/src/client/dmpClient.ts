@@ -108,13 +108,29 @@ export const listRpids = async (userId: string): Promise<RpidDto[]> =>
   )) ?? [];
 
 /**
+ * RPIDs are Sqids codes. Anything else could change the request's path: "."
+ * resolves to the list route, which answers 200 for any user the DMP knows.
+ */
+const RPID_PATTERN = /^[A-Za-z0-9]+$/;
+
+/**
  * Resolves undefined unless the RPID belongs to an active plan the user is a
  * member of. Rejects when the DMP could not be asked.
  */
-export const getRpid = (
+export const getRpid = async (
   userId: string,
   rpid: string,
-): Promise<RpidDto | undefined> =>
-  request((api) =>
+): Promise<RpidDto | undefined> => {
+  if (!RPID_PATTERN.test(rpid)) {
+    return undefined;
+  }
+  const project = await request((api) =>
     api.getRpidForUser({ userId, rpid, status: PlanStatus.Active }),
   );
+  // The SDK doesn't check the shape of a response.
+  if (project && (Array.isArray(project) || project.rpid !== rpid)) {
+    console.warn(`The DMP answered for RPID ${rpid} with another project`);
+    return undefined;
+  }
+  return project;
+};
