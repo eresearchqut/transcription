@@ -1,3 +1,5 @@
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import {
   ClientCredentialsError,
@@ -8,6 +10,8 @@ import {
 import { mockClient } from "aws-sdk-client-mock";
 
 import { getRpid, listRpids, resetDmpClient } from "../../src/client/dmpClient";
+
+jest.mock("node:timers/promises", () => ({ setTimeout: jest.fn() }));
 
 const jsonResponse = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -54,6 +58,7 @@ describe("dmpClient", () => {
 
   beforeEach(() => {
     fetchMock.mockReset();
+    jest.mocked(sleep).mockClear();
     ssmMock.reset();
     ssmMock
       .on(GetParameterCommand)
@@ -277,8 +282,8 @@ describe("dmpClient", () => {
   });
 
   it.each([
-    400, 401, 500,
-  ])("rejects when the DMP answers %i", async (status) => {
+    400, 401,
+  ])("rejects without retrying when the DMP answers %i", async (status) => {
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(status, {}));
@@ -287,6 +292,7 @@ describe("dmpClient", () => {
 
     expect(error).toBeInstanceOf(ResponseError);
     expect((error as ResponseError).response.status).toBe(status);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it.each([
@@ -317,5 +323,79 @@ describe("dmpClient", () => {
 
     expect(error).toBeInstanceOf(ResponseError);
     expect((error as ResponseError).response.status).toBe(403);
+  });
+
+  it.each([
+    ["a 503", async () => jsonResponse(503, {})],
+    ["a 429", async () => jsonResponse(429, {})],
+    ["a network failure", () => Promise.reject(new TypeError("fetch failed"))],
+    [
+      "a timeout",
+      () =>
+        Promise.reject(
+          Object.assign(new Error("The operation timed out."), {
+            name: "TimeoutError",
+          }),
+        ),
+    ],
+  ])("checks the RPID again after %s", async (_, failure) => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockImplementationOnce(failure)
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledWith(1_000);
+  });
+
+  it("gives up checking the RPID after three attempts", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockImplementation(async () => jsonResponse(502, {}));
+
+    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ResponseError);
+    expect((error as ResponseError).response.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(jest.mocked(sleep).mock.calls).toEqual([[1_000], [3_000]]);
+  });
+
+  it("reads the credentials again to check the RPID after a failed token request", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    ssmMock
+      .on(GetParameterCommand)
+      .resolvesOnce(storedCredentials("old-id", "old-secret"))
+      .resolves(storedCredentials("new-id", "new-secret"));
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, {}))
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://auth.dmp.example.com/oauth2/token",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: basicAuth("new-id", "new-secret"),
+        }),
+      }),
+    );
+  });
+
+  it("lists the user's RPIDs without retrying", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(503, {}));
+
+    await expect(listRpids("user-1")).rejects.toBeInstanceOf(ResponseError);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
