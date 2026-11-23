@@ -18,6 +18,16 @@ const researchProject: RpidDto = {
   isHdrProject: true,
 };
 
+const keptProject = {
+  rpid: "RPID-1234",
+  title: "Project",
+  lead: { id: "1", name: "Lead" },
+  supervisor: { id: "2", name: "Supervisor" },
+  faculty: { id: 3, name: "Faculty of X" },
+  fieldsOfResearch: [{ code: "4303", name: "Historical studies", year: 2020 }],
+  isHdrProject: true,
+};
+
 const transcription = (overrides: Partial<Transcription> = {}) =>
   ({
     pk: IDENTITY_ID,
@@ -55,7 +65,7 @@ describe("usageService", () => {
         identityId: IDENTITY_ID,
         jobId: JOB_ID,
         rpid: "RPID-1234",
-        researchProject,
+        researchProject: keptProject,
         sourceLanguages: ["en-AU", "fr-FR"],
         targetLanguage: "es",
         mimeType: "audio/wav",
@@ -72,6 +82,35 @@ describe("usageService", () => {
         updatedAt: "2026-08-06T01:02:03.000Z",
       }),
     );
+  });
+
+  it("keeps only the project details the landing page lists", () => {
+    const dmpResponse = {
+      ...researchProject,
+      status: "ACTIVE",
+      startDate: "2026-01-01",
+      endDate: "2027-12-31",
+      updatedDate: "2026-03-02T00:00:00.000Z",
+      lead: {
+        id: "1",
+        name: "Lead",
+        preferredName: "Lee",
+        orcid: "0000-0002-1825-0097",
+        isStaff: true,
+        organisation: { id: 3, name: "Faculty of X", type: "faculty" },
+      },
+      faculty: { id: 3, name: "Faculty of X", type: "faculty", added: "x" },
+      fieldsOfResearch: [
+        { code: "4303", name: "Historical studies", year: 2020, added: "x" },
+      ],
+      added: "a field the DMP adds later",
+    } as unknown as RpidDto;
+
+    const record = toUsageRecord(
+      transcription({ researchProject: dmpResponse }),
+    );
+
+    expect(record.researchProject).toEqual(keptProject);
   });
 
   it("retains no content, filename, or storage keys", () => {

@@ -1,6 +1,7 @@
 import {
   mapTranscriptionStatus,
   type Transcription,
+  toResearchProject,
   type UsageRecord,
   usagePartitionKey,
   usageSortKey,
@@ -41,7 +42,8 @@ export const toUsageRecord = (record: Transcription): UsageRecord => {
     jobId: record.sk,
 
     rpid: metadata.rpid || undefined,
-    researchProject: record.researchProject,
+    researchProject:
+      record.researchProject && toResearchProject(record.researchProject),
 
     sourceLanguages: splitLanguages(metadata.languages),
     resolvedLanguage: resolvedLanguage(record),
