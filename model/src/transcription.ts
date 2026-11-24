@@ -19,6 +19,7 @@ export interface Transcription {
     generatesummary: string;
     enablepiiredaction: string;
     targetlanguage?: string;
+    rpid?: string;
   };
   date: string;
   downloadKey?: string;

@@ -6,6 +6,10 @@ const parameters: ApiStackProps["parameters"] = {
   ApiDomainName: "transcription-api.example.com",
   ApplicationName: "Transcription",
   AwsRoute53CloudFrontHostedZoneId: "Z2FDTNDATAQYW2",
+  DmpApiUrl: "https://dmp-api.example.com",
+  DmpCredentialsParameter: "/app/dev/transcription/dmp-credentials",
+  DmpTokenUrl: "https://dmp-auth.example.com/oauth2/token",
+  DmpWebUrl: "https://dmp.example.com",
   Environment: "dev",
   FrontEndDomainName: "transcription.example.com",
   GlobalCertificateArn:
@@ -27,6 +31,8 @@ const parameters: ApiStackProps["parameters"] = {
 
 const env = { account: "111111111111", region: "ap-southeast-2" };
 
+const FEATURE_FLAGS_PARAMETER = "/app/dev/transcription/features";
+
 /**
  * A local deploy is described by its configuration, not by a flag: the emulator
  * endpoint is set and the parameters for resources with no local counterpart
@@ -37,6 +43,10 @@ const localProps: Partial<ApiStackProps> = {
   parameters: {
     ...parameters,
     ApiDomainName: "",
+    DmpApiUrl: "http://transcription-dmp:8080",
+    DmpCredentialsParameter: "/app/local/transcription/dmp-credentials",
+    DmpTokenUrl: "http://transcription-dmp:8080/oauth2/token",
+    DmpWebUrl: undefined,
     Environment: "local",
     FrontEndDomainName: "localhost:3000",
     HostedZoneName: "",
@@ -52,6 +62,7 @@ const synthesise = (props?: Partial<ApiStackProps>): Template => {
   const stack = new ApiStack(app, "TranscriptionStack", {
     stackName: "dev-transcription",
     parameters,
+    featureFlagsParameterName: FEATURE_FLAGS_PARAMETER,
     env,
     ...props,
   });
@@ -86,6 +97,67 @@ describe("ApiStack", () => {
       template().hasResourceProperties("AWS::Route53::RecordSet", {
         Name: `${parameters.ApiDomainName}.`,
         Type: "A",
+      });
+    });
+
+    it("lets the functions that check rpids read the dmp credentials", () => {
+      const synthesised = template();
+      const dmpFunctions = Object.values(
+        synthesised.findResources("AWS::Lambda::Function"),
+      ).filter((fn) => fn.Properties.Environment?.Variables?.DMP_API_URL);
+      expect(dmpFunctions).toHaveLength(2);
+      dmpFunctions.forEach((fn) => {
+        expect(fn.Properties.Environment.Variables).toMatchObject({
+          DMP_API_URL: parameters.DmpApiUrl,
+          DMP_TOKEN_URL: parameters.DmpTokenUrl,
+          DMP_CREDENTIALS_PARAMETER: parameters.DmpCredentialsParameter,
+        });
+      });
+      const policies = JSON.stringify(
+        synthesised.findResources("AWS::IAM::Policy"),
+      );
+      expect(policies).toContain("ssm:GetParameter");
+      expect(policies).toContain(
+        `:parameter${parameters.DmpCredentialsParameter}`,
+      );
+    });
+
+    it("links the front end to the dmp", () => {
+      expect(
+        JSON.stringify(template().findOutputs("FrontEndEnvironment")),
+      ).toContain(`NEXT_PUBLIC_DMP_URL=${parameters.DmpWebUrl}`);
+    });
+
+    it("lets the functions that check feature flags read them at runtime", () => {
+      const synthesised = template();
+      const flagFunctions = Object.values(
+        synthesised.findResources("AWS::Lambda::Function"),
+      ).filter(
+        (fn) => fn.Properties.Environment?.Variables?.FEATURE_FLAGS_PARAMETER,
+      );
+      expect(flagFunctions).toHaveLength(2);
+      flagFunctions.forEach((fn) => {
+        expect(
+          fn.Properties.Environment.Variables.FEATURE_FLAGS_PARAMETER,
+        ).toBe(FEATURE_FLAGS_PARAMETER);
+      });
+      expect(
+        JSON.stringify(synthesised.findResources("AWS::IAM::Policy")),
+      ).toContain(`:parameter${FEATURE_FLAGS_PARAMETER}`);
+      synthesised.resourceCountIs("AWS::SSM::Parameter", 0);
+    });
+
+    it("serves the feature flags without a token", () => {
+      const synthesised = template();
+      const [featuresResource] = Object.keys(
+        synthesised.findResources("AWS::ApiGateway::Resource", {
+          Properties: { PathPart: "features" },
+        }),
+      );
+      synthesised.hasResourceProperties("AWS::ApiGateway::Method", {
+        HttpMethod: "GET",
+        AuthorizationType: "NONE",
+        ResourceId: { Ref: featuresResource },
       });
     });
 
@@ -147,6 +219,33 @@ describe("ApiStack", () => {
           ]),
         },
       });
+    });
+  });
+
+  describe("with no dmp configured", () => {
+    const { DmpApiUrl, DmpCredentialsParameter, DmpTokenUrl, ...withoutDmp } =
+      parameters;
+
+    it("gives the functions neither the dmp nor its credentials", () => {
+      const template = synthesise({ parameters: withoutDmp });
+      Object.values(template.findResources("AWS::Lambda::Function")).forEach(
+        (fn) => {
+          expect(fn.Properties.Environment?.Variables ?? {}).not.toHaveProperty(
+            "DMP_API_URL",
+          );
+        },
+      );
+      expect(
+        JSON.stringify(template.findResources("AWS::IAM::Policy")),
+      ).not.toContain(`:parameter${DmpCredentialsParameter}`);
+    });
+
+    it("refuses a partly configured dmp", () => {
+      expect(() =>
+        synthesise({ parameters: { ...withoutDmp, DmpApiUrl } }),
+      ).toThrow(
+        "Set all of DmpApiUrl, DmpCredentialsParameter and DmpTokenUrl, or none of them.",
+      );
     });
   });
 

@@ -49,6 +49,15 @@ const ddb = new DynamoDBClient(clientConfig);
 
 const identityId = "researcher1001";
 
+// Plans of researcher1001 that the Compose stand-in for the DMP serves, from
+// scripts/ministack/dmp.
+const ACTIVE_RPID = "A1B2C3D4";
+const ARCHIVED_RPID = "J9K0L1M2";
+// Plans the stand-in says researcher1001 is not on, or collaborates on without
+// access to transcription.
+const OTHER_RESEARCHER_RPID = "N3P4Q5R6";
+const NO_ACCESS_RPID = "S7T8U9V0";
+
 /** The chain settles in a few seconds locally; allow for a Lambda cold start. */
 const CHAIN_TIMEOUT_MS = 120_000;
 /** Outlasts the polling deadline so waitForRecord's diagnostic surfaces first. */
@@ -95,6 +104,7 @@ type UploadOptions = {
   generateSummary?: boolean;
   enablePiiRedaction?: boolean;
   languages?: string;
+  rpid?: string;
 };
 
 /**
@@ -106,6 +116,7 @@ const upload = async ({
   generateSummary = false,
   enablePiiRedaction = false,
   languages = "en-AU",
+  rpid = ACTIVE_RPID,
 }: UploadOptions) => {
   const jobId = randomUUID();
   const key = `users/${identityId}/${jobId}.upload`;
@@ -124,6 +135,7 @@ const upload = async ({
         enablePiiRedaction: String(enablePiiRedaction),
         generateSummary: String(generateSummary),
         targetLanguage,
+        rpid,
       },
     }),
   );
@@ -137,7 +149,9 @@ type JobRecord = {
   transcriptionResponse?: {
     TranscriptionJob?: { TranscriptionJobName?: string };
   };
-  jobStatusUpdated?: { detail?: { TranscriptionJobStatus?: string } };
+  jobStatusUpdated?: {
+    detail?: { TranscriptionJobStatus?: string; FailureReason?: string };
+  };
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
@@ -369,6 +383,38 @@ describe("upload chain", () => {
         `users/${identityId}/redacted-${jobId}.json`,
       );
       expect(record.summaryKey).toBe(`users/${identityId}/summary/${jobId}`);
+    },
+    TEST_TIMEOUT_MS,
+  );
+});
+
+describe("rpid check", () => {
+  // fileUploadHandler asks the DMP stand-in for the plan, and writes a failed
+  // record instead of starting a job when it is not one of the user's active
+  // plans.
+  it.each([
+    ["an archived plan", ARCHIVED_RPID],
+    ["another researcher's plan", OTHER_RESEARCHER_RPID],
+    ["a plan shared without access to transcription", NO_ACCESS_RPID],
+    ["an RPID the DMP doesn't know", "Z9Y8X7W6"],
+  ])(
+    "refuses %s without starting a transcription",
+    async (_, rpid) => {
+      const jobId = await upload({ rpid });
+
+      const record = await waitForRecord(
+        jobId,
+        (r) => Boolean(r.jobStatusUpdated),
+        "the rejected job status",
+      );
+
+      expect(record.jobStatusUpdated?.detail).toEqual({
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: expect.stringContaining(
+          `${rpid} can't be used with QUT Transcribe`,
+        ),
+      });
+      expect(record.transcriptionResponse).toBeUndefined();
     },
     TEST_TIMEOUT_MS,
   );

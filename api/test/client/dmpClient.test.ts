@@ -1,0 +1,409 @@
+import { setTimeout as sleep } from "node:timers/promises";
+
+import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
+import {
+  ClientCredentialsError,
+  ResponseError,
+  type RpidDto,
+} from "@eresearchqut/dmp-api";
+
+import { mockClient } from "aws-sdk-client-mock";
+
+import { getRpid, listRpids, resetDmpClient } from "../../src/client/dmpClient";
+
+jest.mock("node:timers/promises", () => ({ setTimeout: jest.fn() }));
+
+const jsonResponse = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+
+const tokenResponse = (accessToken = "token-1", expiresIn = 3600) =>
+  jsonResponse(200, { access_token: accessToken, expires_in: expiresIn });
+
+const PARAMETER_NAME = "/app/dev/transcription/dmp-credentials";
+
+const rpidDto: RpidDto = {
+  rpid: "A1B2C3D4",
+  title: "First project",
+  status: "ACTIVE",
+  createdDate: "2026-03-02T00:00:00.000Z",
+  lead: { id: "1", name: "Jane Citizen", preferredName: "Jane" },
+  supervisor: { id: "2", name: "John Smith" },
+  faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
+  school: { id: 2, name: "School of Physics", type: "school", parentId: 1 },
+  fieldsOfResearch: [
+    { code: "5101", name: "Astronomical sciences", year: 2020 },
+  ],
+  isHdrProject: true,
+};
+
+const basicAuth = (clientId: string, clientSecret: string) =>
+  `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
+
+const storedCredentials = (clientId: string, clientSecret: string) => ({
+  Parameter: { Value: JSON.stringify({ clientId, clientSecret }) },
+});
+
+describe("dmpClient", () => {
+  const fetchMock = jest.fn<Promise<Response>, Parameters<typeof fetch>>();
+  const ssmMock = mockClient(SSMClient);
+
+  beforeAll(() => {
+    process.env.DMP_TOKEN_URL = "https://auth.dmp.example.com/oauth2/token";
+    process.env.DMP_API_URL = "https://api.dmp.example.com/";
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    jest.mocked(sleep).mockClear();
+    ssmMock.reset();
+    ssmMock
+      .on(GetParameterCommand)
+      .resolves(storedCredentials("client-id", "client-secret"));
+    process.env.DMP_CREDENTIALS_PARAMETER = PARAMETER_NAME;
+    resetDmpClient();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it("requests a client_credentials token with basic auth and reuses it", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, []))
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await listRpids("user-1");
+    await getRpid("user-1", "A1B2C3D4");
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "https://auth.dmp.example.com/oauth2/token",
+      expect.objectContaining({
+        method: "POST",
+        headers: expect.objectContaining({
+          Authorization: basicAuth("client-id", "client-secret"),
+        }),
+        signal: expect.any(AbortSignal),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://api.dmp.example.com/v1/rpid/user/user-1?status=ACTIVE",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer token-1" }),
+        signal: expect.any(AbortSignal),
+      }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "https://api.dmp.example.com/v1/rpid/user/user-1/A1B2C3D4?status=ACTIVE",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer token-1" }),
+      }),
+    );
+  });
+
+  it("encodes the user in the path", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await getRpid("user/1", "A1B2C3D4");
+
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "https://api.dmp.example.com/v1/rpid/user/user%2F1/A1B2C3D4?status=ACTIVE",
+      expect.anything(),
+    );
+  });
+
+  it("resolves the project when the DMP confirms the RPID", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+  });
+
+  it.each([
+    ".",
+    "..",
+    "A1B2/../C3D4",
+    "A1B2 C3D4",
+    "A1B2C3D4?status=ARCHIVED",
+    "",
+  ])("resolves undefined without asking the DMP for the RPID %j", async (rpid) => {
+    await expect(getRpid("user-1", rpid)).resolves.toBeUndefined();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no projects", []],
+    ["a list", [rpidDto]],
+    ["another project", { ...rpidDto, rpid: "E5F6G7H8" }],
+  ])("resolves undefined when the DMP answers with %s", async (_, body) => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, body));
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
+  });
+
+  it("returns the DMP's projects", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, [rpidDto]));
+
+    await expect(listRpids("user-1")).resolves.toEqual([rpidDto]);
+  });
+
+  it("lists no RPIDs when the DMP doesn't know the user", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(
+        jsonResponse(404, { message: "The user does not exist." }),
+      );
+
+    await expect(listRpids("user-1")).resolves.toEqual([]);
+  });
+
+  it("resolves undefined when the RPID is not one of the user's active plans", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(
+        jsonResponse(404, { message: "The RPID does not exist." }),
+      );
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
+  });
+
+  it("refreshes the token once it has expired", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse("token-1", 3600))
+      .mockResolvedValueOnce(jsonResponse(200, []))
+      .mockResolvedValueOnce(tokenResponse("token-2"))
+      .mockResolvedValueOnce(jsonResponse(200, []));
+
+    await listRpids("user-1");
+    jest.spyOn(Date, "now").mockReturnValue(Date.now() + 3600 * 1000);
+    await listRpids("user-1");
+
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer token-2" }),
+      }),
+    );
+  });
+
+  it("reads the credentials from Parameter Store once", async () => {
+    ssmMock
+      .on(GetParameterCommand, { Name: PARAMETER_NAME, WithDecryption: true })
+      .resolves(storedCredentials("stored-id", "stored-secret"));
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockImplementation(async () => jsonResponse(200, []));
+
+    await listRpids("user-1");
+    await listRpids("user-1");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: basicAuth("stored-id", "stored-secret"),
+        }),
+      }),
+    );
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(1);
+  });
+
+  it("rejects when no credentials parameter is configured", async () => {
+    delete process.env.DMP_CREDENTIALS_PARAMETER;
+
+    await expect(listRpids("user-1")).rejects.toThrow(
+      "DMP_CREDENTIALS_PARAMETER is not set",
+    );
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(0);
+  });
+
+  it("rejects when the Parameter Store credentials are empty", async () => {
+    ssmMock.on(GetParameterCommand).resolves({});
+
+    await expect(listRpids("user-1")).rejects.toThrow(
+      `DMP credentials ${PARAMETER_NAME} are empty`,
+    );
+  });
+
+  it("rejects when the Parameter Store credentials are incomplete", async () => {
+    ssmMock.on(GetParameterCommand).resolves({
+      Parameter: { Value: JSON.stringify({ clientId: "client-id" }) },
+    });
+
+    await expect(listRpids("user-1")).rejects.toThrow(
+      `DMP credentials ${PARAMETER_NAME} must contain clientId and clientSecret`,
+    );
+  });
+
+  it("re-reads the credentials after they could not be read", async () => {
+    ssmMock
+      .on(GetParameterCommand)
+      .rejectsOnce(new Error("Throttled"))
+      .resolves(storedCredentials("client-id", "client-secret"));
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, []));
+
+    await expect(listRpids("user-1")).rejects.toThrow("Throttled");
+    await expect(listRpids("user-1")).resolves.toEqual([]);
+
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(2);
+  });
+
+  it("re-reads the credentials after a failed token request", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, {}))
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, []));
+
+    await expect(listRpids("user-1")).rejects.toThrow(ClientCredentialsError);
+    await expect(listRpids("user-1")).resolves.toEqual([]);
+
+    expect(ssmMock.commandCalls(GetParameterCommand)).toHaveLength(2);
+  });
+
+  it.each([
+    400, 401,
+  ])("rejects without retrying when the DMP answers %i", async (status) => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(status, {}));
+
+    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ResponseError);
+    expect((error as ResponseError).response.status).toBe(status);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    [
+      "the user isn't on the plan",
+      {
+        statusCode: 403,
+        message: "The user does not have access to this RPID.",
+        error: "Forbidden",
+      },
+    ],
+    [
+      "the user can't use the plan for transcription",
+      {
+        statusCode: 403,
+        message:
+          "The collaborator does not have access to perform this operation on this RPID.",
+        error: "Forbidden",
+      },
+    ],
+    [
+      "the client lacks the scope",
+      { statusCode: 403, message: "Forbidden resource", error: "Forbidden" },
+    ],
+    ["of API Gateway", { message: "Missing Authentication Token" }],
+  ])("resolves undefined and logs the body for a 403 because %s", async (_, body) => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(403, body));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(
+      "The DMP refused RPID A1B2C3D4 for user-1",
+      JSON.stringify(body),
+    );
+  });
+
+  it.each([
+    ["a 503", async () => jsonResponse(503, {})],
+    ["a 429", async () => jsonResponse(429, {})],
+    ["a network failure", () => Promise.reject(new TypeError("fetch failed"))],
+    [
+      "a timeout",
+      () =>
+        Promise.reject(
+          Object.assign(new Error("The operation timed out."), {
+            name: "TimeoutError",
+          }),
+        ),
+    ],
+  ])("checks the RPID again after %s", async (_, failure) => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockImplementationOnce(failure)
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledWith(1_000);
+  });
+
+  it("gives up checking the RPID after three attempts", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockImplementation(async () => jsonResponse(502, {}));
+
+    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ResponseError);
+    expect((error as ResponseError).response.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(jest.mocked(sleep).mock.calls).toEqual([[1_000], [3_000]]);
+  });
+
+  it("reads the credentials again to check the RPID after a failed token request", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => {});
+    ssmMock
+      .on(GetParameterCommand)
+      .resolvesOnce(storedCredentials("old-id", "old-secret"))
+      .resolves(storedCredentials("new-id", "new-secret"));
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401, {}))
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(200, rpidDto));
+
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toEqual(rpidDto);
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://auth.dmp.example.com/oauth2/token",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: basicAuth("new-id", "new-secret"),
+        }),
+      }),
+    );
+  });
+
+  it("lists the user's RPIDs without retrying", async () => {
+    fetchMock
+      .mockResolvedValueOnce(tokenResponse())
+      .mockResolvedValueOnce(jsonResponse(503, {}));
+
+    await expect(listRpids("user-1")).rejects.toBeInstanceOf(ResponseError);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});

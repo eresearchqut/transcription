@@ -2,6 +2,8 @@
 
 `chain.test.ts` uploads a `.upload` object to the local stack and follows it through to a stored transcript, summary and translation. Every other test in `api/test` mocks the AWS SDK, so this suite is the only check on the wiring in `deployment/lib/api-stack.ts`: the three overlapping S3 notification filters on one bucket, the two EventBridge rules on the same detail type, and the IAM grants each handler needs. The grants are only checked when MiniStack evaluates IAM, which CI turns on and local development leaves off.
 
+Uploads use researcher1001's fake plans in `scripts/ministack/dmp`, so the suite needs the local DMP stand-in rather than a real DMP. It also checks that the job fails without starting a transcription when the plan is archived, belongs to another researcher, is shared without access to transcription, or doesn't exist. The stand-in answers those the way DMP v1 does, with a 404 for the first and last and a 403 for the other two.
+
 ## Running it
 
 The suite needs a deployed local stack and does not start one:
