@@ -4,7 +4,6 @@ import {
   createResource,
   getResource,
   getResources,
-  putResource,
   updateResource,
   updateResources,
 } from "../repository/repository";
@@ -12,6 +11,11 @@ import {
 export const normaliseJobId = (jobId: string): string =>
   jobId.split("redacted-").at(-1) ?? jobId;
 
+/**
+ * Records a job that Transcribe has already started. The handlers for the
+ * job's status and output can write to its record first, so this adds to the
+ * record and keeps what they wrote.
+ */
 export const jobStarted = (
   identityId: string,
   jobId: string,
@@ -22,13 +26,14 @@ export const jobStarted = (
   usageLogged: boolean,
   rpid?: string,
 ) =>
-  putResource(identityId, jobId, {
+  updateResources(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
     rpid,
     usageLogged,
+    startedAt: new Date().toISOString(),
   });
 
 /**
@@ -53,6 +58,7 @@ export const jobRejected = (
       },
     },
     usageLogged,
+    startedAt: new Date().toISOString(),
   });
 
 export const jobStatusUpdated = (
@@ -72,10 +78,12 @@ export const downloadKey = (
   jobId: string,
   downloadKey: string,
   audioSeconds?: number,
+  identifiedLanguage?: string,
 ) =>
   updateResources(identityId, normaliseJobId(jobId), {
     downloadKey,
     audioSeconds,
+    identifiedLanguage,
   });
 
 export const summaryKey = (

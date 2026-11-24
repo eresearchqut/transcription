@@ -6,6 +6,7 @@ import {
   segmentTexts,
   type TranscriptDocument,
   transcriptDurationSeconds,
+  transcriptLanguage,
   translationCharacterCount,
 } from "../../src/util/transcript";
 
@@ -180,6 +181,28 @@ describe("transcript", () => {
           results: { transcripts: [{ transcript: "Hello world." }] },
         }),
       ).toBeUndefined();
+    });
+  });
+
+  describe("transcriptLanguage", () => {
+    test("returns the language a multi-language job heard for longest", () => {
+      const document = fixture("multi-language");
+
+      expect(document.results.language_codes).toEqual([
+        { language_code: "en-AU", duration_in_seconds: 9.66 },
+        { language_code: "fr-FR", duration_in_seconds: 11.76 },
+      ]);
+      expect(transcriptLanguage(document)).toEqual("fr-FR");
+    });
+
+    test("returns the language a single-language identification found", () => {
+      expect(
+        transcriptLanguage({ results: { language_code: "en-AU" } }),
+      ).toEqual("en-AU");
+    });
+
+    test("returns undefined for a job that was given its language", () => {
+      expect(transcriptLanguage(fixture("single-language"))).toBeUndefined();
     });
   });
 

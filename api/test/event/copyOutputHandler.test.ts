@@ -65,7 +65,35 @@ describe("copyOutputHandler", () => {
     expect(record.audioSeconds).toEqual(612.5);
   });
 
-  it("still records the download key when the duration cannot be measured", async () => {
+  it("records the language a multi-language job identified", async () => {
+    s3ClientMock.on(GetObjectCommand).resolves({
+      Body: sdkStreamMixin(
+        Readable.from(
+          JSON.stringify({
+            results: {
+              ...transcript.results,
+              language_codes: [
+                { language_code: "en-AU", duration_in_seconds: 120.5 },
+                { language_code: "fr-FR", duration_in_seconds: 492 },
+              ],
+            },
+          }),
+        ),
+      ),
+    } as never);
+
+    await handler(
+      event(`transcription/${identityId}/${jobId}.json`),
+      {} as never,
+      {} as never,
+    );
+
+    const record = (await getResource(identityId, jobId)) as Transcription;
+    expect(record.identifiedLanguage).toEqual("fr-FR");
+    expect(record.audioSeconds).toEqual(612.5);
+  });
+
+  it("still records the download key when the transcript cannot be read", async () => {
     s3ClientMock.on(GetObjectCommand).rejects(new Error("AccessDenied"));
 
     await handler(
@@ -77,6 +105,7 @@ describe("copyOutputHandler", () => {
     const record = (await getResource(identityId, jobId)) as Transcription;
     expect(record.downloadKey).toEqual(`users/${identityId}/${jobId}.json`);
     expect(record.audioSeconds).toBeUndefined();
+    expect(record.identifiedLanguage).toBeUndefined();
   });
 
   it("ignores an unexpected key", async () => {

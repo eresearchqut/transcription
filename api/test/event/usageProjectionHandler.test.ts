@@ -2,19 +2,10 @@ import { GetItemCommand, QueryCommand } from "@aws-sdk/client-dynamodb";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import type { DynamoDBRecord, DynamoDBStreamEvent } from "aws-lambda";
-import { FEATURES_OFF, type UsageRecord } from "model";
+import type { UsageRecord } from "model";
 
-import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 import { handler } from "../../src/event/usageProjectionHandler";
 import dynamoDBClient from "../../src/repository/dynamoDBClient";
-
-jest.mock("../../src/client/featureFlagsClient", () => ({
-  getFeatureFlags: jest.fn(),
-}));
-
-const mockGetFeatureFlags = getFeatureFlags as jest.MockedFunction<
-  typeof getFeatureFlags
->;
 
 const usageTableName = process.env.USAGE_TABLE_NAME || "transcription-usage";
 
@@ -25,6 +16,7 @@ const transcriptionRecord = (overrides: Record<string, unknown> = {}) => ({
   pk: IDENTITY_ID,
   sk: JOB_ID,
   date: "2026-08-06T01:02:03.000Z",
+  startedAt: "2026-08-06T01:02:03.000Z",
   metadata: {
     filename: "Welcome.wav",
     filetype: "userUploadedFile",
@@ -78,10 +70,6 @@ const getUsageRecord = () =>
     .then(({ Item }) => Item && (unmarshall(Item) as UsageRecord));
 
 describe("usageProjectionHandler", () => {
-  beforeEach(() => {
-    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog: true });
-  });
-
   it("projects a new transcription record into the usage table", async () => {
     const result = await handler(
       event(streamRecord("INSERT", transcriptionRecord())),
@@ -161,6 +149,32 @@ describe("usageProjectionHandler", () => {
         status: "COMPLETED",
         audioSeconds: 612.5,
         completedAt: "2026-08-06T01:30:00.000Z",
+      }),
+    );
+  });
+
+  it("takes the start from the job when its first image was missed", async () => {
+    await handler(
+      event(
+        streamRecord(
+          "MODIFY",
+          transcriptionRecord({
+            startedAt: "2026-08-31T23:50:00.000Z",
+            date: "2026-09-01T00:20:00.000Z",
+            jobStatusUpdated: {
+              detail: { TranscriptionJobStatus: "COMPLETED" },
+            },
+          }),
+        ),
+      ),
+    );
+
+    expect(await getUsageRecord()).toEqual(
+      expect.objectContaining({
+        startedAt: "2026-08-31T23:50:00.000Z",
+        usageMonth: "2026-08",
+        updatedAt: "2026-09-01T00:20:00.000Z",
+        completedAt: "2026-09-01T00:20:00.000Z",
       }),
     );
   });
@@ -279,17 +293,6 @@ describe("usageProjectionHandler", () => {
     expect(result.batchItemFailures).toEqual([]);
   });
 
-  it("records nothing while the usage log is off", async () => {
-    mockGetFeatureFlags.mockResolvedValue(FEATURES_OFF);
-
-    const result = await handler(
-      event(streamRecord("INSERT", transcriptionRecord())),
-    );
-
-    expect(result.batchItemFailures).toEqual([]);
-    expect(await getUsageRecord()).toBeUndefined();
-  });
-
   it.each([
     [
       "while the usage log was off",
@@ -306,15 +309,6 @@ describe("usageProjectionHandler", () => {
     );
 
     expect(result.batchItemFailures).toEqual([]);
-    expect(await getUsageRecord()).toBeUndefined();
-  });
-
-  it("fails the batch when the feature flags can't be read", async () => {
-    mockGetFeatureFlags.mockRejectedValue(new Error("ThrottlingException"));
-
-    await expect(
-      handler(event(streamRecord("INSERT", transcriptionRecord()))),
-    ).rejects.toThrow("ThrottlingException");
     expect(await getUsageRecord()).toBeUndefined();
   });
 });

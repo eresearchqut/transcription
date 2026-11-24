@@ -15,6 +15,10 @@ export interface TranscriptResults {
   speaker_labels?: unknown;
   items?: unknown;
   audio_segments?: unknown;
+  /** The language of a job that identified one language. */
+  language_code?: string;
+  /** The languages of a job that identified several. */
+  language_codes?: { language_code: string; duration_in_seconds: number }[];
 }
 
 export interface TranscriptDocument {
@@ -60,6 +64,32 @@ export const transcriptDurationSeconds = (
     }
   }
   return longest;
+};
+
+/**
+ * The language Transcribe identified, which for a multi-language job is the
+ * one spoken for longest. Undefined when the output names no language.
+ */
+export const transcriptLanguage = (
+  doc: TranscriptDocument,
+): string | undefined => {
+  const { language_code: identified, language_codes: spoken } = doc.results;
+  if (identified) {
+    return identified;
+  }
+  if (!Array.isArray(spoken)) {
+    return undefined;
+  }
+  let longest: (typeof spoken)[number] | undefined;
+  for (const language of spoken) {
+    if (
+      !longest ||
+      language.duration_in_seconds > longest.duration_in_seconds
+    ) {
+      longest = language;
+    }
+  }
+  return longest?.language_code;
 };
 
 /**

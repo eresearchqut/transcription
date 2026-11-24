@@ -12,6 +12,7 @@ import { getRpid } from "../../src/client/dmpClient";
 import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 import { handler } from "../../src/event/fileUploadHandler";
 import { getResource, putResource } from "../../src/repository/repository";
+import { jobStatusUpdated } from "../../src/service/transcriptionService";
 import fileMetadata from "./fileMetadata.json";
 import fileUploadEvent from "./fileUploadEvent.json";
 
@@ -72,6 +73,7 @@ describe("fileUploadHandler", () => {
       expect.objectContaining({
         metadata: expect.objectContaining({ rpid: RPID }),
         rpid: RPID,
+        startedAt: expect.any(String),
       }),
     );
     expect(await getResource(IDENTITY_ID, JOB_ID)).not.toHaveProperty(
@@ -186,6 +188,34 @@ describe("fileUploadHandler", () => {
     expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
       expect.objectContaining({
         jobStatusUpdated: expect.anything(),
+        usageLogged: true,
+        startedAt: expect.any(String),
+      }),
+    );
+  });
+
+  it("keeps a status recorded before the job's own record", async () => {
+    const failed = {
+      detail: {
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: "The media format that you specified isn't valid.",
+      },
+    };
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog: true });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+    transcribeMock.on(StartTranscriptionJobCommand).callsFake(async () => {
+      await jobStatusUpdated(IDENTITY_ID, JOB_ID, failed);
+      return { TranscriptionJob: { TranscriptionJobStatus: "IN_PROGRESS" } };
+    });
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({
+        jobStatusUpdated: failed,
+        transcriptionResponse: {
+          TranscriptionJob: { TranscriptionJobStatus: "IN_PROGRESS" },
+        },
         usageLogged: true,
       }),
     );

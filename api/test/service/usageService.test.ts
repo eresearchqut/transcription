@@ -95,22 +95,41 @@ describe("usageService", () => {
     expect(serialised).not.toContain("users/");
   });
 
-  it("records the language Transcribe resolved for a multi-language job", () => {
+  it("leaves a multi-language job's language until Transcribe identifies it", () => {
+    const started = transcription({
+      transcriptionResponse: {
+        TranscriptionJob: {
+          TranscriptionJobStatus: TranscriptionJobStatus.IN_PROGRESS,
+          LanguageOptions: ["en-AU", "fr-FR"],
+        },
+      },
+    });
+
+    const record = toUsageRecord(started);
+    expect(record.resolvedLanguage).toBeUndefined();
+    expect(record.status).toEqual(TranscriptionJobStatus.IN_PROGRESS);
+    expect(record.completedAt).toBeUndefined();
+
+    expect(
+      toUsageRecord({ ...started, identifiedLanguage: "fr-FR" })
+        .resolvedLanguage,
+    ).toEqual("fr-FR");
+  });
+
+  it("records the language a single-language job was started with", () => {
     const record = toUsageRecord(
       transcription({
         transcriptionResponse: {
           TranscriptionJob: {
             TranscriptionJobStatus: TranscriptionJobStatus.IN_PROGRESS,
-            LanguageCodes: [{ LanguageCode: "fr-FR" }],
-            LanguageOptions: ["en-AU", "fr-FR"],
+            LanguageCode: "en-AU",
+            LanguageOptions: [],
           },
         },
       }),
     );
 
-    expect(record.resolvedLanguage).toEqual("fr-FR");
-    expect(record.status).toEqual(TranscriptionJobStatus.IN_PROGRESS);
-    expect(record.completedAt).toBeUndefined();
+    expect(record.resolvedLanguage).toEqual("en-AU");
   });
 
   it("stamps completedAt and the failure reason for a terminal job", () => {

@@ -77,7 +77,7 @@ export const createResource = (
 export const updateResources = (
   pk: string,
   sk: string,
-  attributes: Record<string, string | number | object | undefined>,
+  attributes: Record<string, string | number | boolean | object | undefined>,
 ) => {
   const entries = Object.entries(attributes).filter(
     ([, value]) => value !== undefined,

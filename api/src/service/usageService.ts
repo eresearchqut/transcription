@@ -24,15 +24,19 @@ const splitLanguages = (value?: string): string[] | undefined => {
   return languages.length > 0 ? languages : undefined;
 };
 
-const resolvedLanguage = (record: Transcription): string | undefined => {
-  const job = record.transcriptionResponse?.TranscriptionJob;
-  return job?.LanguageCode ?? job?.LanguageCodes?.[0]?.LanguageCode;
-};
+// The response stored at upload names a language only when the job was
+// started with one. A language Transcribe identifies is read from its output.
+const resolvedLanguage = (record: Transcription): string | undefined =>
+  record.identifiedLanguage ??
+  record.transcriptionResponse?.TranscriptionJob?.LanguageCode;
 
 export const toUsageRecord = (record: Transcription): UsageRecord => {
   const metadata = record.metadata ?? ({} as Transcription["metadata"]);
   const status = mapTranscriptionStatus(record);
   const timestamp = record.date ?? new Date().toISOString();
+  // Every update rewrites date, so it is the start only in the job's first
+  // image, which the projection can miss.
+  const startedAt = record.startedAt ?? timestamp;
 
   return {
     pk: usagePartitionKey(record.pk),
@@ -62,8 +66,8 @@ export const toUsageRecord = (record: Transcription): UsageRecord => {
     translationStatus: record.translationJob?.status,
     translationFailureReason: record.translationJob?.message,
 
-    usageMonth: timestamp.slice(0, 7),
-    startedAt: timestamp,
+    usageMonth: startedAt.slice(0, 7),
+    startedAt,
     updatedAt: timestamp,
     ...(status && TERMINAL_STATUSES.includes(status)
       ? { completedAt: timestamp }

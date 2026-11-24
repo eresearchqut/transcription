@@ -7,8 +7,8 @@ export interface FeatureFlags {
   /** Each upload must be assigned an RPID that the DMP confirms. */
   rpid: boolean;
   /**
-   * Job records are copied into the permanent usage table, and the landing
-   * page says so.
+   * Jobs uploaded while it is on are recorded in the permanent usage table,
+   * and the landing page says so.
    */
   usageLog: boolean;
 }

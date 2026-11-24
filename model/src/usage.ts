@@ -15,6 +15,10 @@ export interface UsageRecord {
   rpid?: string;
 
   sourceLanguages?: string[];
+  /**
+   * The language Transcribe identified, or the one the job was started with.
+   * For a multi-language job this is the language spoken for longest.
+   */
   resolvedLanguage?: string;
   targetLanguage?: string;
   mimeType?: string;

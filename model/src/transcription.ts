@@ -24,6 +24,11 @@ export interface Transcription {
   };
   date: string;
   /**
+   * When the upload was processed. Later updates rewrite `date` and leave
+   * this alone.
+   */
+  startedAt?: string;
+  /**
    * The RPID the DMP confirmed at upload. Absent when the upload was rejected
    * or the `rpid` flag was off.
    */
@@ -37,6 +42,12 @@ export interface Transcription {
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
+  /**
+   * The language Transcribe names in its output, as it does for a job that
+   * identifies languages. For a multi-language job this is the one spoken for
+   * longest.
+   */
+  identifiedLanguage?: string;
   audioSeconds?: number;
   summaryUsage?: {
     inputTokens?: number;

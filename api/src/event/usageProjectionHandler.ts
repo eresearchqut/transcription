@@ -8,7 +8,6 @@ import type {
 } from "aws-lambda";
 import type { Transcription } from "model";
 
-import { getFeatureFlags } from "../client/featureFlagsClient";
 import {
   markUsageRecordExpired,
   putUsageRecord,
@@ -18,14 +17,6 @@ import { toUsageRecord } from "../service/usageService";
 export const handler = async (
   event: DynamoDBStreamEvent,
 ): Promise<DynamoDBBatchResponse> => {
-  // While the usage log is off the stream is consumed without recording
-  // anything, so turning it back on leaves a gap rather than a backlog. A
-  // failed read rejects the batch, which the event source mapping retries.
-  const { usageLog } = await getFeatureFlags();
-  if (!usageLog) {
-    return { batchItemFailures: [] };
-  }
-
   for (const record of event.Records) {
     try {
       await project(record);
@@ -61,8 +52,11 @@ const project = async (record: DynamoDBRecord) => {
     console.error("Skipping record with no key", { eventId: record.eventID });
     return;
   }
-  // Without this, a job uploaded while the log was off would be recorded when
-  // TTL removes it, if the log had been turned on since.
+  // Whether a job is recorded is decided once, by the upload handler. Reading
+  // the flag here as well would skip changes to a recorded job whenever this
+  // container's copy of the flag lagged the upload handler's. A job uploaded
+  // while the log was off is never recorded, even when TTL removes it after
+  // the log has been turned on.
   if (!transcription.usageLogged) {
     return;
   }
