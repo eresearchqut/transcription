@@ -124,7 +124,7 @@ services:
   # with it are set (see README.md).
   transcription-dmp:
     container_name: "${TRANSCRIPTION_DMP_DOCKER_NAME:-transcription-dmp}"
-    image: wiremock/wiremock:3.13.2-alpine
+    image: wiremock/wiremock:3.13.2
     command: ["--disable-banner"]
     ports:
       # Loopback only: the admin API lets anyone who can reach it change the
