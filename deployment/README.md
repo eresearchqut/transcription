@@ -30,7 +30,7 @@ aws ssm put-parameter --name /app/dev/transcription/features --type String --ove
 
 Each Lambda container reads the parameter at most once a minute. The frontend fetches the flags from `GET /features`, which needs no token so the landing page can use it, and fetches them again once they are a minute old. A change therefore reaches everyone within a couple of minutes. Until then a page opened earlier can disagree with the handlers: an upload sent from it without an RPID after `rpid` is turned on fails, with the reason shown in My Transcriptions.
 
-Locally, the Compose bootstrap container turns every flag on with `bin/put-local-feature-flags.ts`. To change one, run the command above with `--endpoint-url http://localhost:20005 --region ap-southeast-2`, `AWS_ACCESS_KEY_ID=test`, `AWS_SECRET_ACCESS_KEY=test` and the name `/app/local/transcription/features`.
+Locally, `bin/seed-local-parameters.ts` turns on every flag the parameter doesn't have yet. The Compose bootstrap container runs it when it starts, and `pnpm ministack:deploy` runs it before each deploy, so a flag added since the emulator started is turned on too. To change a flag, run the command above with `--endpoint-url http://localhost:20005 --region ap-southeast-2`, `AWS_ACCESS_KEY_ID=test`, `AWS_SECRET_ACCESS_KEY=test` and the name `/app/local/transcription/features`. The value you set lasts until the emulator restarts.
 
 ## Stacks
 
@@ -61,7 +61,7 @@ A local deploy differs from a deployed environment in five ways.
 
 **Some parameters are blank.** `ApiDomainName`, `HostedZoneName`, `RegionalCertificateArn`, `RegionalWafArn` and `VpcId` are empty, and `ApiStack` skips the custom domain, DNS record, WAF and VPC that use them. A deployed environment with any of them blank fails the synth in `assertDeployedParameters`.
 
-**The DMP is a stand-in.** `DmpApiUrl` and `DmpTokenUrl` point at the WireMock container, and `bin/put-local-dmp-credentials.ts` writes its client credentials to `DmpCredentialsParameter` before each deploy. The `DMP_*` variables in the root README point a local deploy at a real DMP instead.
+**The DMP is a stand-in.** `DmpApiUrl` and `DmpTokenUrl` point at the WireMock container, and `bin/seed-local-parameters.ts` writes its client credentials to `DmpCredentialsParameter` before each deploy. The `DMP_*` variables in the root README point a local deploy at a real DMP instead.
 
 **The stacks differ.** `TranscriptionUserPoolStack` is added under the export names the externally managed pool uses. The GitHub stacks and `TranscriptionFrontEndStack` are skipped, having no local counterpart. The asset bucket those GitHub stacks would create is made by the Compose bootstrap command instead.
 
