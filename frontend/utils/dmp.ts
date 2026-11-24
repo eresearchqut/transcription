@@ -1,4 +1,4 @@
-import type { RpidDto } from "@eresearchqut/dmp-api";
+import type { Rpid } from "model";
 
 /** The Data Management Planner (DMP), where researchers manage the plans RPIDs identify. */
 export const DMP_URL = (process.env.NEXT_PUBLIC_DMP_URL ?? "").replace(
@@ -14,7 +14,7 @@ export const dmpPlanUrl = (rpid: string): string =>
  * can drop it, for example when its plan is archived after it was selected.
  */
 export const activeRpid = (
-  rpids: RpidDto[] | undefined,
+  rpids: Rpid[] | undefined,
   rpid: string | undefined,
 ): string | undefined =>
   rpids?.some((dto) => dto.rpid === rpid) ? rpid : undefined;
