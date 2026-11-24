@@ -1,4 +1,3 @@
-import type { ResearchProject } from "./researchProject";
 import supportedTranscriptionLanguagesJson from "./supported_transcription_languages.json";
 import supportedTranslationLanguagesJson from "./supported_translation_languages.json";
 
@@ -24,8 +23,11 @@ export interface Transcription {
     rpid?: string;
   };
   date: string;
-  /** The DMP project details for the RPID, as they were at upload. */
-  researchProject?: ResearchProject;
+  /**
+   * The RPID the DMP confirmed at upload. Absent when the upload was rejected
+   * or the `rpid` flag was off.
+   */
+  rpid?: string;
   /**
    * Whether the usage log was on when the upload was processed. Only these
    * jobs get a usage record, as only their uploaders could have seen the log

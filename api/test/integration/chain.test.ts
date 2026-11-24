@@ -472,16 +472,6 @@ describe("usage audit log", () => {
         identityId,
         jobId,
         rpid: ACTIVE_RPID,
-        researchProject: {
-          rpid: ACTIVE_RPID,
-          title: "Oral histories of Queensland flood recovery",
-          lead: { name: "Researcher One" },
-          faculty: {
-            name: "Faculty of Creative Industries, Education and Social Justice",
-          },
-          fieldsOfResearch: [{ code: "4303", name: "Historical studies" }],
-          isHdrProject: false,
-        },
         sourceLanguages: ["en-AU"],
         mimeType: "audio/mpeg",
         piiRedaction: false,
@@ -490,6 +480,7 @@ describe("usage audit log", () => {
         bytesUploaded: 1024,
         usageMonth: usage.startedAt.slice(0, 7),
       });
+      expect(usage).not.toHaveProperty("researchProject");
       expect(usage.audioSeconds).toBeGreaterThan(0);
       expect(usage.completedAt).toBeDefined();
       expect(JSON.stringify(usage)).not.toContain("integration.mp3");

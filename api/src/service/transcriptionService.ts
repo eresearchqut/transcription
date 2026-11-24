@@ -1,7 +1,5 @@
 import type { StartTranscriptionJobResponse } from "@aws-sdk/client-transcribe";
 
-import { type ResearchProject, toResearchProject } from "model";
-
 import {
   createResource,
   getResource,
@@ -22,14 +20,14 @@ export const jobStarted = (
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
   usageLogged: boolean,
-  researchProject?: ResearchProject,
+  rpid?: string,
 ) =>
   putResource(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
-    researchProject: researchProject && toResearchProject(researchProject),
+    rpid,
     usageLogged,
   });
 

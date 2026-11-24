@@ -34,11 +34,7 @@ const transcriptionRecord = (overrides: Record<string, unknown> = {}) => ({
     generatesummary: "false",
     rpid: "RPID-1234",
   },
-  researchProject: {
-    rpid: "RPID-1234",
-    title: "Project",
-    lead: { id: "1", name: "Lead" },
-  },
+  rpid: "RPID-1234",
   usageLogged: true,
   uploadEvent: { object: { key: "users/x/y.upload", size: 1292288 } },
   ...overrides,

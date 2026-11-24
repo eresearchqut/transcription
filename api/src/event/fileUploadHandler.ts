@@ -8,7 +8,6 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
-import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { S3Event } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
@@ -27,14 +26,13 @@ xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
 /**
- * Finds the upload's RPID among the user's active projects, or gives the
- * reason to refuse the upload, which is shown to the user as the job's
- * failure reason.
+ * Confirms the upload's RPID with the DMP, or gives the reason to refuse the
+ * upload, which is shown to the user as the job's failure reason.
  */
 const checkRpid = async (
   identityId: string,
   rpid: string | undefined,
-): Promise<{ project: RpidDto } | { rejection: string }> => {
+): Promise<{ rpid: string } | { rejection: string }> => {
   if (!rpid) {
     return {
       rejection:
@@ -42,9 +40,8 @@ const checkRpid = async (
     };
   }
   try {
-    const project = await getRpid(identityId, rpid);
-    if (project) {
-      return { project };
+    if (await getRpid(identityId, rpid)) {
+      return { rpid };
     }
     return {
       rejection: `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`,
@@ -96,7 +93,7 @@ export const handler = async (event: S3Event) => {
 
       const rpidCheck = rpidRequired
         ? await checkRpid(identityId, headResponse.Metadata.rpid)
-        : { project: undefined };
+        : { rpid: undefined };
       if ("rejection" in rpidCheck) {
         const recorded = await jobRejected(
           identityId,
@@ -178,7 +175,7 @@ export const handler = async (event: S3Event) => {
           transcriptionResponse,
           headResponse.Metadata,
           usageLog,
-          rpidCheck.project,
+          rpidCheck.rpid,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

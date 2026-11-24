@@ -1,4 +1,3 @@
-import type { RpidDto } from "@eresearchqut/dmp-api";
 import type { Transcription } from "model";
 import { TranscriptionJobStatus } from "model";
 
@@ -6,27 +5,6 @@ import { toUsageRecord } from "../../src/service/usageService";
 
 const IDENTITY_ID = "76c65a59-1c57-489b-be96-020ceaa9675a";
 const JOB_ID = "2e9b38b5-1df0-4841-8308-f174fb88aac7";
-
-const researchProject: RpidDto = {
-  rpid: "RPID-1234",
-  title: "Project",
-  createdDate: "2026-03-02T00:00:00.000Z",
-  lead: { id: "1", name: "Lead" },
-  supervisor: { id: "2", name: "Supervisor" },
-  faculty: { id: 3, name: "Faculty of X", type: "faculty" },
-  fieldsOfResearch: [{ code: "4303", name: "Historical studies", year: 2020 }],
-  isHdrProject: true,
-};
-
-const keptProject = {
-  rpid: "RPID-1234",
-  title: "Project",
-  lead: { id: "1", name: "Lead" },
-  supervisor: { id: "2", name: "Supervisor" },
-  faculty: { id: 3, name: "Faculty of X" },
-  fieldsOfResearch: [{ code: "4303", name: "Historical studies", year: 2020 }],
-  isHdrProject: true,
-};
 
 const transcription = (overrides: Partial<Transcription> = {}) =>
   ({
@@ -51,7 +29,7 @@ describe("usageService", () => {
   it("maps the metered units and dimensions of a job", () => {
     const record = toUsageRecord(
       transcription({
-        researchProject,
+        rpid: "RPID-1234",
         audioSeconds: 128.4,
         summaryUsage: { inputTokens: 900, outputTokens: 120 },
         translationCharacters: 4321,
@@ -65,7 +43,6 @@ describe("usageService", () => {
         identityId: IDENTITY_ID,
         jobId: JOB_ID,
         rpid: "RPID-1234",
-        researchProject: keptProject,
         sourceLanguages: ["en-AU", "fr-FR"],
         targetLanguage: "es",
         mimeType: "audio/wav",
@@ -84,35 +61,6 @@ describe("usageService", () => {
     );
   });
 
-  it("keeps only the project details the landing page lists", () => {
-    const dmpResponse = {
-      ...researchProject,
-      status: "ACTIVE",
-      startDate: "2026-01-01",
-      endDate: "2027-12-31",
-      updatedDate: "2026-03-02T00:00:00.000Z",
-      lead: {
-        id: "1",
-        name: "Lead",
-        preferredName: "Lee",
-        orcid: "0000-0002-1825-0097",
-        isStaff: true,
-        organisation: { id: 3, name: "Faculty of X", type: "faculty" },
-      },
-      faculty: { id: 3, name: "Faculty of X", type: "faculty", added: "x" },
-      fieldsOfResearch: [
-        { code: "4303", name: "Historical studies", year: 2020, added: "x" },
-      ],
-      added: "a field the DMP adds later",
-    } as unknown as RpidDto;
-
-    const record = toUsageRecord(
-      transcription({ researchProject: dmpResponse }),
-    );
-
-    expect(record.researchProject).toEqual(keptProject);
-  });
-
   it("keys byRpid only on an RPID the DMP confirmed", () => {
     const record = toUsageRecord(
       transcription({
@@ -120,7 +68,7 @@ describe("usageService", () => {
           detail: {
             TranscriptionJobStatus: "FAILED",
             FailureReason:
-              "The Research Project ID (RPID) RPID-1234 is not one of your active projects in the Data Management Planning tool.",
+              "The Research Plan ID (RPID) RPID-1234 can't be used with QUT Transcribe.",
           },
         },
       }),
@@ -171,7 +119,8 @@ describe("usageService", () => {
         jobStatusUpdated: {
           detail: {
             TranscriptionJobStatus: "FAILED",
-            FailureReason: "The Research Project ID (RPID) is required.",
+            FailureReason:
+              "A Research Plan ID (RPID) is required to start a transcription.",
           },
         },
       }),
@@ -179,7 +128,7 @@ describe("usageService", () => {
 
     expect(record.status).toEqual("FAILED");
     expect(record.failureReason).toEqual(
-      "The Research Project ID (RPID) is required.",
+      "A Research Plan ID (RPID) is required to start a transcription.",
     );
     expect(record.completedAt).toEqual("2026-08-06T01:02:03.000Z");
   });

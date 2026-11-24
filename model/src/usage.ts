@@ -1,4 +1,3 @@
-import type { ResearchProject } from "./researchProject";
 import type { TranscriptionJobStatus } from "./transcription";
 
 export interface UsageRecord {
@@ -14,7 +13,6 @@ export interface UsageRecord {
    * upload was rejected or the `rpid` flag was off.
    */
   rpid?: string;
-  researchProject?: ResearchProject;
 
   sourceLanguages?: string[];
   resolvedLanguage?: string;
