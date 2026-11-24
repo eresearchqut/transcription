@@ -86,7 +86,7 @@ describe("fileUploadHandler", () => {
           detail: {
             TranscriptionJobStatus: "FAILED",
             FailureReason:
-              "A Research Project ID (RPID) is required to start a transcription.",
+              "A Research Plan ID (RPID) is required to start a transcription.",
           },
         },
       }),
@@ -132,7 +132,7 @@ describe("fileUploadHandler", () => {
         jobStatusUpdated: {
           detail: {
             TranscriptionJobStatus: "FAILED",
-            FailureReason: `The Research Project ID (RPID) ${RPID} could not be checked with the Data Management Planning tool. Please try again later.`,
+            FailureReason: `The Research Plan ID (RPID) ${RPID} could not be checked with the Data Management Planner. Please try again later.`,
           },
         },
       }),
