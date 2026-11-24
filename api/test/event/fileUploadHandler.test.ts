@@ -4,6 +4,7 @@ import {
   TranscribeClient,
 } from "@aws-sdk/client-transcribe";
 
+import type { RpidDto } from "@eresearchqut/dmp-api";
 import { mockClient } from "aws-sdk-client-mock";
 import { FEATURES_OFF } from "model";
 
@@ -11,12 +12,21 @@ import { getRpid } from "../../src/client/dmpClient";
 import { getFeatureFlags } from "../../src/client/featureFlagsClient";
 import { handler } from "../../src/event/fileUploadHandler";
 import { getResource, putResource } from "../../src/repository/repository";
+import { jobStatusUpdated } from "../../src/service/transcriptionService";
 import fileMetadata from "./fileMetadata.json";
 import fileUploadEvent from "./fileUploadEvent.json";
 
 const IDENTITY_ID = "76c65a59-1c57-489b-be96-020ceaa9675a";
 const JOB_ID = "2e9b38b5-1df0-4841-8308-f174fb88aac7";
 const RPID = "RPID-1234";
+
+const project: RpidDto = {
+  rpid: RPID,
+  title: "My Research Project",
+  createdDate: "2026-03-02T00:00:00.000Z",
+  lead: { id: "1", name: "Jane Citizen" },
+  faculty: { id: 1, name: "Faculty of Science", type: "faculty" },
+};
 
 jest.mock("../../src/client/dmpClient", () => ({
   getRpid: jest.fn(),
@@ -51,12 +61,7 @@ describe("fileUploadHandler", () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
-    mockGetRpid.mockResolvedValue({
-      rpid: RPID,
-      title: "Project",
-      createdDate: "2026-03-02T00:00:00.000Z",
-      lead: { id: "1", name: "Jane Citizen" },
-    });
+    mockGetRpid.mockResolvedValue(project);
 
     expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
 
@@ -67,7 +72,12 @@ describe("fileUploadHandler", () => {
     expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
       expect.objectContaining({
         metadata: expect.objectContaining({ rpid: RPID }),
+        rpid: RPID,
+        startedAt: expect.any(String),
       }),
+    );
+    expect(await getResource(IDENTITY_ID, JOB_ID)).not.toHaveProperty(
+      "researchProject",
     );
   });
 
@@ -149,6 +159,66 @@ describe("fileUploadHandler", () => {
     expect(
       transcribeMock.commandCalls(StartTranscriptionJobCommand),
     ).toHaveLength(1);
+  });
+
+  it.each([
+    true,
+    false,
+  ])("records on a started job whether the usage log is on: %s", async (usageLog) => {
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+
+    await handler(fileUploadEvent);
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({ usageLogged: usageLog }),
+    );
+  });
+
+  it("records on a rejected job whether the usage log is on", async () => {
+    mockGetFeatureFlags.mockResolvedValue({
+      ...FEATURES_OFF,
+      rpid: true,
+      usageLog: true,
+    });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 0 uploads");
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({
+        jobStatusUpdated: expect.anything(),
+        usageLogged: true,
+        startedAt: expect.any(String),
+      }),
+    );
+  });
+
+  it("keeps a status recorded before the job's own record", async () => {
+    const failed = {
+      detail: {
+        TranscriptionJobStatus: "FAILED",
+        FailureReason: "The media format that you specified isn't valid.",
+      },
+    };
+    mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, usageLog: true });
+    s3Mock.on(HeadObjectCommand).resolves(fileMetadata);
+    transcribeMock.on(StartTranscriptionJobCommand).callsFake(async () => {
+      await jobStatusUpdated(IDENTITY_ID, JOB_ID, failed);
+      return { TranscriptionJob: { TranscriptionJobStatus: "IN_PROGRESS" } };
+    });
+
+    expect(await handler(fileUploadEvent)).toEqual("Processed 1 uploads");
+
+    expect(await getResource(IDENTITY_ID, JOB_ID)).toEqual(
+      expect.objectContaining({
+        jobStatusUpdated: failed,
+        transcriptionResponse: {
+          TranscriptionJob: { TranscriptionJobStatus: "IN_PROGRESS" },
+        },
+        usageLogged: true,
+      }),
+    );
   });
 
   it("fails the invocation when the feature flags can't be read", async () => {

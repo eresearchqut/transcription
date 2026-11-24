@@ -14,6 +14,7 @@ export interface Transcription {
   metadata: {
     filetype: string;
     languagecode: string;
+    languages?: string;
     mimetype: string;
     filename: string;
     generatesummary: string;
@@ -22,9 +23,37 @@ export interface Transcription {
     rpid?: string;
   };
   date: string;
+  /**
+   * When the upload was processed. Later updates rewrite `date` and leave
+   * this alone.
+   */
+  startedAt?: string;
+  /**
+   * The RPID the DMP confirmed at upload. Absent when the upload was rejected
+   * or the `rpid` flag was off.
+   */
+  rpid?: string;
+  /**
+   * Whether the usage log was on when the upload was processed. Only these
+   * jobs get a usage record, as only their uploaders could have seen the log
+   * described on the landing page.
+   */
+  usageLogged?: boolean;
   downloadKey?: string;
   summaryKey?: string;
   translationKey?: string;
+  /**
+   * The language Transcribe names in its output, as it does for a job that
+   * identifies languages. For a multi-language job this is the one spoken for
+   * longest.
+   */
+  identifiedLanguage?: string;
+  audioSeconds?: number;
+  summaryUsage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+  translationCharacters?: number;
   translationJob?: {
     jobId: string;
     status: string;

@@ -4,13 +4,18 @@ import {
   createResource,
   getResource,
   getResources,
-  putResource,
   updateResource,
+  updateResources,
 } from "../repository/repository";
 
 export const normaliseJobId = (jobId: string): string =>
   jobId.split("redacted-").at(-1) ?? jobId;
 
+/**
+ * Records a job that Transcribe has already started. The handlers for the
+ * job's status and output can write to its record first, so this adds to the
+ * record and keeps what they wrote.
+ */
 export const jobStarted = (
   identityId: string,
   jobId: string,
@@ -18,12 +23,17 @@ export const jobStarted = (
   uploadEvent: Record<string, unknown>,
   transcriptionResponse: StartTranscriptionJobResponse,
   metadata: Record<string, unknown>,
+  usageLogged: boolean,
+  rpid?: string,
 ) =>
-  putResource(identityId, jobId, {
+  updateResources(identityId, jobId, {
     outputKey,
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
     transcriptionResponse: JSON.parse(JSON.stringify(transcriptionResponse)),
     metadata: JSON.parse(JSON.stringify(metadata)),
+    rpid,
+    usageLogged,
+    startedAt: new Date().toISOString(),
   });
 
 /**
@@ -36,6 +46,7 @@ export const jobRejected = (
   uploadEvent: Record<string, unknown>,
   metadata: Record<string, unknown>,
   failureReason: string,
+  usageLogged: boolean,
 ) =>
   createResource(identityId, jobId, {
     uploadEvent: JSON.parse(JSON.stringify(uploadEvent)),
@@ -46,6 +57,8 @@ export const jobRejected = (
         FailureReason: failureReason,
       },
     },
+    usageLogged,
+    startedAt: new Date().toISOString(),
   });
 
 export const jobStatusUpdated = (
@@ -64,15 +77,25 @@ export const downloadKey = (
   identityId: string,
   jobId: string,
   downloadKey: string,
+  audioSeconds?: number,
+  identifiedLanguage?: string,
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "downloadKey", downloadKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    downloadKey,
+    audioSeconds,
+    identifiedLanguage,
+  });
 
 export const summaryKey = (
   identityId: string,
   jobId: string,
   summaryKey: string,
+  summaryUsage?: { inputTokens?: number; outputTokens?: number },
 ) =>
-  updateResource(identityId, normaliseJobId(jobId), "summaryKey", summaryKey);
+  updateResources(identityId, normaliseJobId(jobId), {
+    summaryKey,
+    summaryUsage,
+  });
 
 export const translationKey = (
   identityId: string,
@@ -90,13 +113,12 @@ export const translationJob = (
   identityId: string,
   jobId: string,
   translationJob: { jobId: string; status: string; message?: string },
+  translationCharacters?: number,
 ) =>
-  updateResource(
-    identityId,
-    normaliseJobId(jobId),
-    "translationJob",
+  updateResources(identityId, normaliseJobId(jobId), {
     translationJob,
-  );
+    translationCharacters,
+  });
 
 export const getTranscriptions = (identityId: string) =>
   getResources(identityId);

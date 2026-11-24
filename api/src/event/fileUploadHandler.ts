@@ -26,32 +26,38 @@ xray.captureAWSv3Client(transcribeClient);
 xray.captureAWSv3Client(s3client);
 
 /**
- * The reason to refuse the upload, shown to the user as the job's failure
- * reason, or undefined when the RPID is one of their active plans that they
- * can use for transcription.
+ * Confirms the upload's RPID with the DMP, or gives the reason to refuse the
+ * upload, which is shown to the user as the job's failure reason.
  */
-const rpidRejection = async (
+const checkRpid = async (
   identityId: string,
   rpid: string | undefined,
-): Promise<string | undefined> => {
+): Promise<{ rpid: string } | { rejection: string }> => {
   if (!rpid) {
-    return "A Research Plan ID (RPID) is required to start a transcription.";
+    return {
+      rejection:
+        "A Research Plan ID (RPID) is required to start a transcription.",
+    };
   }
   try {
     if (await getRpid(identityId, rpid)) {
-      return undefined;
+      return { rpid };
     }
-    return `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`;
+    return {
+      rejection: `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`,
+    };
   } catch (error) {
     console.error(`Failed to validate RPID ${rpid}`, error);
-    return `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`;
+    return {
+      rejection: `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`,
+    };
   }
 };
 
 export const handler = async (event: S3Event) => {
   // Read before the loop, whose errors are logged and skipped, so a failed
   // read fails the invocation and Lambda retries the S3 event.
-  const { rpid: rpidRequired } = await getFeatureFlags();
+  const { rpid: rpidRequired, usageLog } = await getFeatureFlags();
   let uploadsCount = 0;
   for (const record of event.Records) {
     try {
@@ -85,16 +91,17 @@ export const handler = async (event: S3Event) => {
         headResponse.Metadata["enablePiiRedaction".toLowerCase()],
       );
 
-      const rejection = rpidRequired
-        ? await rpidRejection(identityId, headResponse.Metadata.rpid)
-        : undefined;
-      if (rejection) {
+      const rpidCheck = rpidRequired
+        ? await checkRpid(identityId, headResponse.Metadata.rpid)
+        : { rpid: undefined };
+      if ("rejection" in rpidCheck) {
         const recorded = await jobRejected(
           identityId,
           jobId,
           record.s3,
           headResponse.Metadata,
-          rejection,
+          rpidCheck.rejection,
+          usageLog,
         );
         if (!recorded) {
           console.log(
@@ -167,6 +174,8 @@ export const handler = async (event: S3Event) => {
           record.s3,
           transcriptionResponse,
           headResponse.Metadata,
+          usageLog,
+          rpidCheck.rpid,
         ).then(() => uploadsCount++);
       } catch (error) {
         console.error("Failed to save job details", error);

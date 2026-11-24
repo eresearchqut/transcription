@@ -51,6 +51,7 @@ describe("transcription service test", () =>
         filename: "Welcome.wav",
         filetype: "userUploadedFile",
       },
+      false,
     );
     expect(
       await getTranscriptions("76c65a59-1c57-489b-be96-020ceaa9675a"),

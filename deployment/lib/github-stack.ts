@@ -39,6 +39,7 @@ const appResourcePolicies = (
           "ec2:RevokeSecurityGroupEgress",
           "iam:*",
           "events:*",
+          "sqs:*",
           "route53:*",
           "wafv2:*",
         ],

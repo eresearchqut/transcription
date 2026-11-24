@@ -1,14 +1,44 @@
-import { CopyObjectCommand } from "@aws-sdk/client-s3";
+import { CopyObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 
 import type { S3Handler } from "aws-lambda";
 import xray from "aws-xray-sdk";
 
 import s3Client from "../client/s3Client";
 import { downloadKey } from "../service/transcriptionService";
+import {
+  type TranscriptDocument,
+  transcriptDurationSeconds,
+  transcriptLanguage,
+} from "../util/transcript";
 
 const outputPattern = /^transcription\/([^/]+)\/([^/]+)$/;
 
 xray.captureAWSv3Client(s3Client);
+
+const measureTranscript = async (
+  bucketName: string,
+  key: string,
+): Promise<{ audioSeconds?: number; identifiedLanguage?: string }> => {
+  try {
+    const raw = await s3Client
+      .send(new GetObjectCommand({ Bucket: bucketName, Key: key }))
+      .then((result) => result.Body?.transformToString());
+    if (!raw) {
+      return {};
+    }
+    const transcript = JSON.parse(raw) as TranscriptDocument;
+    return {
+      audioSeconds: transcriptDurationSeconds(transcript),
+      identifiedLanguage: transcriptLanguage(transcript),
+    };
+  } catch (e) {
+    console.error(
+      `Failed to measure the duration and language of ${key} because: ${e}`,
+      e,
+    );
+    return {};
+  }
+};
 
 export const handler: S3Handler = async (event) => {
   for (const record of event.Records) {
@@ -29,7 +59,17 @@ export const handler: S3Handler = async (event) => {
             Key: usersKey,
           }),
         );
-        await downloadKey(identityId, jobId, usersKey);
+        const { audioSeconds, identifiedLanguage } = await measureTranscript(
+          bucketName,
+          key,
+        );
+        await downloadKey(
+          identityId,
+          jobId,
+          usersKey,
+          audioSeconds,
+          identifiedLanguage,
+        );
       } catch (e) {
         console.error(`Failed to copy ${key} to ${usersKey} because: ${e}`, e);
       }

@@ -16,27 +16,36 @@ The environment is the current git branch: `dev`, `qa` or `prod`. Its parameters
 
 ## Feature flags
 
-Some features can be turned on and off while the service runs, without a deploy. Their flags are a JSON object in the SSM parameter `/app/<env>/transcription/features`, such as `{"rpid": true}`.
+Some features can be turned on and off while the service runs, without a deploy. Their flags are a JSON object in the SSM parameter `/app/<env>/transcription/features`, such as `{"rpid": true, "usageLog": false}`.
 
 | Flag | Turns on |
 | --- | --- |
 | `rpid` | Requiring each upload to be assigned an RPID, which the upload handler checks with the DMP. Set `DmpApiUrl`, `DmpTokenUrl` and `DmpCredentialsParameter` in the environment's parameters before turning it on, or every upload is rejected. |
+| `usageLog` | Recording jobs in the permanent usage table, and the landing page's "Usage information" section that tells users so. The upload handler decides this once for each job. A job uploaded while it is on is recorded until it expires, even if it is turned off before then. A job uploaded while it is off is never recorded, even if it is turned on before the job finishes or expires. |
 
 A flag is off unless it is `true`, and every flag is off while the parameter doesn't exist. No stack creates the parameter, so a deploy never changes a flag. To change them:
 
 ```sh
-aws ssm put-parameter --name /app/dev/transcription/features --type String --overwrite --value '{"rpid": true}'
+aws ssm put-parameter --name /app/dev/transcription/features --type String --overwrite --value '{"rpid": true, "usageLog": true}'
 ```
 
 Each Lambda container reads the parameter at most once a minute. The frontend fetches the flags from `GET /features`, which needs no token so the landing page can use it, and fetches them again once they are a minute old. A change therefore reaches everyone within a couple of minutes. Until then a page opened earlier can disagree with the handlers: an upload sent from it without an RPID after `rpid` is turned on fails, with the reason shown in My Transcriptions.
 
 Locally, `bin/seed-local-parameters.ts` turns on every flag the parameter doesn't have yet. The Compose bootstrap container runs it when it starts, and `pnpm ministack:deploy` runs it before each deploy, so a flag added since the emulator started is turned on too. To change a flag, run the command above with `--endpoint-url http://localhost:20005 --region ap-southeast-2`, `AWS_ACCESS_KEY_ID=test`, `AWS_SECRET_ACCESS_KEY=test` and the name `/app/local/transcription/features`. The value you set lasts until the emulator restarts.
 
+## Usage log
+
+`UsageProjectionFunction` reads the job table's stream and writes each change to a recorded job into the usage table. Every stream record holds the whole job, so the usage record is written from the latest one. The job record keeps its own `startedAt`, which gives the usage record its `startedAt` and `usageMonth` whichever stream record arrives first.
+
+Stream records that still fail after three retries are skipped, and a message naming their shard and sequence numbers goes to `UsageProjectionDlq`. The message holds no job data. It points at records the stream keeps for 24 hours, after which they can't be read back.
+
+A skipped record seldom needs replaying. The job's next change brings its usage record up to date, and if there is none, its expiry does. The exceptions are a skipped completion, after which `completedAt` is the time of the job's next change, and a skipped expiry, after which the usage record has no `expiredAt`. To replay a record, read it from the stream and invoke the function with it. Check first that the job hasn't changed since, because an older record applied after a newer one puts back the older status.
+
 ## Stacks
 
 | Stack | Contents | Created for |
 | --- | --- | --- |
-| `TranscriptionStack` | The API, the Lambda handlers, the DynamoDB table, the data bucket and the EventBridge rules, in `lib/api-stack.ts` | Every environment |
+| `TranscriptionStack` | The API, the Lambda handlers, the job and usage DynamoDB tables, the data bucket and the EventBridge rules, in `lib/api-stack.ts` | Every environment |
 | `TranscriptionFrontEndStack` | The S3 bucket and CloudFront distribution serving `frontend/out`, in us-east-1 | Deployed environments |
 | `TranscriptionGitHubStack`, `TranscriptionFrontEndGitHubStack` | The asset bucket and the role GitHub Actions assumes to deploy each of the two stacks above | Deployed environments |
 | `TranscriptionUserPoolStack` | A Cognito user pool standing in for the externally managed one | Local deploys |
