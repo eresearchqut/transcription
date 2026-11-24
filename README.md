@@ -24,6 +24,8 @@ npm config set //npm.pkg.github.com/:_authToken "$(gh auth token)"
 
 Don't put the token in the repo's `.npmrc`, and don't use `pnpm config set`, because pnpm 10 installs don't read the token it writes. CI installs with `GITHUB_TOKEN`, which needs access granted in the package's settings.
 
+The MiniStack bootstrap container installs the package too. `pnpm ministack:up` passes it `NODE_AUTH_TOKEN` if that is set, and `gh auth token` otherwise. It can't read the token back from your npm config, because npm 11 refuses to print it.
+
 ## Local frontend development against the deployed dev environment
 1. Copy the dev environment variables into your local `.env.development.local`
 ```
