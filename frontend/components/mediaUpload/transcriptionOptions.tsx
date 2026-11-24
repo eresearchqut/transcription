@@ -136,15 +136,13 @@ export const TranscriptionOptions: FunctionComponent<
       {rpidRequired && (
         <Field invalid={rpidsError} alignItems={"flex-start"} gap={1.5}>
           <Heading as={"h3"} size={"md"}>
-            Research Project
+            Research Project / Activity
           </Heading>
           <Text fontSize={"sm"} color={"fg.muted"}>
             Every transcription must be assigned to one of your research
-            projects. Your Research Project IDs (RPIDs) are sourced from the{" "}
-            <ExternalLink href={DMP_URL}>
-              Data Management Planning tool
-            </ExternalLink>
-            .
+            projects or activities, identified by the Research Plan ID (RPID) of
+            its plan in the{" "}
+            <ExternalLink href={DMP_URL}>Data Management Planner</ExternalLink>.
           </Text>
           <Stack
             direction={{ base: "column", sm: "row" }}
@@ -152,16 +150,20 @@ export const TranscriptionOptions: FunctionComponent<
             align={{ base: "stretch", sm: "center" }}
             width={"full"}
           >
-            <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
-              Research Project ID
-            </Text>
+            <ChakraField.Label
+              fontSize={"sm"}
+              fontWeight={"medium"}
+              whiteSpace={"nowrap"}
+            >
+              Research Plan ID
+            </ChakraField.Label>
             <Box flex={"1"} minWidth={0} width={"full"}>
               <RpidInput
                 rpids={rpids}
                 value={rpid}
                 onChange={setRpid}
                 isLoading={rpidsLoading}
-                placeholder={"Select a research project..."}
+                placeholder={"Select a research plan..."}
               />
             </Box>
           </Stack>
@@ -185,9 +187,13 @@ export const TranscriptionOptions: FunctionComponent<
           align={{ base: "stretch", sm: "center" }}
           width={"full"}
         >
-          <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
+          <ChakraField.Label
+            fontSize={"sm"}
+            fontWeight={"medium"}
+            whiteSpace={"nowrap"}
+          >
             Source languages
-          </Text>
+          </ChakraField.Label>
           <Box flex={"1"} minWidth={0} width={"full"}>
             <LanguageInput
               isMulti={true}

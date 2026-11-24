@@ -116,7 +116,7 @@ services:
     networks:
       - transcription-network
 
-  # Stands in for the Data Management Planning tool, which the handlers check
+  # Stands in for the Data Management Planner, which the handlers check
   # each upload's RPID against. WireMock serves the stubs in
   # scripts/ministack/dmp: a token endpoint for the local client, and the v1
   # RPID routes for two fake researchers. Published so the stubs and the

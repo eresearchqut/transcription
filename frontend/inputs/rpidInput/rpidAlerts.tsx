@@ -15,25 +15,23 @@ export const RpidAlerts: FunctionComponent<UseRpidsState> = ({
     return (
       <Alert
         status={"error"}
-        title={"Your research projects could not be retrieved."}
+        title={"Your research plans could not be retrieved."}
       >
         <Text>
-          A Research Project ID (RPID) is required to use this service. Please
-          try again later. If the problem persists, contact eResearch support.
+          A Research Plan ID (RPID) is required to use this service. Please try
+          again later. If the problem persists, contact eResearch support.
         </Text>
       </Alert>
     );
   }
   if (!isLoading && rpids?.length === 0) {
     return (
-      <Alert status={"warning"} title={"You have no active research projects."}>
+      <Alert status={"warning"} title={"You have no active research plans."}>
         <Text>
-          A Research Project ID (RPID) is required to use this service. Create a
+          A Research Plan ID (RPID) is required to use this service. Create a
           data management plan in the{" "}
-          <ExternalLink href={DMP_URL}>
-            Data Management Planning tool
-          </ExternalLink>
-          , or ask the lead of a project you work on to add you to its plan.
+          <ExternalLink href={DMP_URL}>Data Management Planner</ExternalLink>,
+          or ask the lead of a project you work on to add you to its plan.
         </Text>
       </Alert>
     );
