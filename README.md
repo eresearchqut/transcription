@@ -109,7 +109,7 @@ The real DMP doesn't know `researcher1` or `researcher2`. To see your own plans,
 | --- | --- |
 | `pnpm ministack:up` | Start the emulator and deploy, without the frontend |
 | `pnpm ministack:logs` | Follow the deploy, which is where CDK errors surface |
-| `pnpm ministack:deploy` | Rebuild `model` and redeploy, after changing handler, model or stack code |
+| `pnpm ministack:deploy` | Rebuild `model`, turn on any new feature flag and redeploy, after changing handler, model or stack code |
 | `pnpm ministack:env` | Rewrite `frontend/.env.development.local` from the deployed stack outputs |
 | `pnpm ministack:seed-users` | Recreate the two Cognito users |
 | `pnpm ministack:down` | Stop the emulator and discard its state |

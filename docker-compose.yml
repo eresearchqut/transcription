@@ -178,8 +178,7 @@ services:
                pnpm install --frozen-lockfile --filter deployment... --filter api... &&
                pnpm --filter 'api^...' build &&
                cd deployment &&
-               npx ts-node --prefer-ts-exts bin/put-local-dmp-credentials.ts &&
-               npx ts-node --prefer-ts-exts bin/put-local-feature-flags.ts &&
+               npx ts-node --prefer-ts-exts bin/seed-local-parameters.ts &&
                rm -rf /tmp/cdk.out &&
                (curl -sfI $$ASSET_BUCKET_URL > /dev/null ||
                 curl -sf -X PUT $$ASSET_BUCKET_URL -d '<CreateBucketConfiguration><LocationConstraint>ap-southeast-2</LocationConstraint></CreateBucketConfiguration>') &&

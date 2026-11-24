@@ -28,7 +28,7 @@
     "ministack:up": "NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN:-$(pnpm config get //npm.pkg.github.com/:_authToken)} docker compose up -d --build --wait",
     "ministack:down": "docker compose down",
     "ministack:logs": "docker compose logs -f transcription-bootstrap",
-    "ministack:deploy": "pnpm ministack:build && docker compose exec -w /app/deployment transcription-bootstrap cdklocal deploy --all --require-approval never --output /tmp/cdk.out.deploy",
+    "ministack:deploy": "pnpm ministack:build && docker compose exec -w /app/deployment transcription-bootstrap npx ts-node --prefer-ts-exts bin/seed-local-parameters.ts && docker compose exec -w /app/deployment transcription-bootstrap cdklocal deploy --all --require-approval never --output /tmp/cdk.out.deploy",
     "ministack:build": "docker compose exec -w /app transcription-bootstrap pnpm --filter \"api^...\" build"
   },
   "author": "eResearch",
