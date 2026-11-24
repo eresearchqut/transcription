@@ -94,6 +94,7 @@ services:
   transcription-auth-proxy:
     container_name: "${TRANSCRIPTION_AUTH_PROXY_DOCKER_NAME:-transcription-auth-proxy}"
     image: caddy:2-alpine
+    init: true
     ports:
       # Loopback only, for the same reason as the gateway, and because the
       # certificate is issued for localhost and matches nothing else.
