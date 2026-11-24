@@ -296,33 +296,41 @@ describe("dmpClient", () => {
   });
 
   it.each([
-    "The user does not have access to this RPID.",
-    "The collaborator does not have access to perform this operation on this RPID.",
-  ])("resolves undefined when the DMP answers 403: %s", async (message) => {
-    fetchMock
-      .mockResolvedValueOnce(tokenResponse())
-      .mockResolvedValueOnce(
-        jsonResponse(403, { statusCode: 403, message, error: "Forbidden" }),
-      );
-
-    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
-  });
-
-  it.each([
+    [
+      "the user isn't on the plan",
+      {
+        statusCode: 403,
+        message: "The user does not have access to this RPID.",
+        error: "Forbidden",
+      },
+    ],
+    [
+      "the user can't use the plan for transcription",
+      {
+        statusCode: 403,
+        message:
+          "The collaborator does not have access to perform this operation on this RPID.",
+        error: "Forbidden",
+      },
+    ],
     [
       "the client lacks the scope",
       { statusCode: 403, message: "Forbidden resource", error: "Forbidden" },
     ],
     ["of API Gateway", { message: "Missing Authentication Token" }],
-  ])("rejects a 403 because %s", async (_, body) => {
+  ])("resolves undefined and logs the body for a 403 because %s", async (_, body) => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
     fetchMock
       .mockResolvedValueOnce(tokenResponse())
       .mockResolvedValueOnce(jsonResponse(403, body));
 
-    const error = await getRpid("user-1", "A1B2C3D4").catch((e) => e);
+    await expect(getRpid("user-1", "A1B2C3D4")).resolves.toBeUndefined();
 
-    expect(error).toBeInstanceOf(ResponseError);
-    expect((error as ResponseError).response.status).toBe(403);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(warn).toHaveBeenCalledWith(
+      "The DMP refused RPID A1B2C3D4 for user-1",
+      JSON.stringify(body),
+    );
   });
 
   it.each([

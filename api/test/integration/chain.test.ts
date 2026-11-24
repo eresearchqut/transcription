@@ -411,7 +411,7 @@ describe("rpid check", () => {
       expect(record.jobStatusUpdated?.detail).toEqual({
         TranscriptionJobStatus: "FAILED",
         FailureReason: expect.stringContaining(
-          `${rpid} is not one of your active projects`,
+          `${rpid} can't be used with QUT Transcribe`,
         ),
       });
       expect(record.transcriptionResponse).toBeUndefined();

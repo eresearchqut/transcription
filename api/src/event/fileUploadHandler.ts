@@ -27,7 +27,8 @@ xray.captureAWSv3Client(s3client);
 
 /**
  * The reason to refuse the upload, shown to the user as the job's failure
- * reason, or undefined when the RPID is one of their active projects.
+ * reason, or undefined when the RPID is one of their active plans that they
+ * can use for transcription.
  */
 const rpidRejection = async (
   identityId: string,
@@ -40,7 +41,7 @@ const rpidRejection = async (
     if (await getRpid(identityId, rpid)) {
       return undefined;
     }
-    return `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`;
+    return `The Research Plan ID (RPID) ${rpid} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`;
   } catch (error) {
     console.error(`Failed to validate RPID ${rpid}`, error);
     return `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`;
