@@ -1,10 +1,10 @@
-import type { RpidDto } from "@eresearchqut/dmp-api";
 import { Select, type Props as SelectProps } from "chakra-react-select";
+import type { Rpid } from "model";
 import type { FunctionComponent } from "react";
 
 export interface RpidInputProps
   extends Omit<SelectProps, "options" | "onChange" | "value"> {
-  rpids?: RpidDto[];
+  rpids?: Rpid[];
   value?: string;
   onChange?: (newValue: string | undefined) => void;
 }

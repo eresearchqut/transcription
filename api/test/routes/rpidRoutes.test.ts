@@ -37,8 +37,8 @@ describe("GET /rpid", () => {
     mockGetFeatureFlags.mockResolvedValue({ ...FEATURES_OFF, rpid: true });
   });
 
-  it("returns the user's rpids", async () => {
-    const rpids = [
+  it("returns only the rpid and title of each of the user's rpids", async () => {
+    mockListRpids.mockResolvedValue([
       {
         rpid: "RPID-1",
         title: "First project",
@@ -51,15 +51,17 @@ describe("GET /rpid", () => {
         createdDate: "2026-05-18T00:00:00.000Z",
         lead: { id: "2", name: "John Smith" },
       },
-    ];
-    mockListRpids.mockResolvedValue(rpids);
+    ]);
 
     const response = await request(api)
       .get("/rpid")
       .set("Authorization", AUTHORIZATION);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(rpids);
+    expect(response.body).toEqual([
+      { rpid: "RPID-1", title: "First project" },
+      { rpid: "RPID-2", title: "Second project" },
+    ]);
     expect(mockListRpids).toHaveBeenCalledWith(IDENTITY_ID);
   });
 
