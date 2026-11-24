@@ -13,8 +13,8 @@ export interface UseRpidsState {
 }
 
 /**
- * The authenticated user's Research Project IDs (RPIDs), sourced from the
- * Data Management Planning (DMP) API via the transcription API.
+ * The authenticated user's Research Plan IDs (RPIDs), sourced from the Data
+ * Management Planner (DMP) API via the transcription API.
  */
 export const useRpids = (): UseRpidsState => {
   const { features } = useFeatures();

@@ -39,7 +39,7 @@ export const RpidInput: FunctionComponent<RpidInputProps> = ({
       options={rpidOptions}
       value={selectedRpidOption}
       onChange={onChange}
-      aria-label={"Research Project ID"}
+      aria-label={"Research Plan ID"}
       {...props}
     />
   );

@@ -34,7 +34,7 @@ const rpidRejection = async (
   rpid: string | undefined,
 ): Promise<string | undefined> => {
   if (!rpid) {
-    return "A Research Project ID (RPID) is required to start a transcription.";
+    return "A Research Plan ID (RPID) is required to start a transcription.";
   }
   try {
     if (await getRpid(identityId, rpid)) {
@@ -43,7 +43,7 @@ const rpidRejection = async (
     return `The Research Project ID (RPID) ${rpid} is not one of your active projects in the Data Management Planning tool.`;
   } catch (error) {
     console.error(`Failed to validate RPID ${rpid}`, error);
-    return `The Research Project ID (RPID) ${rpid} could not be checked with the Data Management Planning tool. Please try again later.`;
+    return `The Research Plan ID (RPID) ${rpid} could not be checked with the Data Management Planner. Please try again later.`;
   }
 };
 

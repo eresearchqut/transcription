@@ -88,9 +88,9 @@ Without this, everything except sign-in works. Clicking through the browser warn
 
 Sign-in goes through the Cognito hosted UI, as in a deployed environment. The local pool has no QUT federation, so the hosted UI shows a username and password form. Use `researcher1` or `researcher2` with the password `password`.
 
-### Data Management Planning tool
+### Data Management Planner
 
-Uploads need an RPID from the Data Management Planning tool (DMP) while the `rpid` feature flag is on, as it is locally (see [Feature flags](deployment/README.md#feature-flags)). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
+Uploads need a Research Plan ID (RPID) from the Data Management Planner (DMP) while the `rpid` feature flag is on, as it is locally (see [Feature flags](deployment/README.md#feature-flags)). Locally, a [WireMock](https://wiremock.org) container on http://localhost:20006 serves the fake plans in `scripts/ministack/dmp`: `researcher1` has two active plans and `researcher2` has none. `/__admin/requests` lists the requests the handlers made. This repository is public, so don't commit real plans.
 
 To use a real DMP, set these in your shell or in a `.env` file at the repo root, then run `pnpm ministack:up`:
 
