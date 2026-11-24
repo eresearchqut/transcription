@@ -1,4 +1,5 @@
 import express from "express";
+import type { Rpid } from "model";
 
 import { listRpids } from "../client/dmpClient";
 import { getFeatureFlags } from "../client/featureFlagsClient";
@@ -14,7 +15,10 @@ router.get("/", (request, response, next) => {
         response.sendStatus(404);
         return;
       }
-      response.json(await listRpids(identityId));
+      const rpids: Rpid[] = (await listRpids(identityId)).map(
+        ({ rpid, title }) => ({ rpid, title }),
+      );
+      response.json(rpids);
     })
     .catch(next);
 });
