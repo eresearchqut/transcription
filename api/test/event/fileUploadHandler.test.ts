@@ -93,7 +93,7 @@ describe("fileUploadHandler", () => {
     );
   });
 
-  it("rejects the job when the rpid is not one of the user's active projects", async () => {
+  it("rejects the job when the user can't use the rpid", async () => {
     s3Mock.on(HeadObjectCommand).resolves({
       Metadata: { ...fileMetadata.Metadata, rpid: RPID },
     });
@@ -109,7 +109,7 @@ describe("fileUploadHandler", () => {
         jobStatusUpdated: {
           detail: {
             TranscriptionJobStatus: "FAILED",
-            FailureReason: `The Research Project ID (RPID) ${RPID} is not one of your active projects in the Data Management Planning tool.`,
+            FailureReason: `The Research Plan ID (RPID) ${RPID} can't be used with QUT Transcribe. It must belong to an active plan in the Data Management Planner that you lead or supervise, or collaborate on with access to QUT Transcribe.`,
           },
         },
       }),

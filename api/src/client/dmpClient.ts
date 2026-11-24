@@ -151,29 +151,6 @@ const withRetries = async <T>(call: () => Promise<T>): Promise<T> => {
 };
 
 /**
- * The messages DMP v1 publishes for a 403 from getRpidForUser when the user is
- * not on the plan, or collaborates on it without access to transcription. Any
- * other 403, such as the one for a client that lacks the scope, is an error.
- */
-const NO_ACCESS_MESSAGES = new Set([
-  "The user does not have access to this RPID.",
-  "The collaborator does not have access to perform this operation on this RPID.",
-]);
-
-const isNoAccess = async (error: unknown) => {
-  if (!(error instanceof ResponseError) || error.response.status !== 403) {
-    return false;
-  }
-  const body = (await error.response
-    .clone()
-    .json()
-    .catch(() => undefined)) as { message?: unknown } | undefined;
-  return (
-    typeof body?.message === "string" && NO_ACCESS_MESSAGES.has(body.message)
-  );
-};
-
-/**
  * Resolves undefined unless the RPID belongs to an active plan the user is a
  * member of, with access to transcription. Rejects when the DMP could not be
  * asked, after retrying failures that might not last.
@@ -193,7 +170,14 @@ export const getRpid = async (
       ),
     );
   } catch (error) {
-    if (await isNoAccess(error)) {
+    // The DMP answers 403 when the user isn't on the plan or can't use it for
+    // transcription, and tells these apart only by the message. A client that
+    // lacks the scope gets a 403 too, which is why the body is logged.
+    if (error instanceof ResponseError && error.response.status === 403) {
+      console.warn(
+        `The DMP refused RPID ${rpid} for ${userId}`,
+        await error.response.text().catch(() => undefined),
+      );
       return undefined;
     }
     throw error;
