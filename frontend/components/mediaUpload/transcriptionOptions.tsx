@@ -19,13 +19,9 @@ import { Alert } from "@/components/ui/alert";
 import { Field } from "@/components/ui/field";
 import { Switch } from "@/components/ui/switch";
 import features from "@/public/features.json";
-import { useFeatures } from "../../hooks/useFeatures";
 import { useNewFeatureStorage } from "../../hooks/useNewFeatureStorage";
-import { useRpids } from "../../hooks/useRpids";
 import { LanguageInput } from "../../inputs/languageInput";
-import { RpidAlerts, RpidInput } from "../../inputs/rpidInput";
 import { TranslationLanguageInput } from "../../inputs/translationLanguageInput";
-import { activeRpid, DMP_URL } from "../../utils/dmp";
 
 export interface TranscribeProps {
   languages: string[];
@@ -36,8 +32,10 @@ export interface TranscribeProps {
 }
 
 export interface TranscriptionOptionsValue {
-  props: TranscribeProps;
+  props: Omit<TranscribeProps, "rpid">;
   valid: boolean;
+  /** What the user must still do for the options to be valid. */
+  problems: string[];
 }
 
 export interface TranscriptionOptionsProps {
@@ -60,13 +58,6 @@ export const TranscriptionOptions: FunctionComponent<
   const [targetLanguage, setTargetLanguage] = useState<string | undefined>(
     "en",
   );
-  const [selectedRpid, setRpid] = useState<string | undefined>();
-
-  const { features: featureFlags, isLoading: featuresLoading } = useFeatures();
-  const rpidRequired = !!featureFlags?.rpid;
-  const rpidsState = useRpids();
-  const { rpids, isLoading: rpidsLoading, isError: rpidsError } = rpidsState;
-  const rpid = activeRpid(rpids, selectedRpid);
 
   const { showNewFeature } = useNewFeatureStorage({
     features,
@@ -95,26 +86,31 @@ export const TranscriptionOptions: FunctionComponent<
     }
   };
 
+  const noLanguages = languages.length === 0;
   const languageSizeLimitAchieved = languages.length === MAX_LANGUAGE_LIMIT;
   const languageSizeLimitExceeded = languages.length > MAX_LANGUAGE_LIMIT;
+  const languagesInvalid = noLanguages || languageSizeLimitExceeded;
   const piiLanguageValid = languages.length === 1 && languages[0] === "en-US";
 
   useEffect(() => {
-    const valid =
-      !featuresLoading &&
-      (!rpidRequired || !!rpid) &&
-      !languageSizeLimitExceeded &&
-      !(enableTranslation && !targetLanguage) &&
-      !(enablePiiRedaction && !piiLanguageValid);
+    const problems = [
+      noLanguages && "Select at least one source language.",
+      languageSizeLimitExceeded &&
+        `Select no more than ${MAX_LANGUAGE_LIMIT} source languages.`,
+      enableTranslation && !targetLanguage && "Select a target language.",
+      enablePiiRedaction &&
+        !piiLanguageValid &&
+        "Use English, US as the only source language to redact PII.",
+    ].filter((problem): problem is string => !!problem);
     onChange({
       props: {
         languages,
         enablePiiRedaction,
         generateSummary,
         targetLanguage: enableTranslation ? targetLanguage : undefined,
-        rpid,
       },
-      valid,
+      valid: problems.length === 0,
+      problems,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -123,55 +119,17 @@ export const TranscriptionOptions: FunctionComponent<
     generateSummary,
     enableTranslation,
     targetLanguage,
-    rpid,
-    rpidRequired,
-    featuresLoading,
     piiLanguageValid,
     onChange,
     languageSizeLimitExceeded,
+    noLanguages,
   ]);
 
   return (
     <Stack direction={direction} gap={6} alignSelf={"stretch"}>
-      {rpidRequired && (
-        <Field invalid={rpidsError} alignItems={"flex-start"} gap={1.5}>
-          <Heading as={"h3"} size={"md"}>
-            Research Project / Activity
-          </Heading>
-          <Text fontSize={"sm"} color={"fg.muted"}>
-            Every transcription must be assigned to one of your research
-            projects or activities, identified by the Research Plan ID (RPID) of
-            its plan in the{" "}
-            <ExternalLink href={DMP_URL}>Data Management Planner</ExternalLink>.
-          </Text>
-          <Stack
-            direction={{ base: "column", sm: "row" }}
-            gap={{ base: 1.5, sm: 3 }}
-            align={{ base: "stretch", sm: "center" }}
-            width={"full"}
-          >
-            <ChakraField.Label
-              fontSize={"sm"}
-              fontWeight={"medium"}
-              whiteSpace={"nowrap"}
-            >
-              Research Plan ID
-            </ChakraField.Label>
-            <Box flex={"1"} minWidth={0} width={"full"}>
-              <RpidInput
-                rpids={rpids}
-                value={rpid}
-                onChange={setRpid}
-                isLoading={rpidsLoading}
-                placeholder={"Select a research plan..."}
-              />
-            </Box>
-          </Stack>
-          <RpidAlerts {...rpidsState} />
-        </Field>
-      )}
       <Field
-        invalid={languageSizeLimitExceeded}
+        invalid={languagesInvalid}
+        required
         alignItems={"flex-start"}
         gap={1.5}
       >
@@ -193,6 +151,7 @@ export const TranscriptionOptions: FunctionComponent<
             whiteSpace={"nowrap"}
           >
             Source languages
+            <ChakraField.RequiredIndicator />
           </ChakraField.Label>
           <Box flex={"1"} minWidth={0} width={"full"}>
             <LanguageInput
@@ -200,15 +159,22 @@ export const TranscriptionOptions: FunctionComponent<
               value={languages}
               onChange={onLanguageChange}
               maxSize={MAX_LANGUAGE_LIMIT}
-              invalid={languageSizeLimitExceeded}
+              invalid={languagesInvalid}
             />
           </Box>
         </Stack>
-        {languageSizeLimitAchieved && (
-          <ChakraField.HelperText whiteSpace={"nowrap"}>
-            A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
-          </ChakraField.HelperText>
-        )}
+        <Stack aria-live={"polite"} gap={1.5}>
+          {noLanguages && (
+            <ChakraField.ErrorText>
+              Select at least one language.
+            </ChakraField.ErrorText>
+          )}
+          {languageSizeLimitAchieved && (
+            <ChakraField.HelperText whiteSpace={"nowrap"}>
+              A maximum of {MAX_LANGUAGE_LIMIT} languages is allowed.
+            </ChakraField.HelperText>
+          )}
+        </Stack>
       </Field>
       <Field alignItems={"flex-start"} gap={1.5}>
         <Heading as={"h3"} size={"md"}>
@@ -256,28 +222,35 @@ export const TranscriptionOptions: FunctionComponent<
           </Alert>
         )}
         {enableTranslation && (
-          <Stack
-            direction={{ base: "column", sm: "row" }}
-            gap={{ base: 1.5, sm: 3 }}
-            align={{ base: "stretch", sm: "center" }}
-            width={"full"}
-          >
-            <Text fontSize={"sm"} fontWeight={"medium"} whiteSpace={"nowrap"}>
-              Target language
-            </Text>
-            <Box minWidth={{ base: "auto", sm: "15rem" }} width={"full"}>
-              <TranslationLanguageInput
-                value={targetLanguage}
-                onChange={(value) => setTargetLanguage(value)}
-                placeholder={"Select a language..."}
-              />
-            </Box>
-          </Stack>
-        )}
-        {enableTranslation && !targetLanguage && (
-          <ChakraField.HelperText whiteSpace={"nowrap"}>
-            Select a language to translate into.
-          </ChakraField.HelperText>
+          <ChakraField.Root required gap={1.5}>
+            <Stack
+              direction={{ base: "column", sm: "row" }}
+              gap={{ base: 1.5, sm: 3 }}
+              align={{ base: "stretch", sm: "center" }}
+              width={"full"}
+            >
+              <ChakraField.Label
+                fontSize={"sm"}
+                fontWeight={"medium"}
+                whiteSpace={"nowrap"}
+              >
+                Target language
+                <ChakraField.RequiredIndicator />
+              </ChakraField.Label>
+              <Box minWidth={{ base: "auto", sm: "15rem" }} width={"full"}>
+                <TranslationLanguageInput
+                  value={targetLanguage}
+                  onChange={(value) => setTargetLanguage(value)}
+                  placeholder={"Select a language..."}
+                />
+              </Box>
+            </Stack>
+            {!targetLanguage && (
+              <ChakraField.HelperText whiteSpace={"nowrap"}>
+                Select a language to translate into.
+              </ChakraField.HelperText>
+            )}
+          </ChakraField.Root>
         )}
       </Field>
       <Field alignItems={"flex-start"} gap={1.5}>

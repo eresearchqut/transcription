@@ -2,6 +2,7 @@ import { Select, type Props as SelectProps } from "chakra-react-select";
 import { isArray } from "lodash";
 import { SUPPORTED_TRANSCRIPTION_LANGUAGES as SUPPORTED_LANGUAGES_SOURCE } from "model";
 import type { FunctionComponent } from "react";
+import { SelectFieldInput } from "../selectFieldInput";
 
 export interface LanguageInputProps
   extends Omit<SelectProps, "options" | "onChange"> {
@@ -53,6 +54,7 @@ export const LanguageInput: FunctionComponent<LanguageInputProps> = ({
       onChange={onChange}
       isDisabled={isDisabled}
       isOptionDisabled={() => maxLimitReached}
+      components={{ Input: SelectFieldInput }}
       {...props}
     />
   );

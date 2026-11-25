@@ -5,13 +5,14 @@ import {
   Button,
   Group,
   Heading,
+  Span,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { TRANSCRIBE_QUOTAS } from "model";
 import NextLink from "next/link";
-import { type FunctionComponent, type ReactNode, useState } from "react";
+import { type FunctionComponent, type ReactNode, useId, useState } from "react";
 import { MappedIcon } from "@/components/mappedIcon";
 import { supportedFileFormatsText } from "@/components/quotas/quotas";
 import {
@@ -20,8 +21,13 @@ import {
   StepsList,
   StepsRoot,
 } from "@/components/ui/steps";
+import { useFeatures } from "../../hooks/useFeatures";
 import { FilePicker, type FilePickerProps } from "../../inputs/filePicker";
 import { OptionsSummary } from "./optionsSummary";
+import {
+  ResearchPlanOptions,
+  type ResearchPlanValue,
+} from "./researchPlanOptions";
 import {
   type TranscribeProps,
   TranscriptionOptions,
@@ -30,12 +36,21 @@ import {
 
 export type { TranscribeProps };
 
-const STEP_TITLES = [
-  "Overview",
-  "Choose options",
-  "Choose files",
-  "Track progress",
-];
+type StepKey = "overview" | "plan" | "options" | "files" | "progress";
+
+const STEP_TITLES: Record<StepKey, string> = {
+  overview: "Overview",
+  plan: "Choose plan",
+  options: "Choose options",
+  files: "Choose files",
+  progress: "Track progress",
+};
+
+const DEFAULT_PLAN: ResearchPlanValue = {
+  rpid: undefined,
+  valid: false,
+  problems: [],
+};
 
 const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
   props: {
@@ -43,9 +58,71 @@ const DEFAULT_OPTIONS: TranscriptionOptionsValue = {
     enablePiiRedaction: false,
     generateSummary: true,
     targetLanguage: undefined,
-    rpid: undefined,
   },
   valid: false,
+  problems: [],
+};
+
+const RequiredFieldsNote = () => (
+  <Text fontSize={"sm"} color={"fg.muted"}>
+    Fields marked{" "}
+    <Span color={"fg.error"} fontWeight={"bold"}>
+      *
+    </Span>{" "}
+    are required.
+  </Text>
+);
+
+interface StepActionsProps {
+  value: { valid: boolean; problems: string[] };
+  onBack: () => void;
+  onNext: () => void;
+}
+
+const StepActions: FunctionComponent<StepActionsProps> = ({
+  value: { valid, problems },
+  onBack,
+  onNext,
+}) => {
+  const problemsId = useId();
+  return (
+    <Group justifyContent={"space-between"} alignItems={"flex-start"}>
+      <Button variant={"outline"} onClick={onBack}>
+        <MappedIcon icon={"chevron-left"} size={"xs"} />
+        Back
+      </Button>
+      <Stack
+        direction={{ base: "column", sm: "row" }}
+        align={{ base: "flex-end", sm: "center" }}
+        gap={{ base: 2, sm: 4 }}
+      >
+        {!valid && (
+          <Stack
+            id={problemsId}
+            gap={0}
+            fontSize={"sm"}
+            color={"fg.muted"}
+            textAlign={"end"}
+          >
+            {problems.map((problem) => (
+              <Text key={problem}>{problem}</Text>
+            ))}
+          </Stack>
+        )}
+        {/* aria-disabled rather than disabled keeps the button focusable,
+            so screen reader users can reach it and hear why it's unavailable. */}
+        <Button
+          colorPalette={"blue"}
+          aria-disabled={!valid}
+          aria-describedby={valid ? undefined : problemsId}
+          onClick={() => valid && onNext()}
+        >
+          Next
+          <MappedIcon icon={"chevron-right"} size={"xs"} />
+        </Button>
+      </Stack>
+    </Group>
+  );
 };
 
 export interface MediaUploadProps {
@@ -68,15 +145,33 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
   const [optionsKey, setOptionsKey] = useState<number>(0);
   const [uploadStarted, setUploadStarted] = useState<boolean>(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [planValue, setPlanValue] = useState<ResearchPlanValue>(DEFAULT_PLAN);
   const [optionsValue, setOptionsValue] =
     useState<TranscriptionOptionsValue>(DEFAULT_OPTIONS);
 
+  const { features, isLoading: featuresLoading } = useFeatures();
+  const rpidRequired = !!features?.rpid;
+  const steps: StepKey[] = [
+    "overview",
+    ...(rpidRequired ? (["plan"] as const) : []),
+    "options",
+    "files",
+    "progress",
+  ];
+  const goTo = (key: StepKey) => setStep(steps.indexOf(key));
+
+  const transcribeProps: TranscribeProps = {
+    ...optionsValue.props,
+    rpid: rpidRequired ? planValue.rpid : undefined,
+  };
+  const valid = optionsValue.valid && (!rpidRequired || planValue.valid);
+
   const onFilesPicked = (files: File[]) => {
-    onSubmit(optionsValue.props, files);
+    onSubmit(transcribeProps, files);
     setUploadStarted(true);
     setSelectedFiles([]);
     setFilePickerKey((key) => key + 1);
-    setStep(3);
+    goTo("progress");
   };
 
   const onUploadMore = () => {
@@ -91,17 +186,20 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onClearUploads?.();
     setUploadStarted(false);
     setSelectedFiles([]);
+    setPlanValue(DEFAULT_PLAN);
     setOptionsValue(DEFAULT_OPTIONS);
     setOptionsKey((key) => key + 1);
     setFilePickerKey((key) => key + 1);
-    setStep(0);
+    goTo("overview");
   };
 
   const isStepValid = (index: number) => {
-    switch (index) {
-      case 1:
+    switch (steps[index]) {
+      case "plan":
+        return planValue.valid;
+      case "options":
         return optionsValue.valid;
-      case 2:
+      case "files":
         return uploadStarted;
       default:
         return true;
@@ -122,9 +220,9 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     onFilesPicked,
   };
 
-  const stepHeading = (index: number) => (
+  const stepHeading = (key: StepKey) => (
     <Heading as={"h2"} size={"lg"} hideFrom={"md"}>
-      {STEP_TITLES[index]}
+      {STEP_TITLES[key]}
     </Heading>
   );
 
@@ -132,21 +230,20 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
     <StepsRoot
       step={step}
       onStepChange={(details) => setStep(details.step)}
-      count={4}
+      count={steps.length}
       linear
       isStepValid={isStepValid}
       colorPalette={"blue"}
     >
       <StepsList>
-        <StepsItem index={0} title={STEP_TITLES[0]} />
-        <StepsItem index={1} title={STEP_TITLES[1]} />
-        <StepsItem index={2} title={STEP_TITLES[2]} />
-        <StepsItem index={3} title={STEP_TITLES[3]} />
+        {steps.map((key, index) => (
+          <StepsItem key={key} index={index} title={STEP_TITLES[key]} />
+        ))}
       </StepsList>
 
-      <StepsContent index={0}>
+      <StepsContent index={steps.indexOf("overview")}>
         <VStack align={"stretch"} gap={4} pt={4}>
-          {stepHeading(0)}
+          {stepHeading("overview")}
           <Box>
             <Text mb={3}>
               This service transcribes your audio and video files into text. You
@@ -158,6 +255,11 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
               To get started:
             </Text>
             <Stack as={"ol"} gap={1} pl={5} listStyleType={"decimal"}>
+              {rpidRequired && (
+                <Text as={"li"}>
+                  Choose the data management plan your media belongs to.
+                </Text>
+              )}
               <Text as={"li"}>
                 Choose the transcription options that suit your media.
               </Text>
@@ -169,7 +271,13 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             </Stack>
           </Box>
           <Group justifyContent={"flex-end"}>
-            <Button colorPalette={"blue"} onClick={() => setStep(1)}>
+            {/* Wait for the feature flags, which decide whether there is a plan step. */}
+            <Button
+              colorPalette={"blue"}
+              loading={featuresLoading}
+              loadingText={"Get started"}
+              onClick={() => setStep(1)}
+            >
               Get started
               <MappedIcon icon={"chevron-right"} size={"xs"} />
             </Button>
@@ -177,40 +285,47 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
         </VStack>
       </StepsContent>
 
-      <StepsContent index={1}>
+      {rpidRequired && (
+        <StepsContent index={steps.indexOf("plan")}>
+          <VStack align={"stretch"} gap={4} pt={4}>
+            {stepHeading("plan")}
+            <RequiredFieldsNote />
+            <ResearchPlanOptions key={optionsKey} onChange={setPlanValue} />
+            <StepActions
+              value={planValue}
+              onBack={() => goTo("overview")}
+              onNext={() => goTo("options")}
+            />
+          </VStack>
+        </StepsContent>
+      )}
+
+      <StepsContent index={steps.indexOf("options")}>
         <VStack align={"stretch"} gap={4} pt={4}>
-          {stepHeading(1)}
+          {stepHeading("options")}
+          <RequiredFieldsNote />
           <TranscriptionOptions
             key={optionsKey}
             identityId={identityId}
             onChange={setOptionsValue}
             direction={{ base: "column" }}
           />
-          <Group justifyContent={"space-between"}>
-            <Button variant={"outline"} onClick={() => setStep(0)}>
-              <MappedIcon icon={"chevron-left"} size={"xs"} />
-              Back
-            </Button>
-            <Button
-              colorPalette={"blue"}
-              disabled={!optionsValue.valid}
-              onClick={() => setStep(2)}
-            >
-              Next
-              <MappedIcon icon={"chevron-right"} size={"xs"} />
-            </Button>
-          </Group>
+          <StepActions
+            value={optionsValue}
+            onBack={() => goTo(rpidRequired ? "plan" : "overview")}
+            onNext={() => goTo("files")}
+          />
         </VStack>
       </StepsContent>
 
-      <StepsContent index={2}>
+      <StepsContent index={steps.indexOf("files")}>
         <VStack align={"stretch"} gap={4} pt={4}>
-          {stepHeading(2)}
-          <OptionsSummary options={optionsValue.props} />
+          {stepHeading("files")}
+          <OptionsSummary options={transcribeProps} />
           <FilePicker
             key={filePickerKey}
             {...filePickerProps}
-            disabled={!optionsValue.valid}
+            disabled={!valid}
             onSelectionChange={setSelectedFiles}
             hideUploadButton
             description={
@@ -222,13 +337,13 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
             }
           />
           <Group justifyContent={"space-between"}>
-            <Button variant={"outline"} onClick={() => setStep(1)}>
+            <Button variant={"outline"} onClick={() => goTo("options")}>
               <MappedIcon icon={"chevron-left"} size={"xs"} />
               Back
             </Button>
             <Button
               colorPalette={"blue"}
-              disabled={!optionsValue.valid || selectedFiles.length === 0}
+              disabled={!valid || selectedFiles.length === 0}
               onClick={() => onFilesPicked(selectedFiles)}
             >
               Upload
@@ -238,10 +353,10 @@ export const MediaUpload: FunctionComponent<MediaUploadProps> = ({
         </VStack>
       </StepsContent>
 
-      <StepsContent index={3}>
+      <StepsContent index={steps.indexOf("progress")}>
         <VStack align={"stretch"} gap={4} pt={4}>
-          {stepHeading(3)}
-          <OptionsSummary options={optionsValue.props} />
+          {stepHeading("progress")}
+          <OptionsSummary options={transcribeProps} />
           {children ?? (
             <Box>
               <Text>

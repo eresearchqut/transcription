@@ -18,8 +18,17 @@ export const RpidAlerts: FunctionComponent<UseRpidsState> = ({
         title={"Your research plans could not be retrieved."}
       >
         <Text>
-          A Research Plan ID (RPID) is required to use this service. Please try
-          again later. If the problem persists, contact eResearch support.
+          A Research Plan Identifier (RPID) is required to use this service.
+          Please try again later. If the problem persists, contact eResearch
+          support at{" "}
+          <ExternalLink
+            href={"mailto:eresearch@qut.edu.au"}
+            target={undefined}
+            withIcon={false}
+          >
+            eresearch@qut.edu.au
+          </ExternalLink>
+          .
         </Text>
       </Alert>
     );
@@ -28,8 +37,8 @@ export const RpidAlerts: FunctionComponent<UseRpidsState> = ({
     return (
       <Alert status={"warning"} title={"You have no active research plans."}>
         <Text>
-          A Research Plan ID (RPID) is required to use this service. Create a
-          data management plan in the{" "}
+          A Research Plan Identifier (RPID) is required to use this service.
+          Create a data management plan in the{" "}
           <ExternalLink href={DMP_URL}>Data Management Planner</ExternalLink>,
           or ask the lead of a project you work on to add you to its plan.
         </Text>

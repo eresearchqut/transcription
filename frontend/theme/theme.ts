@@ -39,6 +39,16 @@ const customConfig = defineConfig({
     tokens: {
       colors,
     },
+    semanticTokens: {
+      colors: {
+        fg: {
+          // red.500 is 3.76:1 on white, below WCAG AA's 4.5:1 for text.
+          error: {
+            value: { _light: "{colors.red.600}", _dark: "{colors.red.400}" },
+          },
+        },
+      },
+    },
     recipes: {
       button: buttonRecipe,
       heading: headingRecipe,
