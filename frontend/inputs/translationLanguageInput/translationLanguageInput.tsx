@@ -1,6 +1,7 @@
 import { Select, type Props as SelectProps } from "chakra-react-select";
 import { SUPPORTED_TRANSLATION_LANGUAGES as SUPPORTED_TRANSLATION_LANGUAGES_SOURCE } from "model";
 import type { FunctionComponent } from "react";
+import { SelectFieldInput } from "../selectFieldInput";
 
 export interface TranslationLanguageInputProps
   extends Omit<SelectProps, "options" | "onChange" | "value"> {
@@ -37,6 +38,7 @@ export const TranslationLanguageInput: FunctionComponent<
       options={languageOptions}
       value={selectedLanguageOption}
       onChange={onChange}
+      components={{ Input: SelectFieldInput }}
       {...props}
     />
   );

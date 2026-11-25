@@ -49,9 +49,7 @@ export const OptionsSummary: FunctionComponent<OptionsSummaryProps> = ({
         Selected options:
       </Text>
       <Wrap gap={2}>
-        {rpid && (
-          <OptionBadge label={"Research Project / Activity"} value={rpid} />
-        )}
+        {rpid && <OptionBadge label={"Data Management Plan"} value={rpid} />}
         <OptionBadge
           label={"Source languages"}
           value={languages

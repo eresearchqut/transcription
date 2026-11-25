@@ -3,7 +3,7 @@ import { formatDuration } from "date-fns";
 import { isEmpty, lowerFirst, upperFirst } from "lodash";
 import type { TranscribeQuotaProps } from "model";
 import type { FunctionComponent } from "react";
-import { bytesToSize } from "../../inputs/filePicker";
+import { bytesToSize } from "../../utils/bytes";
 
 export interface QuotasProps extends Omit<TranscribeQuotaProps, "accept"> {
   asTextOnly?: boolean;

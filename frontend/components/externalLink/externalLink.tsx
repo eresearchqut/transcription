@@ -27,9 +27,12 @@ const ExternalLink: React.FC<ExternalLinkProps> = ({
       _hover={{ textDecorationColor: "currentColor" }}
       {...rest}
     >
-      {children}{" "}
+      {children}
       {withIcon && (
-        <MappedIcon icon={"external-link"} mb={1} display={"inline"} />
+        <>
+          {" "}
+          <MappedIcon icon={"external-link"} mb={1} display={"inline"} />
+        </>
       )}
     </Link>
   );

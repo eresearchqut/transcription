@@ -1,6 +1,7 @@
 import { Select, type Props as SelectProps } from "chakra-react-select";
 import type { Rpid } from "model";
 import type { FunctionComponent } from "react";
+import { SelectFieldInput } from "../selectFieldInput";
 
 export interface RpidInputProps
   extends Omit<SelectProps, "options" | "onChange" | "value"> {
@@ -39,7 +40,8 @@ export const RpidInput: FunctionComponent<RpidInputProps> = ({
       options={rpidOptions}
       value={selectedRpidOption}
       onChange={onChange}
-      aria-label={"Research Plan ID"}
+      components={{ Input: SelectFieldInput }}
+      aria-label={"Data Management Plan"}
       {...props}
     />
   );

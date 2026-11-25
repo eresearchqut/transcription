@@ -21,8 +21,8 @@ import type { FunctionComponent, PropsWithChildren } from "react";
 import { ExternalLink } from "@/components/externalLink";
 import { handleLogin, type NextPageWithLayout } from "@/pages/_app";
 import { useAuth } from "../context/auth-context";
-import { bytesToSize } from "../inputs/filePicker";
 import Layout from "../layout/layout";
+import { bytesToSize } from "../utils/bytes";
 
 const SUPPORTED_UPLOAD_FILE_FORMATS = SUPPORTED_FILE_FORMATS;
 const supportedInputLanguagesCount = Object.keys(
