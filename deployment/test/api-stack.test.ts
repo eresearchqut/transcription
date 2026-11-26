@@ -147,6 +147,16 @@ describe("ApiStack", () => {
       synthesised.resourceCountIs("AWS::SSM::Parameter", 0);
     });
 
+    it("deploys before the feature flags parameter exists", () => {
+      const synthesised = template();
+      expect(JSON.stringify(synthesised.toJSON())).not.toContain(
+        `{{resolve:ssm:${FEATURE_FLAGS_PARAMETER}}}`,
+      );
+      expect(JSON.stringify(synthesised.findParameters("*"))).not.toContain(
+        FEATURE_FLAGS_PARAMETER,
+      );
+    });
+
     it("serves the feature flags without a token", () => {
       const synthesised = template();
       const [featuresResource] = Object.keys(

@@ -249,11 +249,17 @@ export class ApiStack extends cdk.Stack {
       : {};
 
     // Created outside any stack and read while the handlers run, so a flag
-    // can change without a deploy.
-    const featureFlags = ssm.StringParameter.fromStringParameterName(
+    // can change without a deploy. fromStringParameterName would add a
+    // CloudFormation parameter that resolves the value, failing the deploy
+    // while the parameter doesn't exist. A dynamic reference is only added to
+    // the template where the value is used, which is nowhere.
+    const featureFlags = ssm.StringParameter.fromStringParameterAttributes(
       this,
       "FeatureFlags",
-      props.featureFlagsParameterName,
+      {
+        parameterName: props.featureFlagsParameterName,
+        forceDynamicReference: true,
+      },
     );
     const featureFlagsEnvironment: Record<string, string> = {
       FEATURE_FLAGS_PARAMETER: featureFlags.parameterName,
